@@ -1,0 +1,153 @@
+import { Timestamp } from 'firebase/firestore';
+
+export type KYCStatus = 'not_started' | 'pending' | 'approved' | 'rejected' | 'blocked';
+
+export interface KYCState {
+  status: KYCStatus;
+  submittedAt?: Timestamp;
+  approvedAt?: Timestamp;
+  reviewedAt?: Timestamp;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  rejectionCount?: number;
+  rejectionReasons?: string[];
+  lastRejectionDate?: Timestamp;
+  nextEligibilityDate?: Timestamp;
+  livenessScore?: number;
+  adminNote?: string;
+}
+
+export type TransactionStatus = 'pending' | 'proof_received' | 'confirmed' | 'completed' | 'failed' | 'flagged_problem';
+
+export interface StatusHistoryItem {
+  status: TransactionStatus;
+  timestamp: Timestamp;
+  notes?: string;
+}
+
+export interface ProblemFlag {
+  type: 'missing_proof' | 'wrong_amount' | 'operator_error' | 'other';
+  reportedAt: Timestamp;
+  description: string;
+  resolved: boolean;
+}
+
+export interface Transaction {
+  id: string;
+  userId: string;
+  type: 'russia-africa' | 'africa-russia' | 'russia-russia';
+  status: TransactionStatus;
+  amount: number;
+  currency: string;
+  fromCountry: string;
+  toCountry: string;
+  operator: string;
+  proofUrl: string;
+  createdAt: Timestamp;
+  statusHistory: StatusHistoryItem[];
+  adminNotes?: string;
+  problemFlags?: ProblemFlag[];
+}
+
+export interface ExchangeRate {
+  id: string;
+  from: string;
+  to: string;
+  rate: number;
+  updatedAt: Timestamp;
+  updatedBy: string;
+  source: 'manual' | 'api';
+  margin: number;
+}
+
+export interface Commission {
+  id: string;
+  transferType: 'russia-russia' | 'russia-africa' | 'africa-russia';
+  percentage: number;
+  minAmount: number;
+  maxAmount: number;
+  currency: string;
+  updatedAt: Timestamp;
+  updatedBy: string;
+}
+
+export interface DepositAccount {
+  operator: string;
+  number: string;
+  holder: string;
+  type: 'mobile_money' | 'bank_transfer';
+  active: boolean;
+}
+
+export interface Country {
+  id: string;
+  code: string;
+  name: string;
+  dialCode?: string;
+  continent: 'africa' | 'europe';
+  currency: string;
+  operators: any[];
+  banks: string[];
+  depositAccounts: DepositAccount[];
+  enabled: boolean;
+  updatedAt: Timestamp;
+  updatedBy: string;
+}
+
+export interface KYCRequest {
+  id: string;
+  userId: string;
+  email: string;
+  fullName: string;
+  status: 'pending' | 'approved' | 'rejected';
+  documents: {
+    idProof: { url: string; type: string; uploadedAt: Timestamp };
+    addressProof: { url: string; type: string; uploadedAt: Timestamp };
+    selfie: { url: string; uploadedAt: Timestamp };
+  };
+  submittedAt: Timestamp;
+  reviewedAt?: Timestamp;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  notes?: string;
+  rejectionCount?: number;
+  blocked?: boolean;
+  blockedUntil?: Timestamp;
+  history?: Array<{
+    action: 'submitted' | 'approved' | 'rejected';
+    timestamp: Timestamp;
+    actor: string;
+    reason?: string;
+  }>;
+}
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  emailVerified: boolean;
+  isAdmin: boolean;
+  kycStatus: KYCStatus;
+  statut_kyc?: 'Standard' | 'Pending' | 'Expert' | 'Rejected';
+  kyc?: KYCState;
+}
+
+export interface RussianBank {
+  id: string;
+  name: string;
+  type: 'phone' | 'card_account';
+  number: string;
+  details?: string;
+  active: boolean;
+}
+
+export interface ProblemReport {
+  id: string;
+  transactionId: string;
+  userId: string;
+  type: 'missing_proof' | 'wrong_amount' | 'operator_error' | 'other';
+  description: string;
+  status: 'pending' | 'in_progress' | 'resolved' | 'rejected';
+  createdAt: Timestamp;
+  resolvedAt?: Timestamp;
+  adminNotes?: string;
+}

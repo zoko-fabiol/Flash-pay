@@ -1,0 +1,84 @@
+import React from 'react';
+import type { ReactNode } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import { Home, History, Send, Share2, User } from 'lucide-react';
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export const Layout: React.FC<LayoutProps> = ({ children }) => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const location = useLocation();
+
+  const mobileTabs = [
+    { path: '/', label: 'Accueil', icon: Home },
+    { path: '/transactions', label: 'Historique', icon: History },
+    { path: '/transfer', label: 'Transfert', icon: Send, featured: true },
+    { path: '/referral', label: 'Parrainage', icon: Share2 },
+    { path: '/profile', label: 'Profil', icon: User },
+  ];
+
+  const isActive = (path: string) => {
+    if (path === '/transfer') {
+      return location.pathname.startsWith('/transfer');
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`);
+  };
+
+  return (
+    <div className="flex flex-col h-screen bg-[radial-gradient(circle_at_top_left,_#f5efff_0%,_#fbf9ff_42%,_#f7f3ff_100%)]">
+      <Header onMenuClick={() => setSidebarOpen(true)} />
+      
+      <div className="flex flex-1 overflow-hidden">
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        
+        <main className="flex-1 overflow-auto pb-28 lg:pb-6">
+          <div className="container mx-auto p-4 max-w-7xl">
+            {children}
+          </div>
+        </main>
+      </div>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e6dbff] bg-white shadow-[0_-12px_35px_rgba(69,34,143,0.10)] lg:hidden">
+        <div className="mx-auto grid max-w-3xl grid-cols-5 gap-1 px-2 py-2">
+          {mobileTabs.map((tab) => {
+            const Icon = tab.icon;
+            const active = isActive(tab.path);
+
+            return (
+              <Link
+                key={tab.path}
+                to={tab.path}
+                className={`flex flex-col items-center justify-center rounded-2xl px-2 py-2 text-[11px] font-semibold transition-all ${
+                  tab.featured
+                    ? active
+                      ? 'translate-y-[-14px] rounded-full bg-gradient-to-br from-[#7d49df] to-[#5f2fc4] px-4 py-4 text-white shadow-[0_16px_30px_rgba(98,54,204,0.35)] ring-4 ring-[#efe6ff]'
+                      : 'translate-y-[-14px] rounded-full bg-white px-4 py-4 text-slate-400 shadow-[0_8px_16px_rgba(0,0,0,0.08)] ring-4 ring-slate-100'
+                    : active
+                      ? 'text-[#6236CC]'
+                      : 'text-slate-500'
+                }`}
+              >
+                <span className={`mb-1 flex h-10 w-10 items-center justify-center rounded-full ${
+                  tab.featured
+                    ? active
+                      ? 'bg-white/15 text-white'
+                      : 'bg-slate-200 text-slate-400'
+                    : active
+                      ? 'bg-[#6236CC]/10'
+                      : 'bg-transparent'
+                }`}>
+                  <Icon size={tab.featured ? 20 : 18} />
+                </span>
+                <span className={tab.featured ? 'sr-only' : ''}>{tab.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+};

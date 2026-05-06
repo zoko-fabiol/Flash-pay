@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #6750A4; /* M3 Primary Purple */
+  --color-on-primary: #FFFFFF;
+  --color-primary-container: #EADDFF;
+  --color-on-primary-container: #21005D;
+  
+  --color-secondary: #625B71;
+  --color-secondary-container: #E8DEF8;
+  
+  --color-surface: #FEF7FF;
+  --color-surface-variant: #E7E0EB;
+  --color-on-surface: #1D1B20;
+  --color-on-surface-variant: #49454F;
+  
+  --color-outline: #79747E;
+}
+
+@theme {
+  --color-brand: var(--color-primary);
+  --color-brand-container: var(--color-primary-container);
+  --color-surface-m3: var(--color-surface);
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-display: swap;
+}
+
+* {
+  @apply transition-colors duration-150;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
+}
+
+/* Loading animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}

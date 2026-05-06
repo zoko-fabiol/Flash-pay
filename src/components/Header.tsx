@@ -1,0 +1,49 @@
+import React from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Menu, Zap } from 'lucide-react';
+
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
+
+  return (
+    <header className="bg-white px-5 py-4 flex justify-between items-center sticky top-0 z-50 border-b border-[#eadfff] shadow-[0_8px_28px_rgba(72,38,145,0.06)]">
+      <div className="flex items-center gap-2 text-primary font-black text-xl tracking-tight cursor-pointer" onClick={() => navigate('/')}>
+        <Zap size={24} />
+        <span>Flash Pay</span>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        <span className="text-sm font-bold text-slate-500 hidden sm:block">
+          {user?.nom || 'Invité'}
+        </span>
+        <button
+          onClick={handleLogout}
+          className="text-xs font-bold px-4 py-2 rounded-full border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 transition hidden sm:block"
+        >
+          Déconnexion
+        </button>
+        <button
+          onClick={onMenuClick}
+          className="hamburger-btn p-2 hover:bg-[#efe6ff] rounded-2xl transition"
+        >
+          <Menu size={24} />
+        </button>
+      </div>
+    </header>
+  );
+};
