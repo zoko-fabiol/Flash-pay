@@ -342,5 +342,35 @@ export const adminService = {
       details: { id },
       timestamp: Timestamp.now()
     });
-  }
+  },
+
+  updateDailyLimit: async (dailyLimitRUB: number) => {
+    const q = query(collection(db, 'settings'));
+    const snapshot = await getDocs(q);
+    
+    if (snapshot.empty) {
+      // Create new settings document
+      await addDoc(collection(db, 'settings'), {
+        dailyLimitRUB,
+        updatedAt: Timestamp.now(),
+        updatedBy: auth.currentUser?.uid,
+      });
+    } else {
+      // Update existing settings document
+      const settingsRef = doc(db, 'settings', snapshot.docs[0].id);
+      await updateDoc(settingsRef, {
+        dailyLimitRUB,
+        updatedAt: Timestamp.now(),
+        updatedBy: auth.currentUser?.uid,
+      });
+    }
+
+    // Log action
+    await addDoc(collection(db, 'admin_logs'), {
+      adminId: auth.currentUser?.uid,
+      action: 'UPDATE_DAILY_LIMIT',
+      details: { dailyLimitRUB },
+      timestamp: Timestamp.now()
+    });
+  },
 };

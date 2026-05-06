@@ -10,8 +10,6 @@ import {
   Phone,
   Calendar,
   ShieldCheck,
-  CreditCard,
-  TrendingUp,
   Award,
   Link as LinkIcon
 } from 'lucide-react';

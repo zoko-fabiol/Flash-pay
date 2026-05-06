@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -6,7 +6,7 @@ import { useTransferWizard } from '../context/TransferWizardContext';
 import { Layout } from '../components/Layout';
 import { ChevronLeft, ChevronRight, Globe, CreditCard, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send } from 'lucide-react';
 import { collection, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
-import { db, auth } from '../services/firebase';
+import { db, auth, calculateTransactionRecap } from '../services/firebase';
 
 async function fileToBase64(file: File | Blob, maxWidth = 800, quality = 0.65): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -73,6 +73,16 @@ export const TransferWizardPage: React.FC = () => {
   const [timerSeconds, setTimerSeconds] = useState(20 * 60); // 20 minutes
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const sortedCountries = useMemo(
+    () => [...countries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
+    [countries]
+  );
+
+  const sortedBanks = useMemo(
+    () => [...banks].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
+    [banks]
+  );
+
   // Payment timer - starts/resets when entering a payment step
   useEffect(() => {
     const isPaymentStep = 
@@ -137,12 +147,61 @@ export const TransferWizardPage: React.FC = () => {
       // 1. Convert the proof file to base64
       const proofUrl = await fileToBase64(proofFile);
 
-      // 2. Create transaction in Firestore
+      // 2. Determine input and output currencies based on transfer type
+      let inputCurrency = transferData.currency || 'RUB';
+      let outputCurrency = transferData.currency || 'RUB';
+      
+      if (transferData.transferType === 'russia-africa') {
+        inputCurrency = 'RUB';
+        outputCurrency = transferData.currency || 'XAF';
+      } else if (transferData.transferType === 'africa-russia') {
+        inputCurrency = transferData.currency || 'XAF';
+        outputCurrency = 'RUB';
+      }
+      // russia-russia: both stay the same (RUB)
+
+      // 3. Calculate transaction recap with exchange rate snapshot and fees
+      const calculation = await calculateTransactionRecap({
+        transferType: transferData.transferType || 'russia-russia',
+        amount: transferData.amount,
+        inputCurrency,
+        outputCurrency,
+        recipientOperator: transferData.recipientOperator,
+        recipientName: transferData.recipientName,
+        recipientPhone: transferData.recipientPhone,
+        destinationCountry: transferData.destinationCountry,
+        narration: transferData.narration,
+      });
+
+      if (!calculation.isValid) {
+        toast.error(`Erreur de calcul: ${calculation.errors.join(', ')}`, { id: t });
+        return;
+      }
+
+      // 4. Create transaction in Firestore with complete calculation snapshot
       await addDoc(collection(db, 'transactions'), {
         ...transferData,
         userId: auth.currentUser?.uid,
+        clientName: user?.nom || '',
+        clientPhone: user?.tel || '',
+        clientEmail: user?.email || auth.currentUser?.email || '',
+        type: transferData.transferType,
         proofUrl,
         status: 'pending',
+        // Currency fields
+        currency: inputCurrency,
+        destinationCurrency: outputCurrency,
+        // Calculation snapshots (stored at transaction time)
+        exchangeRate: calculation.exchangeRate,
+        exchangeRateTimestamp: calculation.exchangeRateTimestamp,
+        fee: calculation.commissionAmount,
+        commissionPercentage: calculation.commissionPercentage,
+        receivedAmount: calculation.receivedAmount,
+        // Additional fields
+        amount: transferData.amount,
+        fromCountry: transferData.originCountry || 'RU',
+        toCountry: transferData.destinationCountry || 'RU',
+        operator: transferData.recipientOperator || '',
         createdAt: Timestamp.now(),
         statusHistory: [{
           status: 'pending',
@@ -231,13 +290,15 @@ export const TransferWizardPage: React.FC = () => {
                 isValid={!!transferData.destinationCountry}
               >
                 <div className="grid grid-cols-2 gap-4">
-                  {countries.map(c => (
+                  {sortedCountries.map((c: any) => (
                     <button
                       key={c.id}
                       onClick={() => updateTransferData({ destinationCountry: c.code, currency: c.currency })}
                       className={`p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ${transferData.destinationCountry === c.code ? 'border-brand bg-brand/5' : 'border-slate-100 hover:border-slate-300'}`}
                     >
-                      <Globe className="text-brand flex-shrink-0" size={24} />
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 shrink-0 bg-white shadow-sm">
+                        <img src={`https://flagcdn.com/w40/${(c.code || 'cm').toLowerCase()}.png`} alt={`${c.name} flag`} className="w-full h-full object-cover" />
+                      </div>
                       <span className="font-bold">{c.name}</span>
                     </button>
                   ))}
@@ -331,7 +392,7 @@ export const TransferWizardPage: React.FC = () => {
         const rate = foundRate?.rate || foundRate?.rateFixed || 7.22;
         const commissionFee = getCommission(transferData.amount || 0, 'russia-africa');
         const convertedAmount = (transferData.amount || 0) * rate;
-        const requiresKYC = convertedAmount >= 50000 && !isKycExpert;
+        const requiresKYC = (transferData.amount || 0) >= 20000 && !isKycExpert;
         const isAmountValid = (transferData.amount || 0) > 0 && !requiresKYC;
         const bonusPoints = Math.floor(convertedAmount / 6.55); // Adjusting to match ~1000 points for 1000 roubles in screenshot
 
@@ -636,13 +697,15 @@ export const TransferWizardPage: React.FC = () => {
             <div className="max-w-xl mx-auto py-12">
               <StepWrapper title="Origine" description="Depuis quel pays envoyez-vous l'argent ?" onBack={previousStep} onNext={nextStep} isValid={!!transferData.originCountry}>
                 <div className="grid grid-cols-2 gap-4">
-                  {countries.filter(c => c.canSendToRussia !== false).map(c => (
+                  {sortedCountries.filter(c => c.canSendToRussia !== false).map((c: any) => (
                     <button
                       key={c.id}
                       onClick={() => updateTransferData({ originCountry: c.code, currency: c.currency })}
                       className={`p-4 rounded-2xl border-2 transition-all flex items-center gap-3 ${transferData.originCountry === c.code ? 'border-brand bg-brand/5' : 'border-slate-100 hover:border-slate-300'}`}
                     >
-                      <Globe className="text-brand flex-shrink-0" size={24} />
+                      <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-200 shrink-0 bg-white shadow-sm">
+                        <img src={`https://flagcdn.com/w40/${(c.code || 'cm').toLowerCase()}.png`} alt={`${c.name} flag`} className="w-full h-full object-cover" />
+                      </div>
                       <span className="font-bold">{c.name}</span>
                     </button>
                   ))}
@@ -713,7 +776,7 @@ export const TransferWizardPage: React.FC = () => {
         const commissionFeeAfRu = getCommission(transferData.amount || 0, 'africa-russia');
         const totalAfRuToPay = (transferData.amount || 0) + commissionFeeAfRu;
         const convertedAmountAfRu = (transferData.amount || 0) * rateAfRu;
-        const requiresKYCAfRu = (transferData.amount || 0) >= 50000 && !isKycExpert;
+        const requiresKYCAfRu = (transferData.amount || 0) >= 20000 && !isKycExpert;
         const isAmountValidAfRu = (transferData.amount || 0) > 0 && !requiresKYCAfRu;
         const bonusPointsAfRu = Math.floor((transferData.amount || 0) / 6.55);
 
@@ -1026,7 +1089,7 @@ export const TransferWizardPage: React.FC = () => {
         );
       case 5: // Montant
         const commissionFeeRuRu = getCommission(transferData.amount || 0, 'russia-russia');
-        const requiresKYCRuRu = (transferData.amount || 0) >= 50000 && !isKycExpert;
+        const requiresKYCRuRu = (transferData.amount || 0) >= 20000 && !isKycExpert;
         const isAmountValidRuRu = (transferData.amount || 0) > 0 && !requiresKYCRuRu;
 
         return (
@@ -1044,7 +1107,7 @@ export const TransferWizardPage: React.FC = () => {
                   {requiresKYCRuRu && (
                      <div className="p-4 bg-red-50 text-red-700 rounded-2xl flex gap-3 text-sm font-semibold border border-red-200">
                        <Info size={20} className="shrink-0" />
-                       Pour les transferts de 50 000 RUB ou plus, une vérification d'identité (Niveau Expert) est requise. Veuillez compléter votre profil.
+                       Pour les transferts de 20 000 RUB ou plus, une vérification d'identité (Niveau Expert) est requise. Veuillez compléter votre profil.
                      </div>
                   )}
                 </div>

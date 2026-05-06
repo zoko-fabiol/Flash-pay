@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { addDoc, collection, onSnapshot, Timestamp } from 'firebase/firestore';
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Copy, Globe, MapPinned, Paperclip, Send, ShieldCheck, Smartphone, Upload, X } from 'lucide-react';
 import { useTransferWizard } from '../context/TransferWizardContext';
 import { Layout } from '../components/Layout';
-import { auth, db } from '../services/firebase';
+import { auth, db, calculateTransactionRecap } from '../services/firebase';
 
 type CountryRecord = {
   id: string;
@@ -102,6 +103,7 @@ const bankFallbacks = [
 const TransferJourneyPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentStep, transferData, updateTransferData, nextStep, previousStep, resetWizard } = useTransferWizard();
+  const { user } = useAuth();
 
   const [countries, setCountries] = useState<CountryRecord[]>([]);
   const [rates, setRates] = useState<RateRecord[]>([]);
@@ -111,6 +113,16 @@ const TransferJourneyPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdTransactionId, setCreatedTransactionId] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(20 * 60);
+
+  const sortedCountries = useMemo(
+    () => [...countries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
+    [countries]
+  );
+
+  const sortedBanks = useMemo(
+    () => [...banks].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
+    [banks]
+  );
 
   useEffect(() => {
     const unsubCountries = onSnapshot(collection(db, 'countries'), (snapshot) => {
@@ -147,12 +159,12 @@ const TransferJourneyPage: React.FC = () => {
     return () => window.clearInterval(timer);
   }, [currentStep]);
 
-  const destinationCountry = countries.find((country) => country.code === transferData.destinationCountry);
+  const destinationCountry = sortedCountries.find((country) => country.code === transferData.destinationCountry);
   const selectedRate = rates.find((rate) => rate.from === 'RUB' && rate.to === (destinationCountry?.currency || transferData.currency || 'XAF'))?.rate ?? 7.22;
   const receivedAmount = useMemo(() => (transferData.amount || 0) * selectedRate, [selectedRate, transferData.amount]);
 
-  const bankAccounts: BankAccountView[] = banks.length > 0
-    ? banks.slice(0, 2).map((bank, index) => ({
+  const bankAccounts: BankAccountView[] = sortedBanks.length > 0
+    ? sortedBanks.slice(0, 2).map((bank, index) => ({
         title: `Option ${index + 1}`,
         name: bank.name,
         number: bank.number,
@@ -189,9 +201,32 @@ const TransferJourneyPage: React.FC = () => {
 
     try {
       const proofUrl = await fileToBase64(proofFile);
+      
+      // Calculate transaction with exchange rate snapshot and fees
+      const calculation = await calculateTransactionRecap({
+        transferType: 'russia-africa',
+        amount: transferData.amount,
+        inputCurrency: 'RUB',
+        outputCurrency: destinationCountry?.currency || 'XAF',
+        recipientOperator: transferData.recipientOperator,
+        recipientName: transferData.recipientName,
+        recipientPhone: transferData.recipientPhone,
+        destinationCountry: transferData.destinationCountry,
+        narration: transferData.narration,
+      });
+
+      if (!calculation.isValid) {
+        toast.error(`Erreur de calcul: ${calculation.errors.join(', ')}`, { id: loadingToast });
+        return;
+      }
+
       const created = await addDoc(collection(db, 'transactions'), {
         userId: auth.currentUser?.uid || '',
-        transferType: transferData.transferType,
+        clientName: user?.nom || '',
+        clientPhone: user?.tel || '',
+        clientEmail: user?.email || auth.currentUser?.email || '',
+        transferType: 'russia-africa',
+        type: 'russia-africa',
         recipientName: transferData.recipientName,
         recipientPhone: transferData.recipientPhone || '',
         recipientOperator: transferData.recipientOperator || 'Orange Money',
@@ -199,14 +234,21 @@ const TransferJourneyPage: React.FC = () => {
         amount: transferData.amount,
         currency: 'RUB',
         destinationCurrency: destinationCountry?.currency || 'XAF',
-        exchangeRate: selectedRate,
-        fee: 0,
+        // Store calculation snapshots
+        exchangeRate: calculation.exchangeRate,
+        exchangeRateTimestamp: calculation.exchangeRateTimestamp,
+        fee: calculation.commissionAmount,
+        commissionPercentage: calculation.commissionPercentage,
+        receivedAmount: calculation.receivedAmount,
         points: Math.round(transferData.amount || 0),
         narration: transferData.narration || '',
         proofUrl,
         status: 'pending',
         route: 'russia-africa',
         country: destinationCountry?.name || 'Afrique',
+        fromCountry: 'RU',
+        toCountry: transferData.destinationCountry || '',
+        operator: transferData.recipientOperator || '',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         statusHistory: [

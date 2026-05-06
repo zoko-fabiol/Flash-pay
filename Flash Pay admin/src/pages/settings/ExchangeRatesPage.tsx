@@ -79,6 +79,11 @@ const ExchangeRatesPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newCustomRate, setNewCustomRate] = useState({ from: '', to: '', rate: '' });
 
+  // Daily limit state
+  const [dailyLimit, setDailyLimit] = useState<number>(150000);
+  const [editingLimit, setEditingLimit] = useState<string>('150000');
+  const [isSavingLimit, setIsSavingLimit] = useState(false);
+
   useEffect(() => {
     const q = query(collection(db, 'exchange_rates'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -94,9 +99,21 @@ const ExchangeRatesPage: React.FC = () => {
       setCustomRates(snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })));
     });
 
+    // Load daily limit
+    const qSettings = query(collection(db, 'settings'));
+    const unsubSettings = onSnapshot(qSettings, (snapshot) => {
+      if (!snapshot.empty) {
+        const settingsDoc = snapshot.docs[0].data();
+        const limit = settingsDoc.dailyLimitRUB || 150000;
+        setDailyLimit(limit);
+        setEditingLimit(limit.toString());
+      }
+    });
+
     return () => {
       unsubscribe();
       unsubCustom();
+      unsubSettings();
     };
   }, []);
 
@@ -118,6 +135,25 @@ const ExchangeRatesPage: React.FC = () => {
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveDailyLimit = async () => {
+    const newLimit = parseInt(editingLimit);
+    if (isNaN(newLimit) || newLimit <= 0) {
+      toast.error('Limite invalide');
+      return;
+    }
+    setIsSavingLimit(true);
+    try {
+      await adminService.updateDailyLimit(newLimit);
+      setDailyLimit(newLimit);
+      toast.success('Limite journalière mise à jour');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setIsSavingLimit(false);
     }
   };
 
@@ -173,7 +209,8 @@ const ExchangeRatesPage: React.FC = () => {
                  <div className="relative">
                    <input 
                     type="number" 
-                    defaultValue={150000}
+                    value={editingLimit}
+                    onChange={(e) => setEditingLimit(e.target.value)}
                     className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-rose-500/50 outline-none"
                    />
                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-bold">RUB</span>
@@ -181,8 +218,22 @@ const ExchangeRatesPage: React.FC = () => {
                </div>
             </div>
           </div>
-          <button className="mt-6 w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 font-bold rounded-xl border border-rose-500/30 transition-all text-xs">
-            Mettre à jour la limite
+          <button 
+            onClick={handleSaveDailyLimit}
+            disabled={isSavingLimit}
+            className="mt-6 w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-rose-500 font-bold rounded-xl border border-rose-500/30 transition-all text-xs flex items-center justify-center gap-2"
+          >
+            {isSavingLimit ? (
+              <>
+                <RefreshCcw size={14} className="animate-spin" />
+                Mise à jour...
+              </>
+            ) : (
+              <>
+                <Save size={14} />
+                Mettre à jour la limite
+              </>
+            )}
           </button>
         </div>
       </div>

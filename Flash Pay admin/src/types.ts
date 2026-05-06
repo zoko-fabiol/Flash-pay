@@ -35,6 +35,9 @@ export interface ProblemFlag {
 export interface Transaction {
   id: string;
   userId: string;
+  clientName?: string;
+  clientPhone?: string;
+  clientEmail?: string;
   type: 'russia-africa' | 'africa-russia' | 'russia-russia';
   status: TransactionStatus;
   amount: number;
@@ -45,8 +48,24 @@ export interface Transaction {
   proofUrl: string;
   createdAt: Timestamp;
   statusHistory: StatusHistoryItem[];
+  originCountry?: string;
+  destinationCountry?: string;
+  destinationCurrency?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  recipientOperator?: string;
+  narration?: string;
+  route?: string;
+  country?: string;
   adminNotes?: string;
   problemFlags?: ProblemFlag[];
+  // Transaction calculation fields (snapshots at transaction time)
+  exchangeRate?: number;
+  exchangeRateTimestamp?: Timestamp;
+  fee?: number;
+  commissionPercentage?: number;
+  receivedAmount?: number;
+  points?: number;
 }
 
 export interface ExchangeRate {
@@ -137,6 +156,7 @@ export interface RussianBank {
   type: 'phone' | 'card_account';
   number: string;
   details?: string;
+  logo?: string;
   active: boolean;
 }
 
@@ -150,4 +170,20 @@ export interface ProblemReport {
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
   adminNotes?: string;
+}
+
+// Transaction calculation recap for admin display
+export interface TransactionRecap {
+  originalAmount: number;
+  inputCurrency: string;
+  outputCurrency: string;
+  exchangeRate: number;
+  exchangeRateTimestamp: Timestamp;
+  commissionPercentage: number;
+  commissionAmount: number;
+  amountAfterCommission: number;
+  receivedAmount: number;
+  route: 'russia-russia' | 'russia-africa' | 'africa-russia';
+  isValid: boolean;
+  errors?: string[];
 }

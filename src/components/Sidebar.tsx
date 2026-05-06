@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Send, History, Lock, Share2, User, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Send, History, Lock, Share2, User, Settings, LogOut, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface SidebarProps {
@@ -19,6 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     { path: '/kyc', label: 'Mon Profil (KYC)', icon: Lock },
     { path: '/referral', label: 'Parrainage', icon: Share2 },
     { path: '/profile', label: 'Mon Compte', icon: User },
+    { path: '/preferences', label: 'Préférences', icon: Settings },
   ];
 
   const isActive = (path: string) => location.pathname === path;

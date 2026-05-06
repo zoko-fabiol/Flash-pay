@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -16,3 +16,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+void enableMultiTabIndexedDbPersistence(db).catch((error: any) => {
+  if (error?.code === 'failed-precondition' || error?.code === 'unimplemented') {
+    console.info('Firestore local cache is unavailable in this browser context.');
+    return;
+  }
+
+  console.warn('Unable to enable Firestore local cache persistence.', error);
+});

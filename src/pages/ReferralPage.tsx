@@ -72,7 +72,7 @@ export const ReferralPage: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl p-6 border border-slate-200">
             <h3 className="text-sm font-semibold text-slate-600 mb-2">Bonus Total</h3>
-            <p className="text-3xl font-bold text-green-600">{totalBonus} XAF</p>
+            <p className="text-3xl font-bold text-green-600">{totalBonus} RUB</p>
           </div>
           <div className="bg-white rounded-xl p-6 border border-slate-200">
             <h3 className="text-sm font-semibold text-slate-600 mb-2">En attente / validés</h3>
@@ -80,7 +80,7 @@ export const ReferralPage: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl p-6 border border-slate-200 md:col-span-3">
             <h3 className="text-sm font-semibold text-slate-600 mb-2">Commission par Inscription</h3>
-            <p className="text-3xl font-bold text-blue-600">500 XAF</p>
+            <p className="text-3xl font-bold text-blue-600">500 RUB</p>
           </div>
         </div>
 

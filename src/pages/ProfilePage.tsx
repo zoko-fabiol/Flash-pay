@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { userService } from '../services/firebase';
 import { Layout } from '../components/Layout';
-import { User as UserIcon, Mail, Phone, Calendar } from 'lucide-react';
+import { User as UserIcon, Mail, Phone, Calendar, ChevronRight } from 'lucide-react';
 import { Error, Success } from '../components/UI';
 import { SeedCountries } from '../components/SeedCountries';
 
 export const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -157,7 +159,7 @@ export const ProfilePage: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl p-6 border border-slate-200">
             <p className="text-sm font-semibold text-slate-600 mb-2">Bonus Disponible</p>
-            <p className="text-lg font-bold text-primary">{user?.solde_bonus} XAF</p>
+            <p className="text-lg font-bold text-primary">{user?.solde_bonus} RUB</p>
           </div>
         </div>
 
@@ -165,41 +167,14 @@ export const ProfilePage: React.FC = () => {
         {/* Preferences */}
         <div className="bg-white rounded-xl p-6 border border-slate-200">
           <h3 className="font-bold text-lg mb-4">Préférences</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <p className="font-semibold text-slate-900">Langue de l'interface</p>
-                <p className="text-sm text-slate-500">Choisissez votre langue préférée</p>
-              </div>
-              <select className="px-4 py-2 bg-white border border-slate-300 rounded-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50">
-                <option value="fr">Français</option>
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-              </select>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <p className="font-semibold text-slate-900">Notifications Push & Pop-ups</p>
-                <p className="text-sm text-slate-500">Recevoir des alertes sur votre appareil</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <p className="font-semibold text-slate-900">Emails promotionnels</p>
-                <p className="text-sm text-slate-500">Recevoir nos offres par mail</p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
-            </div>
-          </div>
+          <p className="text-slate-600 text-sm mb-4">Personnalisez votre expérience utilisateur avec la langue, les notifications et les emails promotionnels.</p>
+          <button
+            onClick={() => navigate('/preferences')}
+            className="w-full px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-semibold border border-slate-200 flex items-center justify-between"
+          >
+            <span>Gérer les préférences</span>
+            <ChevronRight size={20} />
+          </button>
         </div>
 
         {/* Security */}

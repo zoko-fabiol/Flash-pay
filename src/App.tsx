@@ -15,6 +15,7 @@ import { TransactionsPage } from './pages/TransactionsPage';
 import { KYCPage } from './pages/KYCPage';
 import { ReferralPage } from './pages/ReferralPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PreferencesPage } from './pages/PreferencesPage';
 import { ExportsPage } from './pages/ExportsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { Security2FAPage } from './pages/Security2FAPage';
@@ -114,6 +115,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/preferences"
+        element={
+          <ProtectedRoute>
+            <PreferencesPage />
           </ProtectedRoute>
         }
       />

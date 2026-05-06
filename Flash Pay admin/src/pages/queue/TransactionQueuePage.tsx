@@ -67,7 +67,10 @@ const TransactionQueuePage: React.FC = () => {
 
   const filteredTransactions = transactions.filter(tx => {
     const matchesSearch = tx.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         tx.userId.toLowerCase().includes(searchTerm.toLowerCase());
+                         tx.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tx.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tx.clientPhone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tx.clientEmail?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || tx.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -126,6 +129,8 @@ const TransactionQueuePage: React.FC = () => {
                 <th className="px-6 py-4 font-semibold">Client</th>
                 <th className="px-6 py-4 font-semibold">Type</th>
                 <th className="px-6 py-4 font-semibold">Montant</th>
+                <th className="px-6 py-4 font-semibold">Commission</th>
+                <th className="px-6 py-4 font-semibold">À Recevoir</th>
                 <th className="px-6 py-4 font-semibold">Statut</th>
                 <th className="px-6 py-4 font-semibold">Date</th>
                 <th className="px-6 py-4 font-semibold text-right">Actions</th>
@@ -134,7 +139,7 @@ const TransactionQueuePage: React.FC = () => {
             <tbody className="divide-y divide-border-dark">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center">
+                  <td colSpan={9} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-slate-500 text-sm">Chargement des transactions...</span>
@@ -143,7 +148,7 @@ const TransactionQueuePage: React.FC = () => {
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-20 text-center">
+                  <td colSpan={9} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-3 text-slate-500">
                       <Search size={48} strokeWidth={1} />
                       <span>Aucune transaction trouvée</span>
@@ -160,7 +165,10 @@ const TransactionQueuePage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-slate-300 text-sm">{tx.userId.substring(0, 12)}...</span>
+                      <div className="flex flex-col">
+                        <span className="text-slate-200 text-sm font-semibold">{tx.clientName || 'Client inconnu'}</span>
+                        <span className="text-slate-500 text-[10px]">{tx.clientPhone || tx.clientEmail || `${tx.userId.substring(0, 12)}...`}</span>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2 text-slate-400">
@@ -170,6 +178,20 @@ const TransactionQueuePage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-white font-bold">{tx.amount.toLocaleString()} {tx.currency}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {tx.fee !== undefined && tx.commissionPercentage !== undefined ? (
+                        <span className="text-amber-400 text-sm font-semibold">{tx.fee.toLocaleString()} {tx.currency} ({tx.commissionPercentage}%)</span>
+                      ) : (
+                        <span className="text-slate-500 text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      {tx.receivedAmount !== undefined && tx.destinationCurrency ? (
+                        <span className="text-emerald-400 font-bold">{tx.receivedAmount.toLocaleString(undefined, {maximumFractionDigits: 2})} {tx.destinationCurrency}</span>
+                      ) : (
+                        <span className="text-slate-500 text-xs">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={tx.status} />

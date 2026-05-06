@@ -54,7 +54,7 @@ const initialTransferData: TransferData = {
   transferType: null,
   recipientName: '',
   amount: 0,
-  currency: 'XAF',
+  currency: 'RUB',
 };
 
 export const TransferWizardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

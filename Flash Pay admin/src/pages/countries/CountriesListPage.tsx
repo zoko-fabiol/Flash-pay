@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import {
   collection,
@@ -40,7 +40,29 @@ const CountriesListPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [tempOperators, setTempOperators] = useState<any[]>([]);
+  const [bankLogo, setBankLogo] = useState('');
   const [restrictionModal, setRestrictionModal] = useState<{ open: boolean; country: any }>({ open: false, country: null });
+
+  const sortedCountries = useMemo(
+    () => [...countries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
+    [countries]
+  );
+
+  const sortedBanks = useMemo(
+    () => [...banks].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
+    [banks]
+  );
+
+  const sortedOperators = useMemo(
+    () =>
+      countries
+        .flatMap((country) => country.operators.map((operator) => ({ ...operator, countryName: country.name, parentCountry: country })))
+        .sort((left, right) => {
+          const nameComparison = left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' });
+          return nameComparison !== 0 ? nameComparison : left.countryName.localeCompare(right.countryName, 'fr', { sensitivity: 'base' });
+        }),
+    [countries]
+  );
 
   useEffect(() => {
     const qCountries = query(collection(db, 'countries'));
@@ -62,6 +84,7 @@ const CountriesListPage: React.FC = () => {
   const handleEdit = (item: any) => {
     setEditingItem(item);
     setTempOperators(item.operators || []);
+    setBankLogo(item?.logo || '');
     setIsModalOpen(true);
   };
 
@@ -85,7 +108,7 @@ const CountriesListPage: React.FC = () => {
           <p className="text-slate-400 text-sm">Configuration des pays, opérateurs et comptes bancaires</p>
         </div>
         <button
-          onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
+          onClick={() => { setEditingItem(null); setTempOperators([]); setBankLogo(''); setIsModalOpen(true); }}
           className="bg-brand hover:bg-brand-dark text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-brand/20 transition-all"
         >
           <Plus size={20} /> Ajouter un élément
@@ -115,7 +138,7 @@ const CountriesListPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {activeTab === 'countries' && countries.map(country => (
+        {activeTab === 'countries' && sortedCountries.map(country => (
           <div key={country.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl group hover:border-brand/30 transition-all shadow-lg">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
@@ -190,7 +213,7 @@ const CountriesListPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-slate-800/50">
-                {countries.flatMap(c => c.operators.map(op => ({ ...op, countryName: c.name, parentCountry: c }))).map((op, idx) => (
+                {sortedOperators.map((op, idx) => (
                   <tr key={idx} className="hover:bg-slate-800/20 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
@@ -223,12 +246,16 @@ const CountriesListPage: React.FC = () => {
           </div>
         )}
 
-        {activeTab === 'banks' && banks.map(bank => (
+        {activeTab === 'banks' && sortedBanks.map(bank => (
           <div key={bank.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl group hover:border-brand/30 transition-all">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 border border-slate-700">
-                  <Landmark size={24} />
+                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 border border-slate-700 overflow-hidden shrink-0">
+                  {bank.logo ? (
+                    <img src={bank.logo} alt={bank.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <Landmark size={24} />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-white font-bold">{bank.name}</h3>
@@ -306,6 +333,7 @@ const CountriesListPage: React.FC = () => {
                     number: formData.get('number'),
                     type: formData.get('type'),
                     details: formData.get('details'),
+                    logo: bankLogo || editingItem?.logo || '',
                     active: editingItem ? editingItem.active : true
                   });
                 }
@@ -472,6 +500,40 @@ const CountriesListPage: React.FC = () => {
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-500 uppercase">Détails Additionnels (Propriétaire, etc.)</label>
                       <textarea name="details" defaultValue={editingItem?.details} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand h-24" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-500 uppercase">Logo de la Banque</label>
+                      <div className="flex items-center gap-3 bg-slate-800/70 border border-slate-700 rounded-xl p-3">
+                        <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                          {bankLogo ? (
+                            <img src={bankLogo} alt="Logo banque" className="w-full h-full object-cover" />
+                          ) : (
+                            <Landmark size={20} className="text-slate-500" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              toast.dismiss();
+                              const t = toast.loading('Upload du logo...');
+                              try {
+                                const safeName = (editingItem?.name || 'bank').toString().replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                                const url = await adminService.uploadFile(`banks/${safeName}_${Date.now()}.jpg`, file);
+                                setBankLogo(url);
+                                toast.success('Logo téléchargé !', { id: t });
+                              } catch (err: any) {
+                                console.error(err);
+                                toast.error(`Échec: ${err.message || 'Erreur inconnue'}`, { id: t });
+                              }
+                            }}
+                            className="block w-full text-[10px] text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}

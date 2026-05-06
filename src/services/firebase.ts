@@ -25,6 +25,7 @@ import {
   type Firestore,
   Timestamp,
   increment,
+  enableMultiTabIndexedDbPersistence,
 } from 'firebase/firestore';
 import {
   getStorage,
@@ -48,6 +49,15 @@ const app = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
 export const storage = getStorage(app);
+
+void enableMultiTabIndexedDbPersistence(db).catch((error: any) => {
+  if (error?.code === 'failed-precondition' || error?.code === 'unimplemented') {
+    console.info('Firestore local cache is unavailable in this browser context.');
+    return;
+  }
+
+  console.warn('Unable to enable Firestore local cache persistence.', error);
+});
 
 // Auth Service
 export const authService = {
@@ -799,15 +809,192 @@ export const kycService = {
   },
 };
 
-// Transaction Service
+// ===== TRANSACTION CALCULATION & CREATION SERVICE =====
+// Handles exchange rate snapshots, commission calculations, and complete transaction validation
+
+export interface TransactionInput {
+  transferType: 'russia-russia' | 'russia-africa' | 'africa-russia';
+  amount: number;
+  inputCurrency: string;
+  outputCurrency: string;
+  recipientOperator?: string;
+  recipientName?: string;
+  recipientPhone?: string;
+  destinationCountry?: string;
+  narration?: string;
+}
+
+export interface TransactionCalculation {
+  exchangeRate: number;
+  exchangeRateTimestamp: Timestamp;
+  commissionPercentage: number;
+  commissionAmount: number;
+  amountAfterCommission: number;
+  receivedAmount: number;
+  isValid: boolean;
+  errors: string[];
+}
+
+// Default fallback rates if not found in Firestore
+const DEFAULT_RATES: { [key: string]: number } = {
+  'RUB-XAF': 7.22,
+  'XAF-RUB': 0.1385,
+  'RUB-RUB': 1.0,
+  'XAF-XAF': 1.0,
+  'EUR-XAF': 655.957,
+  'XAF-EUR': 0.001525,
+  'EUR-RUB': 90.8,
+  'RUB-EUR': 0.011011,
+};
+
+// Get current exchange rate from Firestore with fallback
+async function getExchangeRateSnapshot(fromCurrency: string, toCurrency: string): Promise<{ rate: number; timestamp: Timestamp }> {
+  // Same currency = no conversion
+  if (fromCurrency === toCurrency) {
+    return { rate: 1.0, timestamp: Timestamp.now() };
+  }
+
+  try {
+    const q = query(
+      collection(db, 'exchange_rates'),
+      where('from', '==', fromCurrency),
+      where('to', '==', toCurrency),
+      limit(1)
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const rateDoc = snapshot.docs[0].data();
+      return { 
+        rate: rateDoc.rate, 
+        timestamp: Timestamp.now() 
+      };
+    }
+
+    // Fallback to default rate if not found
+    const fallbackKey = `${fromCurrency}-${toCurrency}`;
+    const fallbackRate = DEFAULT_RATES[fallbackKey];
+    
+    if (fallbackRate) {
+      console.warn(`Exchange rate ${fromCurrency} → ${toCurrency} not in Firestore, using default: ${fallbackRate}`);
+      return { 
+        rate: fallbackRate, 
+        timestamp: Timestamp.now() 
+      };
+    }
+
+    throw new Error(`No exchange rate found for ${fromCurrency} → ${toCurrency}`);
+  } catch (error) {
+    throw new Error(`Failed to get exchange rate: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+// Get applicable commission for transfer type and amount
+async function getCommissionForAmount(
+  transferType: 'russia-russia' | 'russia-africa' | 'africa-russia',
+  amount: number,
+  currency: string
+): Promise<{ percentage: number; id: string }> {
+  try {
+    const q = query(
+      collection(db, 'commissions'),
+      where('transferType', '==', transferType),
+      where('currency', '==', currency)
+    );
+    const snapshot = await getDocs(q);
+
+    // Find commission rule that matches the amount range
+    for (const doc of snapshot.docs) {
+      const commission = doc.data();
+      if (amount >= commission.minAmount && amount <= commission.maxAmount) {
+        return { 
+          percentage: commission.percentage,
+          id: doc.id 
+        };
+      }
+    }
+
+    // If no exact match found, return default (0%)
+    return { percentage: 0, id: 'default' };
+  } catch (error) {
+    console.error('Failed to get commission:', error);
+    return { percentage: 0, id: 'default' };
+  }
+}
+
+// Calculate complete transaction with all snapshots
+export async function calculateTransactionRecap(transactionInput: TransactionInput): Promise<TransactionCalculation> {
+  const errors: string[] = [];
+  let isValid = true;
+
+  try {
+    // Get exchange rate snapshot
+    const { rate: exchangeRate, timestamp: exchangeRateTimestamp } = 
+      await getExchangeRateSnapshot(transactionInput.inputCurrency, transactionInput.outputCurrency);
+
+    // Get commission for amount
+    const { percentage: commissionPercentage } = 
+      await getCommissionForAmount(
+        transactionInput.transferType,
+        transactionInput.amount,
+        transactionInput.inputCurrency
+      );
+
+    // Calculate commission amount
+    const commissionAmount = (transactionInput.amount * commissionPercentage) / 100;
+    const amountAfterCommission = transactionInput.amount - commissionAmount;
+
+    // Calculate received amount after conversion
+    const receivedAmount = amountAfterCommission * exchangeRate;
+
+    // Validate calculation
+    if (exchangeRate <= 0) {
+      errors.push('Invalid exchange rate');
+      isValid = false;
+    }
+    if (amountAfterCommission <= 0) {
+      errors.push('Amount after commission must be positive');
+      isValid = false;
+    }
+    if (receivedAmount <= 0) {
+      errors.push('Received amount must be positive');
+      isValid = false;
+    }
+
+    return {
+      exchangeRate,
+      exchangeRateTimestamp,
+      commissionPercentage,
+      commissionAmount,
+      amountAfterCommission,
+      receivedAmount,
+      isValid,
+      errors,
+    };
+  } catch (error) {
+    errors.push(error instanceof Error ? error.message : 'Unknown calculation error');
+    return {
+      exchangeRate: 0,
+      exchangeRateTimestamp: Timestamp.now(),
+      commissionPercentage: 0,
+      commissionAmount: 0,
+      amountAfterCommission: 0,
+      receivedAmount: 0,
+      isValid: false,
+      errors,
+    };
+  }
+}
+
+// Transaction Service with calculation integration
 export const transactionService = {
   async createTransaction(userId: string, transactionData: any) {
     const docRef = await addDoc(collection(db, 'transactions'), {
       userId,
       ...transactionData,
       status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
     });
     return docRef.id;
   },
@@ -824,7 +1011,7 @@ export const transactionService = {
   async updateTransactionStatus(transactionId: string, status: string) {
     await updateDoc(doc(db, 'transactions', transactionId), {
       status,
-      updatedAt: new Date(),
+      updatedAt: Timestamp.now(),
     });
   },
 };

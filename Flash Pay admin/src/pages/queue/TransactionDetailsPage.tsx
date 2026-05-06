@@ -18,10 +18,17 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
+type ClientProfile = {
+  nom?: string;
+  tel?: string;
+  email?: string;
+};
+
 const TransactionDetailsPage: React.FC = () => {
   const { transactionId } = useParams();
   const navigate = useNavigate();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
+  const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [adminNote, setAdminNote] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -38,6 +45,23 @@ const TransactionDetailsPage: React.FC = () => {
 
     return () => unsubscribe();
   }, [transactionId]);
+
+  useEffect(() => {
+    if (!transaction?.userId) {
+      setClientProfile(null);
+      return;
+    }
+
+    const unsubscribeUser = onSnapshot(doc(db, 'users', transaction.userId), (userDoc) => {
+      if (userDoc.exists()) {
+        setClientProfile(userDoc.data() as ClientProfile);
+      } else {
+        setClientProfile(null);
+      }
+    });
+
+    return () => unsubscribeUser();
+  }, [transaction?.userId]);
 
   const handleStatusUpdate = async (status: any) => {
     if (!transaction) return;
@@ -67,21 +91,47 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.setTextColor(50, 50, 50);
       pdf.text(`Transaction ID: #${transaction.id}`, 20, 40);
       pdf.text(`Date: ${transaction.createdAt.toDate().toLocaleString()}`, 20, 50);
-      pdf.text(`Client ID: ${transaction.userId}`, 20, 60);
+      pdf.text(`Client: ${transaction.clientName || clientProfile?.nom || 'Client inconnu'}`, 20, 60);
+      pdf.text(`Client ID: ${transaction.userId}`, 20, 70);
       
       pdf.setFontSize(16);
-      pdf.text('Details du Transfert', 20, 80);
+      pdf.text('Details du Transfert', 20, 90);
       
       pdf.setFontSize(12);
-      pdf.text(`Type: ${transaction.type.toUpperCase()}`, 20, 95);
-      pdf.text(`Montant: ${transaction.amount.toLocaleString()} ${transaction.currency}`, 20, 105);
-      if (transaction.operator) pdf.text(`Operateur: ${transaction.operator}`, 20, 115);
-      if (transaction.recipientPhone) pdf.text(`Telephone: ${transaction.recipientPhone}`, 20, 125);
-      if (transaction.recipientName) pdf.text(`Nom: ${transaction.recipientName}`, 20, 135);
+      pdf.text(`Type: ${transaction.type.toUpperCase()}`, 20, 105);
+      pdf.text(`Montant Envoyé: ${transaction.amount.toLocaleString()} ${transaction.currency}`, 20, 115);
+      if (transaction.originCountry) pdf.text(`Origine: ${transaction.originCountry}`, 20, 125);
+      if (transaction.destinationCountry) pdf.text(`Destination: ${transaction.destinationCountry}`, 20, 135);
+      if (transaction.operator) pdf.text(`Operateur: ${transaction.operator}`, 20, 145);
+      if (transaction.recipientPhone) pdf.text(`Telephone: ${transaction.recipientPhone}`, 20, 155);
+      if (transaction.recipientName) pdf.text(`Nom: ${transaction.recipientName}`, 20, 165);
       
-      pdf.setFontSize(14);
+      // Add calculation details if available
+      let yPosition = 185;
+      if (transaction.exchangeRate !== undefined) {
+        pdf.setFontSize(16);
+        pdf.text('Details du Calcul', 20, yPosition);
+        yPosition += 15;
+        
+        pdf.setFontSize(12);
+        pdf.text(`Taux de Change: 1 ${transaction.currency} = ${transaction.exchangeRate.toFixed(2)} ${transaction.destinationCurrency}`, 20, yPosition);
+        yPosition += 10;
+        
+        if (transaction.commissionPercentage !== undefined && transaction.fee !== undefined) {
+          pdf.text(`Commission: ${transaction.commissionPercentage}% = ${transaction.fee.toLocaleString()} ${transaction.currency}`, 20, yPosition);
+          yPosition += 10;
+        }
+        
+        if (transaction.receivedAmount !== undefined) {
+          pdf.setTextColor(0, 150, 0);
+          pdf.setFontSize(14);
+          pdf.text(`Montant à Recevoir: ${transaction.receivedAmount.toLocaleString(undefined, {maximumFractionDigits: 2})} ${transaction.destinationCurrency}`, 20, yPosition);
+          yPosition += 15;
+        }
+      }
+      
       pdf.setTextColor(0, 150, 0);
-      pdf.text(`Statut: ${transaction.status.toUpperCase()}`, 20, 160);
+      pdf.text(`Statut: ${transaction.status.toUpperCase()}`, 20, yPosition + 15);
       
       pdf.save(`FlashPay_Recu_${transaction.id}.pdf`);
       toast.success('Reçu généré avec succès !', { id: t });
@@ -143,25 +193,183 @@ const TransactionDetailsPage: React.FC = () => {
                   <User size={16} /> Information Client
                 </h3>
                 <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                  <p className="text-white font-bold text-lg">ID: {transaction.userId}</p>
+                  <p className="text-white font-bold text-lg">{transaction.clientName || clientProfile?.nom || 'Client inconnu'}</p>
+                  <p className="text-slate-400 text-sm mt-1">ID: {transaction.userId}</p>
+                  {(transaction.clientPhone || clientProfile?.tel) && (
+                    <p className="text-slate-400 text-sm mt-1">Téléphone: {transaction.clientPhone || clientProfile?.tel}</p>
+                  )}
+                  {(transaction.clientEmail || clientProfile?.email) && (
+                    <p className="text-slate-400 text-sm mt-1">Email: {transaction.clientEmail || clientProfile?.email}</p>
+                  )}
                   <p className="text-slate-400 text-sm mt-1">Status KYC: <span className="text-emerald-500 font-medium">Approuvé</span></p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-                  <CreditCard size={16} /> Flux Financier
+                  <CreditCard size={16} /> Détails du Transfert
                 </h3>
-                <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                  <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">{transaction.type}</p>
-                  <p className="text-white font-bold text-2xl mt-1">{transaction.amount.toLocaleString()} {transaction.currency}</p>
-                  <p className="text-brand text-xs mt-1">Opérateur: {transaction.operator}</p>
+                <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50 space-y-2.5">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Type</p>
+                      <p className="text-white font-bold text-sm">{transaction.type}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Route</p>
+                      <p className="text-white font-bold text-sm">
+                        {transaction.fromCountry || 'N/A'} → {transaction.toCountry || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-slate-700/30 pt-2.5">
+                    <p className="text-slate-400 text-xs uppercase tracking-wider font-bold mb-1">Montant Envoyé</p>
+                    <p className="text-white font-bold text-lg">{transaction.amount.toLocaleString()} {transaction.currency}</p>
+                  </div>
+
+                  <div className="space-y-1.5 pt-2">
+                    <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Opérateur</p>
+                    <p className="text-slate-300 text-sm">{transaction.operator || 'Non spécifié'}</p>
+                  </div>
+
+                  {transaction.recipientOperator && (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Opérateur Destinataire</p>
+                      <p className="text-slate-300 text-sm">{transaction.recipientOperator}</p>
+                    </div>
+                  )}
+
+                  {transaction.recipientName && (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Bénéficiaire</p>
+                      <p className="text-slate-300 text-sm font-medium">{transaction.recipientName}</p>
+                    </div>
+                  )}
+
+                  {transaction.recipientPhone && (
+                    <div className="space-y-1.5 pt-1">
+                      <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Tél. Bénéficiaire</p>
+                      <p className="text-slate-300 text-sm font-mono">{transaction.recipientPhone}</p>
+                    </div>
+                  )}
+
+                  {transaction.narration && (
+                    <div className="space-y-1.5 pt-1 border-t border-slate-700/30">
+                      <p className="text-slate-400 text-xs uppercase tracking-wider font-bold">Note/Narration</p>
+                      <p className="text-slate-300 text-sm italic">{transaction.narration}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Proof of Transfer */}
+          {/* Transaction Calculation Recap */}
+          <div className="bg-card-dark border border-border-dark p-8 rounded-3xl">
+            <div className="flex justify-between items-start mb-8">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <ShieldCheck size={20} /> Résumé Complet de la Commande
+              </h3>
+              <span className="text-xs text-slate-400 px-2 py-1 bg-slate-800 rounded-full">
+                {transaction.status.toUpperCase()}
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {/* Transaction Meta */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">Transaction ID</p>
+                  <p className="text-slate-300 font-mono text-sm">{transaction.id.substring(0, 16)}...</p>
+                </div>
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">Date & Heure</p>
+                  <p className="text-slate-300 text-sm">{transaction.createdAt.toDate().toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Client & Destinataire */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">Expéditeur</p>
+                  <p className="text-slate-300 font-medium text-sm">{transaction.clientName || clientProfile?.nom || 'N/A'}</p>
+                  <p className="text-slate-500 text-xs mt-1">{transaction.clientPhone || clientProfile?.tel || 'N/A'}</p>
+                </div>
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">Bénéficiaire</p>
+                  <p className="text-slate-300 font-medium text-sm">{transaction.recipientName || 'N/A'}</p>
+                  <p className="text-slate-500 text-xs mt-1">{transaction.recipientPhone || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Route & Montants */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">De</p>
+                  <p className="text-slate-300 text-sm font-medium">{transaction.fromCountry || 'N/A'}</p>
+                </div>
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30 flex items-center justify-center">
+                  <p className="text-brand font-bold">→</p>
+                </div>
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">Vers</p>
+                  <p className="text-slate-300 text-sm font-medium">{transaction.toCountry || transaction.destinationCountry || 'N/A'}</p>
+                </div>
+              </div>
+
+              {/* Financial Details */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-blue-500/5 border border-blue-500/20 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Montant Envoyé:</span>
+                  <span className="text-white font-bold">{transaction.amount.toLocaleString()} {transaction.currency}</span>
+                </div>
+                {transaction.fee !== undefined && (
+                  <div className="flex justify-between items-center text-amber-400/80">
+                    <span className="text-sm">Commission ({transaction.commissionPercentage || 0}%):</span>
+                    <span className="font-bold">- {transaction.fee.toLocaleString()} {transaction.currency}</span>
+                  </div>
+                )}
+                {transaction.exchangeRate !== undefined && (
+                  <div className="flex justify-between items-center text-slate-300 text-sm">
+                    <span>Taux:</span>
+                    <span className="font-mono">1 {transaction.currency} = {transaction.exchangeRate.toFixed(2)} {transaction.destinationCurrency}</span>
+                  </div>
+                )}
+                {transaction.receivedAmount !== undefined && (
+                  <div className="flex justify-between items-center pt-2 border-t border-blue-500/20">
+                    <span className="text-emerald-400 font-bold">À Recevoir:</span>
+                    <span className="text-emerald-400 font-bold text-lg">{transaction.receivedAmount.toLocaleString(undefined, {maximumFractionDigits: 2})} {transaction.destinationCurrency}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Operateurs & Infos Supplémentaires */}
+              {(transaction.operator || transaction.recipientOperator) && (
+                <div className="grid grid-cols-2 gap-4">
+                  {transaction.operator && (
+                    <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                      <p className="text-slate-400 text-xs uppercase font-bold mb-1">Opérateur Expéditeur</p>
+                      <p className="text-slate-300 text-sm">{transaction.operator}</p>
+                    </div>
+                  )}
+                  {transaction.recipientOperator && (
+                    <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                      <p className="text-slate-400 text-xs uppercase font-bold mb-1">Opérateur Destinataire</p>
+                      <p className="text-slate-300 text-sm">{transaction.recipientOperator}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {transaction.narration && (
+                <div className="bg-slate-800/30 p-3 rounded-lg border border-slate-700/30">
+                  <p className="text-slate-400 text-xs uppercase font-bold mb-1">Note/Référence</p>
+                  <p className="text-slate-300 text-sm italic">{transaction.narration}</p>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="bg-card-dark border border-border-dark p-8 rounded-3xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
