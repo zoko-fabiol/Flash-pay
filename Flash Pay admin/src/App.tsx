@@ -42,10 +42,13 @@ function App() {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1e293b',
-            color: '#fff',
-            border: '1px solid #334155',
-            borderRadius: '16px',
+            background: '#FEF7FF',
+            color: '#1D1B20',
+            border: '1px solid #E7E0EB',
+            borderRadius: '24px',
+            fontSize: '12px',
+            fontWeight: '800',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.05)',
           },
         }}
       />

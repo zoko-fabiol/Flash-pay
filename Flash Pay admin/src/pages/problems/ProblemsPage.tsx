@@ -15,9 +15,10 @@ import {
   Clock, 
   CheckCircle2, 
   User, 
-  ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Activity
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ProblemsPage: React.FC = () => {
   const [problems, setProblems] = useState<ProblemReport[]>([]);
@@ -34,93 +35,116 @@ const ProblemsPage: React.FC = () => {
   }, []);
 
   const handleResolve = async (id: string) => {
+    const t = toast.loading('Mise à jour...');
     try {
       await updateDoc(doc(db, 'problem_reports', id), {
         status: 'resolved',
         resolvedAt: Timestamp.now()
       });
+      toast.success('Incident résolu', { id: t });
     } catch (err) {
       console.error(err);
-      alert('Erreur lors de la résolution.');
+      toast.error('Erreur lors de la résolution', { id: t });
     }
   };
 
   const filteredProblems = problems.filter(p => filter === 'all' || p.status === filter);
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Signalements de Problèmes</h2>
-          <p className="text-slate-400 text-sm">Gestion des anomalies et litiges signalés par le système ou les clients</p>
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#B3261E] text-white rounded-[16px] flex items-center justify-center shadow-lg"><AlertTriangle size={24} /></div>
+            Gestion des Incidents
+          </h2>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Suivi et résolution des litiges clients</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="flex bg-slate-800 rounded-xl p-1">
-            {['all', 'pending', 'resolved'].map((f) => (
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="flex bg-[#F3EDF7] p-1.5 rounded-full shadow-sm">
+            {[
+              { id: 'all', label: 'Tous' },
+              { id: 'pending', label: 'En attente' },
+              { id: 'resolved', label: 'Résolus' }
+            ].map((f) => (
               <button
-                key={f}
-                onClick={() => setFilter(f as any)}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f ? 'bg-brand text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`}
+                key={f.id}
+                onClick={() => setFilter(f.id as any)}
+                className={`
+                  px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all
+                  ${filter === f.id ? 'bg-[#6750A4] text-white shadow-md' : 'text-[#49454F] hover:bg-[#EADDFF] hover:text-[#21005D]'}
+                `}
               >
-                {f === 'all' ? 'Tous' : f === 'pending' ? 'En attente' : 'Résolus'}
+                {f.label}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="grid grid-cols-1 gap-6">
         {loading ? (
-          <div className="p-20 text-center text-slate-500">Chargement...</div>
+          <div className="py-32 flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-[#6750A4] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Scan des anomalies en cours...</p>
+          </div>
         ) : filteredProblems.length === 0 ? (
-          <div className="bg-card-dark border border-border-dark p-20 rounded-3xl text-center">
-            <CheckCircle2 className="mx-auto text-emerald-500/20 mb-4" size={64} strokeWidth={1} />
-            <p className="text-slate-500 text-lg">Bravo ! Aucun problème non résolu.</p>
+          <div className="m3-card-elevated p-24 text-center bg-[#F3EDF7]/30 border-2 border-dashed">
+            <div className="w-20 h-20 bg-white text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
+               <CheckCircle2 size={40} />
+            </div>
+            <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Système Impeccable</h3>
+            <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest mt-2 opacity-60">Aucun incident non résolu à signaler</p>
           </div>
         ) : (
           filteredProblems.map(problem => (
-            <div key={problem.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl hover:border-brand/30 transition-all group flex flex-col md:flex-row gap-6 items-start md:items-center">
-              <div className={`p-4 rounded-2xl shrink-0 ${
-                problem.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500 animate-pulse'
+            <div key={problem.id} className="m3-card-elevated group flex flex-col lg:flex-row gap-8 items-start lg:items-center relative overflow-hidden">
+              {problem.status === 'pending' && (
+                <div className="absolute top-0 left-0 w-1 h-full bg-[#B3261E]"></div>
+              )}
+              
+              <div className={`p-5 rounded-[24px] shrink-0 shadow-sm border ${
+                problem.status === 'resolved' ? 'bg-[#E8DEF8] text-[#1D192B] border-[#E7E0EB]' : 'bg-[#F9DEDC] text-[#B3261E] border-[#F9DEDC] animate-pulse'
               }`}>
-                <AlertTriangle size={24} />
+                <AlertTriangle size={32} />
               </div>
 
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-1">
-                  <h3 className="text-white font-bold text-lg">{problem.type.replace('_', ' ').toUpperCase()}</h3>
-                  <span className="text-slate-600 text-xs font-mono">#{problem.id.substring(0, 8)}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-[#1D1B20] font-black text-xl tracking-tight uppercase truncate">{(problem.type || 'Anomalie').replace('_', ' ')}</h3>
+                  <span className="text-[#6750A4] text-[9px] font-black tracking-widest bg-[#EADDFF] px-2.5 py-1 rounded-md">ID: {problem.id.substring(0, 10).toUpperCase()}</span>
                 </div>
-                <p className="text-slate-400 text-sm max-w-2xl line-clamp-2">{problem.description}</p>
+                <p className="text-[#49454F] text-sm font-medium leading-relaxed line-clamp-2">{problem.description}</p>
                 
-                <div className="flex flex-wrap gap-4 mt-4">
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                    <User size={14} /> <span>Client: {problem.userId.substring(0, 8)}...</span>
+                <div className="flex flex-wrap gap-6 mt-6">
+                  <div className="flex items-center gap-2 text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-60">
+                    <User size={14} className="text-[#6750A4]" /> Client: {problem.userId.substring(0, 8)}...
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                    <Clock size={14} /> <span>Signalé le {problem.createdAt.toDate().toLocaleDateString()}</span>
+                  <div className="flex items-center gap-2 text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-60">
+                    <Clock size={14} className="text-[#6750A4]" /> Signalé le {problem.createdAt.toDate().toLocaleDateString('fr-FR')}
                   </div>
-                  <div className="flex items-center gap-1.5 text-[11px] text-brand font-bold">
-                    <ExternalLink size={14} /> <span>Transaction: {problem.transactionId.substring(0, 8)}...</span>
+                  <div className="flex items-center gap-2 text-[9px] font-black text-[#6750A4] uppercase tracking-widest">
+                    <Activity size={14} /> Transaction: #{problem.transactionId.substring(0, 8)}...
                   </div>
                 </div>
               </div>
 
-              <div className="shrink-0 flex items-center gap-4 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
+              <div className="shrink-0 flex items-center gap-4 w-full lg:w-auto border-t lg:border-t-0 pt-6 lg:pt-0">
                 {problem.status === 'pending' ? (
                   <button 
                     onClick={() => handleResolve(problem.id)}
-                    className="flex-1 md:flex-none px-6 py-2.5 bg-brand text-white font-bold rounded-xl hover:bg-brand-dark transition-all text-sm"
+                    className="flex-1 lg:flex-none m3-btn-filled !py-3 !px-8 text-[10px] tracking-widest uppercase"
                   >
-                    Marquer Résolu
+                    Résoudre
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2 text-emerald-500 text-sm font-bold">
-                    <CheckCircle2 size={18} /> Résolu
+                  <div className="flex items-center gap-2 text-emerald-600 text-xs font-black uppercase tracking-widest bg-[#E8DEF8] px-5 py-3 rounded-full shadow-sm">
+                    <CheckCircle2 size={18} /> Incident Résolu
                   </div>
                 )}
-                <button className="p-2.5 bg-slate-800 text-slate-500 hover:text-white rounded-xl transition-all">
+                <button className="p-4 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#F3EDF7] rounded-full transition-all shadow-sm">
                   <ChevronRight size={20} />
                 </button>
               </div>

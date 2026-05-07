@@ -189,6 +189,14 @@ export interface ProblemReport {
   adminNotes?: string;
 }
 
+export interface Operator {
+  id: string;
+  name: string;
+  logo?: string;
+  prefixes?: string[];
+  active?: boolean;
+}
+
 // Transaction calculation recap for admin display
 export interface TransactionRecap {
   originalAmount: number;

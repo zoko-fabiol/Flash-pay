@@ -12,11 +12,11 @@ import toast from 'react-hot-toast';
 const statusOrder = ['pending', 'proof_received', 'confirmed', 'completed'] as const;
 
 const statusLabels: Record<string, string> = {
-  pending: 'Transfert initié',
+  pending: 'Vous avez initié le transfert',
   proof_received: 'Paiement en cours',
   confirmed: 'Paiement confirmé',
-  completed: 'Transfert effectué',
-  failed: 'Échec',
+  completed: 'Paiement effectué',
+  failed: 'Échec du transfert',
   flagged_problem: 'Problème signalé',
 };
 
@@ -221,84 +221,111 @@ export const TransactionDetailPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-3xl space-y-6">
-        <button onClick={() => navigate('/transactions')} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 group">
-          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Retour à l’historique
+      <div className="mx-auto max-w-3xl space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <button 
+          onClick={() => navigate('/transactions')} 
+          className="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-[#6236CC] hover:opacity-70 transition-all group px-2"
+        >
+          <div className="p-2 bg-[#6236CC]/10 rounded-full group-hover:-translate-x-1 transition-transform">
+            <ArrowLeft size={16} />
+          </div>
+          Retour à l’historique
         </button>
 
-        <div className="overflow-hidden rounded-[32px] border border-[#eadfff] bg-white shadow-[0_20px_60px_rgba(98,54,204,0.08)]">
-          {/* Header Section */}
-          <div className="bg-gradient-to-br from-[#6f3bd3] via-[#6236CC] to-[#4d259f] px-6 py-12 text-white sm:px-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md shadow-xl border border-white/20">
-              <Send size={28} />
+        <div className="overflow-hidden rounded-[40px] border border-[#eadfff] bg-white shadow-[0_30px_90px_-20px_rgba(98,54,204,0.12)] transition-all">
+          {/* Header Section with Glassmorphism Effect */}
+          <div className="bg-gradient-to-br from-[#7C4DFF] via-[#6236CC] to-[#4d259f] px-8 py-16 text-white text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-[80px] animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#7C4DFF]/20 rounded-full -ml-32 -mb-32 blur-[60px]"></div>
+            
+            <div className="relative z-10 space-y-6">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-white/10 backdrop-blur-xl shadow-2xl border border-white/20 scale-110">
+                <Send size={32} className="text-white drop-shadow-md" />
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 drop-shadow-sm">
+                  {transaction.isBulk ? 'Transfert Groupé' : (statusLabels[currentStatus] || 'Transaction')}
+                </p>
+                <h1 className="text-5xl font-black tracking-tighter sm:text-6xl drop-shadow-lg">
+                  {transaction.amount?.toLocaleString('fr-FR')} <span className="text-2xl font-bold opacity-60">{transaction.currency}</span>
+                </h1>
+                <p className="text-sm text-white/60 font-black tracking-widest uppercase">
+                  {transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}
+                </p>
+              </div>
             </div>
-            <p className="mt-6 text-center text-xs font-black uppercase tracking-[0.3em] text-white/60">{transaction.isBulk ? 'Transfert Groupé' : (statusLabels[currentStatus] || 'Transaction')}</p>
-            <h1 className="mt-3 text-center text-4xl font-black sm:text-5xl">{transaction.amount?.toLocaleString('fr-FR')} {transaction.currency}</h1>
-            <p className="mt-2 text-center text-white/60 font-bold">{transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}</p>
           </div>
 
-          <div className="space-y-8 p-6 sm:p-10">
+          <div className="space-y-12 p-8 sm:p-12 bg-[#FEF7FF]/30 backdrop-blur-3xl">
             
-            {/* BULK PROGRESS BANNER */}
+            {/* BULK PROGRESS BANNER - Modernized */}
             {transaction.isBulk && (
-              <div className="rounded-[28px] border-2 border-brand/10 bg-brand/5 p-6 space-y-4">
+              <div className="rounded-[36px] border-2 border-[#6236CC]/10 bg-white p-8 space-y-6 shadow-xl shadow-[#6236CC]/5 hover:shadow-2xl hover:shadow-[#6236CC]/10 transition-all duration-500">
                 <div className="flex justify-between items-end">
-                  <div>
-                    <h3 className="text-brand font-black text-lg">Progression de l'envoi</h3>
-                    <p className="text-slate-500 text-sm font-medium">{completedRecipients} sur {totalRecipients} bénéficiaires payés</p>
+                  <div className="space-y-1">
+                    <h3 className="text-[#6236CC] font-black text-xl tracking-tight">Progression de l'envoi</h3>
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{completedRecipients} sur {totalRecipients} bénéficiaires payés</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-brand">{Math.round(bulkProgress)}%</span>
+                    <span className="text-4xl font-black text-[#6236CC] tracking-tighter">{Math.round(bulkProgress)}%</span>
                   </div>
                 </div>
-                <div className="w-full h-3 bg-white rounded-full overflow-hidden border border-brand/5">
+                <div className="w-full h-5 bg-[#F3EDF7] rounded-full overflow-hidden p-1 shadow-inner">
                   <div 
-                    className="h-full bg-brand transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(98,54,204,0.3)]"
+                    className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#6236CC] rounded-full transition-all duration-1000 ease-out shadow-lg"
                     style={{ width: `${bulkProgress}%` }}
-                  />
+                  >
+                    <div className="w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[progress-bar-stripes_2s_linear_infinite]" />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* RECIPIENT(S) LIST */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <User size={16} /> {transaction.isBulk ? 'Liste des bénéficiaires' : 'Détails du bénéficiaire'}
+            {/* RECIPIENT(S) LIST - Premium Cards */}
+            <div className="space-y-6">
+              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 px-2">
+                <div className="w-1 h-4 bg-[#6236CC] rounded-full"></div>
+                {transaction.isBulk ? 'Liste des bénéficiaires' : 'Détails du bénéficiaire'}
               </h3>
               
               {!transaction.isBulk ? (
-                <div className="rounded-[24px] border border-[#eadfff] bg-[#faf7ff] p-5 flex items-center justify-between">
-                  <div>
-                    <p className="text-lg font-black text-slate-900">{transaction.recipientName || 'N/A'}</p>
-                    <p className="text-sm text-slate-500 font-medium">{transaction.recipientPhone || 'N/A'} • {transaction.recipientOperator || 'Orange Money'}</p>
+                <div className="rounded-[32px] border border-[#eadfff] bg-white p-8 flex items-center justify-between shadow-lg shadow-[#6236CC]/5 group hover:scale-[1.01] transition-all">
+                  <div className="space-y-2">
+                    <p className="text-2xl font-black text-slate-900 tracking-tight">{transaction.recipientName || 'N/A'}</p>
+                    <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-slate-400">{transaction.recipientPhone || 'N/A'}</span>
+                        <div className="w-1 h-1 bg-slate-200 rounded-full" />
+                        <span className="text-xs font-black text-[#6236CC] uppercase tracking-widest">{transaction.recipientOperator || 'Orange Money'}</span>
+                    </div>
                   </div>
-                  <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-wider ${statusTone[currentStatus] || statusTone.pending}`}>
+                  <div className={`rounded-2xl px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border ${statusTone[currentStatus] || statusTone.pending} border-current/10`}>
                     {statusLabels[currentStatus] || currentStatus}
-                  </span>
+                  </div>
                 </div>
               ) : (
-                <div className="grid gap-3">
+                <div className="grid gap-4">
                   {transaction.bulkRecipients?.map((rec: any) => (
-                    <div key={rec.id} className="rounded-[24px] border border-slate-100 bg-white p-5 flex items-center justify-between hover:border-brand/20 transition-colors group shadow-sm">
-                      <div>
-                        <p className="font-black text-slate-900">{rec.name}</p>
-                        <p className="text-xs text-slate-500 font-medium">{rec.phone} • {rec.operator}</p>
+                    <div key={rec.id} className="rounded-[32px] border border-slate-100 bg-white p-6 flex items-center justify-between hover:border-[#6236CC]/30 transition-all group shadow-sm hover:shadow-xl hover:shadow-[#6236CC]/5">
+                      <div className="space-y-1">
+                        <p className="font-black text-slate-900 text-lg tracking-tight">{rec.name}</p>
+                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{rec.phone} • {rec.operator}</p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right mr-2">
-                          <p className="text-sm font-black text-slate-900">{Math.floor(rec.amount * (transaction.exchangeRate || 1)).toLocaleString()} {transaction.destinationCurrency}</p>
-                          <span className={`text-[9px] font-black uppercase ${rec.status === 'completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                            {rec.status === 'completed' ? 'Reçu' : 'En attente'}
-                          </span>
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-xl font-black text-slate-900 tracking-tighter">{Math.floor(rec.amount * (transaction.exchangeRate || 1)).toLocaleString()} <span className="text-xs opacity-40">{transaction.destinationCurrency}</span></p>
+                          <div className={`text-[9px] font-black uppercase tracking-widest mt-1 flex items-center justify-end gap-1.5 ${rec.status === 'completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                             {rec.status === 'completed' && <CheckCircle2 size={10} />}
+                             {rec.status === 'completed' ? 'Effectué' : 'En attente'}
+                          </div>
                         </div>
                         {rec.status === 'completed' && (
                           <button 
                             onClick={() => handleReceiptDownload(rec)}
-                            className="p-3 bg-brand/10 text-brand rounded-2xl hover:bg-brand hover:text-white transition-all shadow-sm"
+                            className="p-4 bg-[#6236CC]/5 text-[#6236CC] rounded-[20px] hover:bg-[#6236CC] hover:text-white transition-all shadow-sm border border-[#6236CC]/10"
                             title="Télécharger le reçu A5"
                           >
-                            <Download size={18} />
+                            <Download size={20} />
                           </button>
                         )}
                       </div>
@@ -308,27 +335,31 @@ export const TransactionDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* GLOBAL STATUS TIMELINE (Only for Single or as General State for Bulk) */}
+            {/* GLOBAL STATUS TIMELINE - Premium Checkmark Design */}
             {!transaction.isBulk && (
-              <div className="rounded-[32px] border border-[#eadfff] bg-white p-6 sm:p-8 shadow-[0_10px_40px_rgba(98,54,204,0.06)]">
-                <div className="flex items-center gap-2 text-sm font-black text-brand mb-8">
-                  <Clock3 size={18} /> Chronologie du transfert
+              <div className="rounded-[40px] border border-[#eadfff] bg-white p-10 sm:p-12 shadow-xl shadow-[#6236CC]/5">
+                <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#6236CC] mb-12">
+                  <div className="p-2 bg-[#6236CC]/10 rounded-lg">
+                    <Clock3 size={18} />
+                  </div>
+                  Chronologie du transfert
                 </div>
-
-                <div className="space-y-6 relative">
-                  <div className="absolute left-5 top-2 bottom-2 w-px bg-slate-100" />
+                
+                <div className="space-y-12 relative ml-3">
+                  <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-[#f3edff]" />
                   {statusOrder.map((status, index) => {
                     const active = index <= stepIndex;
-                    const current = index === stepIndex;
 
                     return (
-                      <div key={status} className="flex gap-6 relative z-10">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border-2 transition-all duration-500 ${active ? 'border-brand bg-brand text-white shadow-lg shadow-brand/20 scale-110' : 'border-slate-100 bg-white text-slate-300'}`}>
-                          {active ? <CheckCircle2 size={18} /> : <Clock3 size={18} />}
+                      <div key={status} className="flex gap-10 relative z-10 group">
+                        <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-700 ${
+                            active ? 'bg-[#6236CC] text-white shadow-xl shadow-[#6236CC]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
+                        }`}>
+                          <CheckCircle2 size={18} strokeWidth={3} className={active ? 'animate-in zoom-in duration-500' : ''} />
                         </div>
-                        <div className="flex-1 pb-4">
-                          <p className={`font-black text-lg ${active ? 'text-slate-900' : 'text-slate-400'}`}>{statusLabels[status]}</p>
-                          <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                        <div className="flex-1 space-y-1">
+                          <p className={`font-black text-xl tracking-tight transition-colors duration-500 ${active ? 'text-slate-900' : 'text-slate-200'}`}>{statusLabels[status]}</p>
+                          <p className={`text-sm font-medium leading-relaxed transition-colors duration-500 ${active ? 'text-slate-500' : 'text-slate-100'}`}>
                             {status === 'pending' && 'La demande a été transmise à notre service.'}
                             {status === 'proof_received' && 'Nous avons bien reçu votre justificatif de paiement.'}
                             {status === 'confirmed' && 'Votre paiement est validé, les fonds sont en route.'}
@@ -342,29 +373,38 @@ export const TransactionDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* GLOBAL RECEIPT (For Single or Entire Bulk if needed) */}
+            {/* GLOBAL RECEIPT section - Premium Call to Action */}
             {currentStatus === 'completed' && !transaction.isBulk && (
-              <div className="rounded-[32px] border border-emerald-100 bg-emerald-50/30 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
-                    <FileText size={24} />
+              <div className="rounded-[40px] border-2 border-[#eadfff] bg-gradient-to-br from-white to-[#F3EDF7]/50 p-10 sm:p-12 shadow-2xl shadow-[#6236CC]/10 group hover:scale-[1.01] transition-all">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-10">
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-[#6236CC] shadow-xl border border-[#eadfff] group-hover:rotate-6 transition-transform">
+                      <FileText size={36} />
+                    </div>
+                    <div className="space-y-1">
+                      <h4 className="font-black text-slate-900 text-2xl tracking-tight">Reçu de transaction</h4>
+                      <p className="text-sm text-slate-500 font-bold uppercase tracking-widest opacity-60">Votre document officiel est prêt</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-black text-slate-900">Reçu de transaction</h4>
-                    <p className="text-sm text-slate-600 font-medium">Téléchargez votre reçu officiel pour cette opération.</p>
-                  </div>
+                  <button 
+                    onClick={() => handleReceiptDownload()}
+                    className="w-full sm:w-auto px-12 py-5 bg-[#6236CC] text-white font-black uppercase text-xs tracking-widest rounded-full shadow-2xl shadow-[#6236CC]/40 hover:translate-y-[-4px] active:scale-95 transition-all flex items-center justify-center gap-4 group"
+                  >
+                    <Download size={22} className="group-hover:animate-bounce" /> Télécharger
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleReceiptDownload()}
-                  className="w-full sm:w-auto px-8 py-4 bg-brand text-white font-black rounded-full shadow-xl shadow-brand/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
-                >
-                  <Download size={20} /> Télécharger
-                </button>
               </div>
             )}
           </div>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes progress-bar-stripes {
+          from { background-position: 1rem 0; }
+          to { background-position: 0 0; }
+        }
+      `}</style>
     </Layout>
   );
 };

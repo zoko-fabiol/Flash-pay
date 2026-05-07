@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { userService, db } from '../services/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
-import { Upload, AlertCircle, CheckCircle, Camera } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Camera, Shield, Globe } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { pickImageNative, isNativeApp } from '../utils/capacitorUtils';
@@ -46,8 +46,6 @@ export const KYCPage: React.FC = () => {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [addressProofFile, setAddressProofFile] = useState<File | null>(null);
   const [localProofFile, setLocalProofFile] = useState<File | null>(null);
-  const [departureRegion, setDepartureRegion] = useState<'russia' | 'africa'>('russia');
-
   const [dailyLimit, setDailyLimit] = useState(150000);
   const [standardLimit, setStandardLimit] = useState(20000);
   const [expertLimit, setExpertLimit] = useState(150000);
@@ -55,8 +53,7 @@ export const KYCPage: React.FC = () => {
   const [countries, setCountries] = useState<any[]>([]);
 
   useEffect(() => {
-    const qSettings = query(collection(db, 'settings'));
-    const unsubSettings = onSnapshot(qSettings, (snapshot) => {
+    const unsubSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
       if (!snapshot.empty) {
         const settingsDoc = snapshot.docs[0].data();
         if (settingsDoc.dailyLimitRUB) setDailyLimit(settingsDoc.dailyLimitRUB);
@@ -65,18 +62,14 @@ export const KYCPage: React.FC = () => {
       }
     });
 
-    const qRates = query(collection(db, 'exchange_rates'));
-    const unsubRates = onSnapshot(qRates, (snapshot) => {
+    const unsubRates = onSnapshot(collection(db, 'exchange_rates'), (snapshot) => {
       setRates(snapshot.docs.map(doc => doc.data()));
     });
 
-    // Charger les pays depuis Firestore
     const unsubCountries = onSnapshot(collection(db, 'countries'), (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Trier alphabétiquement par nom
       data.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
       setCountries(data);
-      // Définir le premier pays comme valeur par défaut seulement si le form n'a pas déjà une valeur
       if (data.length > 0 && !formData.countryOfDeparture) {
         setFormData(prev => ({ ...prev, countryOfDeparture: (data[0] as any).name }));
       }
@@ -89,11 +82,6 @@ export const KYCPage: React.FC = () => {
     };
   }, []);
 
-  // Détecter si c'est le corridor russe (code RU ou nom Russie)
-  const selectedCountry = countries.find((c: any) => c.name === formData.countryOfDeparture);
-  const needsLocalDocument = selectedCountry
-    ? (selectedCountry.code || '').toUpperCase() !== 'RU'
-    : (formData.countryOfDeparture.trim().toLowerCase() !== 'russie' && formData.countryOfDeparture.trim().toLowerCase() !== 'russia');
   const kycStatus = getKycStatus(user);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -151,8 +139,6 @@ export const KYCPage: React.FC = () => {
       });
 
       setSuccess(t('kyc_submitted'));
-      
-      // Reset form
       setFormData({
         firstName: '',
         lastName: '',
@@ -169,7 +155,6 @@ export const KYCPage: React.FC = () => {
       setSelfieFile(null);
       setAddressProofFile(null);
       setLocalProofFile(null);
-
     } catch (err: any) {
       setError(err.message || t('update_error'));
     } finally {
@@ -194,17 +179,13 @@ export const KYCPage: React.FC = () => {
       Blocked: <AlertCircle size={16} />,
     };
 
-    const badgeKey = getKycStatus(user) === 'blocked'
-      ? 'Blocked'
-      : (getKycStatus(user) === 'approved' ? 'Expert' :
-      getKycStatus(user) === 'pending' ? 'Pending' :
-      getKycStatus(user) === 'rejected' ? 'Rejected' :
-      'Standard');
+    const badgeKey = kycStatus === 'blocked' ? 'Blocked' : 
+                   (kycStatus === 'approved' ? 'Expert' :
+                    kycStatus === 'pending' ? 'Pending' :
+                    kycStatus === 'rejected' ? 'Rejected' : 'Standard');
 
     return (
-      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${
-        statusColors[badgeKey as keyof typeof statusColors] || statusColors.Standard
-      }`}>
+      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${statusColors[badgeKey as keyof typeof statusColors]}`}>
         {statusIcons[badgeKey as keyof typeof statusIcons]}
         {t(`kyc_${badgeKey.toLowerCase()}`)}
       </div>
@@ -213,38 +194,39 @@ export const KYCPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-5 pb-10 px-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{t('kyc_title')}</h1>
-          <p className="text-slate-500 font-medium">{t('kyc_desc')}</p>
+      <div className="max-w-2xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-2 px-2">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter sm:text-5xl">{t('kyc_title')}</h1>
+          <p className="text-slate-500 font-bold uppercase text-[11px] tracking-[0.2em] opacity-70">{t('kyc_desc')}</p>
         </div>
 
         {/* Current Status */}
-        <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
-          <h3 className="font-black text-slate-900 mb-4">{t('kyc_status')}</h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-700">{t('verification_level')}</span>
+        <div className="bg-white rounded-[40px] p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5 relative overflow-hidden group">
+          <div className="absolute -right-20 -top-20 w-48 h-48 bg-[#6236CC]/5 rounded-full blur-3xl group-hover:bg-[#6236CC]/10 transition-colors"></div>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 relative z-10">{t('kyc_status')}</h3>
+          <div className="space-y-8 relative z-10">
+            <div className="flex items-center justify-between pb-6 border-b border-slate-50">
+              <div className="space-y-1">
+                <span className="text-slate-900 font-black text-lg tracking-tight">{t('verification_level')}</span>
+              </div>
               {getStatusBadge()}
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-700">{t('daily_transfer_limit')}</span>
+              <div className="space-y-1">
+                <span className="text-slate-900 font-black text-lg tracking-tight">{t('daily_transfer_limit')}</span>
+              </div>
               <div className="text-right">
                 {(() => {
                   const isExpert = kycStatus === 'approved';
                   const activeLimit = isExpert ? expertLimit : standardLimit;
-                  if (kycStatus === 'blocked') return <p className="font-bold text-rose-600">{t('kyc_blocked')}</p>;
-                  if (kycStatus === 'pending') return <p className="font-bold text-amber-600">{t('kyc_pending')}</p>;
+                  if (kycStatus === 'blocked') return <p className="font-black text-rose-500">{t('kyc_blocked')}</p>;
+                  if (kycStatus === 'pending') return <p className="font-black text-amber-500">{t('kyc_pending')}</p>;
                   return (
-                    <>
-                      <p className={`font-black text-lg ${isExpert ? 'text-emerald-700' : 'text-slate-900'}`}>
-                        {activeLimit.toLocaleString('fr-FR')} RUB
-                        {isExpert && <span className="ml-1.5 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Expert</span>}
+                    <div className="space-y-1">
+                      <p className={`text-3xl font-black tracking-tighter ${isExpert ? 'text-[#6236CC]' : 'text-slate-900'}`}>
+                        {activeLimit.toLocaleString('fr-FR')} <span className="text-sm font-bold opacity-40">RUB</span>
                       </p>
-                      <p className="text-xs text-slate-500 font-medium">
-                        ≈ {(activeLimit * (rates.find(r => r.from === 'RUB' && r.to === 'XAF')?.rate || 7.22)).toLocaleString('fr-FR')} XAF
-                      </p>
-                    </>
+                    </div>
                   );
                 })()}
               </div>
@@ -255,307 +237,87 @@ export const KYCPage: React.FC = () => {
         {error && <Error message={error} onDismiss={() => setError('')} />}
         {success && <Success message={success} />}
 
-        {/* KYC Form */}
         {(kycStatus === 'not_started' || kycStatus === 'rejected') && (
-          <div className="bg-white rounded-[24px] p-6 border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h3 className="font-bold text-lg mb-6">{t('personal_details')}</h3>
-            {kycStatus === 'rejected' && (
-              <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
-                <p className="font-bold">{t('kyc_rejected')}</p>
-                <p className="text-sm">{t('kyc_desc')}</p>
+          <div className="bg-white rounded-[40px] p-10 border border-[#eadfff] shadow-2xl shadow-slate-900/5">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-12 h-12 bg-[#F3EDF7] rounded-2xl flex items-center justify-center text-[#6236CC] shadow-sm">
+                <Shield size={24} />
               </div>
-            )}
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('first_name')}
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  placeholder={t('first_name')}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('last_name')}
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  placeholder={t('last_name')}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
-              </div>
+              <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('personal_details')}</h3>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3">
-                {t('departure_country')}
-              </label>
-
-              {/* Step 1: Region selector — premium card style */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                {/* Russia */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDepartureRegion('russia');
-                    setFormData(prev => ({ ...prev, countryOfDeparture: 'Russie' }));
-                  }}
-                  className={`relative flex flex-col items-center justify-center gap-2 py-5 px-4 rounded-2xl border-2 transition-all duration-200 ${
-                    departureRegion === 'russia'
-                      ? 'border-[#6236CC] bg-gradient-to-b from-[#f7f3ff] to-white shadow-[0_4px_16px_rgba(98,54,204,0.15)]'
-                      : 'border-slate-200 bg-white hover:border-[#6236CC]/40 hover:shadow-sm'
-                  }`}
-                >
-                  {/* Active indicator dot */}
-                  {departureRegion === 'russia' && (
-                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#6236CC]" />
-                  )}
-                  {/* Russia icon */}
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-md overflow-hidden">
-                    <rect width="32" height="10.67" fill="#FFFFFF"/>
-                    <rect y="10.67" width="32" height="10.67" fill="#0039A6"/>
-                    <rect y="21.33" width="32" height="10.67" fill="#D52B1E"/>
-                  </svg>
-                  <span className={`text-sm font-black tracking-tight ${departureRegion === 'russia' ? 'text-[#6236CC]' : 'text-slate-600'}`}>
-                    {t('russia')}
-                  </span>
-                </button>
-
-                {/* Africa */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDepartureRegion('africa');
-                    if (countries.length > 0) {
-                      setFormData(prev => ({ ...prev, countryOfDeparture: countries[0].name }));
-                    }
-                  }}
-                  className={`relative flex flex-col items-center justify-center gap-2 py-5 px-4 rounded-2xl border-2 transition-all duration-200 ${
-                    departureRegion === 'africa'
-                      ? 'border-[#6236CC] bg-gradient-to-b from-[#f7f3ff] to-white shadow-[0_4px_16px_rgba(98,54,204,0.15)]'
-                      : 'border-slate-200 bg-white hover:border-[#6236CC]/40 hover:shadow-sm'
-                  }`}
-                >
-                  {departureRegion === 'africa' && (
-                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#6236CC]" />
-                  )}
-                  {/* Africa map icon */}
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="16" cy="16" r="16" fill="#F0F4FF"/>
-                    <path d="M16 6C12.5 6 9 8.5 9 13c0 2.5 1 4.5 1 6.5 0 1.5.5 3 2 4.5.5.5 1.5 1.5 2 2 .5.5 1 1 2 1s1.5-.5 2-1c.5-.5 1.5-1.5 2-2 1.5-1.5 2-3 2-4.5 0-2 1-4 1-6.5C23 8.5 19.5 6 16 6z" fill="#6236CC" opacity="0.7"/>
-                    <path d="M18 6.2c1 .5 2 1.2 2.5 2.3.5 1 .5 2-.5 2.5s-2 0-2.5-1-.5-2.5.5-3.8z" fill="#4A1FA0" opacity="0.5"/>
-                  </svg>
-                  <span className={`text-sm font-black tracking-tight ${departureRegion === 'africa' ? 'text-[#6236CC]' : 'text-slate-600'}`}>
-                    {t('africa') || 'Afrique'}
-                  </span>
-                </button>
+            <form onSubmit={handleSubmit} className="space-y-10">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('first_name')}</label>
+                  <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('last_name')}</label>
+                  <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('birth_date')}</label>
+                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('nationality')}</label>
+                  <input type="text" name="nationality" value={formData.nationality} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                </div>
               </div>
 
-              {/* Step 2: African countries dropdown */}
-              {departureRegion === 'africa' && (
-                <div className="relative">
-                  <select
-                    name="countryOfDeparture"
-                    value={formData.countryOfDeparture}
-                    onChange={handleInputChange}
-                    className="w-full appearance-none px-4 py-3.5 pr-10 border-2 border-[#6236CC]/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6236CC]/20 focus:border-[#6236CC] font-bold text-slate-900 bg-white transition cursor-pointer"
-                    required
-                  >
-                    {countries.length === 0 ? (
-                      <option value="">{t('loading')}</option>
-                    ) : (
-                      countries.map((country: any) => (
-                        <option key={country.id} value={country.name}>
-                          {country.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                  {/* Custom chevron */}
-                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M4 6L8 10L12 6" stroke="#6236CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('address')}</label>
+                <input type="text" name="address" value={formData.address} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('city')}</label>
+                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('postal_code')}</label>
+                  <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-slate-50">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-10 h-10 bg-[#F3EDF7] rounded-xl flex items-center justify-center text-[#6236CC]">
+                    <Globe size={20} />
+                  </div>
+                  <h4 className="text-lg font-black text-slate-900">{t('identity_document')}</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('document_type')}</label>
+                    <select name="idType" value={formData.idType} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900">
+                      <option value="Passport">Passport</option>
+                      <option value="ID Card">Carte d'Identité</option>
+                      <option value="Driver License">Permis de conduire</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('id_number')}</label>
+                    <input type="text" name="idNumber" value={formData.idNumber} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* DOB and Nationality */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('dob')}
-                </label>
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+                   <FileUpload label={t('id_proof')} file={documentFile} onChange={(e) => handleFileChange(e, setDocumentFile)} />
+                   <FileUpload label={t('selfie_with_id')} file={selfieFile} onChange={(e) => handleFileChange(e, setSelfieFile)} />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('nationality')}
-                </label>
-                <input
-                  type="text"
-                  name="nationality"
-                  value={formData.nationality}
-                  onChange={handleInputChange}
-                  placeholder={t('nationality_placeholder')}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
-              </div>
-            </div>
 
-            {/* Address */}
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                {t('address')}
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-                placeholder={t('address')}
-                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                required
-              />
-            </div>
-
-            {/* City and Postal */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('address_city')}
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleInputChange}
-                  placeholder={t('address_city')}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('postal_code')}
-                </label>
-                <input
-                  type="text"
-                  name="postalCode"
-                  value={formData.postalCode}
-                  onChange={handleInputChange}
-                  placeholder={t('postal_code')}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* ID Info */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('id_type')}
-                </label>
-                <select
-                  name="idType"
-                  value={formData.idType}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                >
-                  <option value="Passport">{t('passport')}</option>
-                  <option value="NationalId">{t('national_id')}</option>
-                  <option value="DrivingLicense">{t('driving_license')}</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  {t('id_number')}
-                </label>
-                <input
-                  type="text"
-                  name="idNumber"
-                  value={formData.idNumber}
-                  onChange={handleInputChange}
-                  placeholder="AB123456"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Document Upload */}
-            <div>
-              <h4 className="font-semibold text-slate-900 mb-4">{t('required_documents_corridor', { country: formData.countryOfDeparture })}</h4>
-              <div className="space-y-4">
-                <FileUpload
-                  label={t('id_card_photo')}
-                  file={documentFile}
-                  onChange={(e) => handleFileChange(e, setDocumentFile)}
-                  onFileChange={(f) => setDocumentFile(f)}
-                />
-                <FileUpload
-                  label={t('selfie_photo')}
-                  file={selfieFile}
-                  onChange={(e) => handleFileChange(e, setSelfieFile)}
-                  onFileChange={(f) => setSelfieFile(f)}
-                />
-                <FileUpload
-                  label={t('address_proof')}
-                  file={addressProofFile}
-                  onChange={(e) => handleFileChange(e, setAddressProofFile)}
-                  onFileChange={(f) => setAddressProofFile(f)}
-                />
-                {needsLocalDocument && (
-                  <>
-                    <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
-                      <span className="text-amber-500 text-lg shrink-0">⚠️</span>
-                      <div>
-                        <p className="font-bold text-amber-800 text-sm">{t('local_document_required')}</p>
-                        <p className="text-xs text-amber-700 mt-0.5">{t('local_document_desc')}</p>
-                      </div>
-                    </div>
-                    <FileUpload
-                      label={t('local_document')}
-                      file={localProofFile}
-                      onChange={(e) => handleFileChange(e, setLocalProofFile)}
-                      onFileChange={(f) => setLocalProofFile(f)}
-                    />
-                  </>
-                )}
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] disabled:opacity-50 text-white font-black py-4 rounded-2xl shadow-[0_8px_24px_rgba(98,54,204,0.25)] hover:shadow-[0_12px_32px_rgba(98,54,204,0.35)] transition active:scale-95 flex items-center justify-center gap-2"
-            >
-              {loading ? t('saving') : t('submit_kyc')}
-            </button>
-          </form>
+              <button type="submit" disabled={loading} className="w-full bg-[#6236CC] text-white font-black py-6 rounded-[32px] shadow-2xl hover:translate-y-[-4px] transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest mt-12">
+                {loading ? t('saving') : t('submit_kyc')}
+              </button>
+            </form>
           </div>
         )}
       </div>
@@ -567,115 +329,31 @@ interface FileUploadProps {
   label: string;
   file: File | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onFileChange?: (file: File) => void; // for native camera
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange, onFileChange }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange }) => {
   const { t } = useLanguage();
   const inputId = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const [loading, setLoading] = useState(false);
-
-  const handleNativePick = async () => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      const picked = await pickImageNative('PROMPT');
-      if (picked && onFileChange) onFileChange(picked);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const native = isNativeApp();
 
   return (
-    <div>
-      <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">{label}</label>
-      <div
-        className={`relative border-2 border-dashed rounded-2xl transition-all overflow-hidden ${
-          file
-            ? 'border-emerald-300 bg-emerald-50'
-            : 'border-slate-200 bg-white hover:border-[#6236CC]/50 hover:bg-[#f7f3ff]/30'
-        }`}
-      >
-        {/* Hidden input for web fallback */}
-        {!native && (
-          <input
-            type="file"
-            onChange={onChange}
-            accept="image/*"
-            className="hidden"
-            id={inputId}
-          />
-        )}
-
-        {/* Clickable area */}
-        {native ? (
-          <button
-            type="button"
-            onClick={handleNativePick}
-            disabled={loading}
-            className="cursor-pointer flex items-center gap-3 px-4 py-4 w-full text-left"
-          >
-            <FileUploadContent file={file} loading={loading} t={t} native />
-          </button>
+    <div className="space-y-4">
+      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{label}</p>
+      <label htmlFor={inputId} className={`relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${file ? 'border-emerald-500 bg-emerald-50/30' : 'border-[#eadfff] bg-[#F8F9FC] hover:border-[#6236CC]/50 hover:bg-[#F3EDF7]/20'}`}>
+        {file ? (
+          <div className="flex flex-col items-center p-4">
+            <CheckCircle className="text-emerald-500 mb-3" size={32} />
+            <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">{t('file_selected')}</p>
+            <p className="text-[10px] text-emerald-600 mt-1 opacity-60 truncate max-w-[150px]">{file.name}</p>
+          </div>
         ) : (
-          <label htmlFor={inputId} className="cursor-pointer flex items-center gap-3 px-4 py-4 w-full">
-            <FileUploadContent file={file} loading={loading} t={t} native={false} />
-          </label>
+          <div className="flex flex-col items-center p-4">
+            <Upload className="text-slate-300 mb-3" size={32} />
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('choose_file')}</p>
+          </div>
         )}
-      </div>
+        <input id={inputId} type="file" className="hidden" accept="image/*" onChange={onChange} />
+      </label>
     </div>
   );
 };
 
-// Inner content to avoid duplication
-const FileUploadContent: React.FC<{
-  file: File | null;
-  loading: boolean;
-  t: (key: string) => string;
-  native: boolean;
-}> = ({ file, loading, t, native }) => (
-  <>
-    {/* Icon */}
-    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-      file ? 'bg-emerald-100' : 'bg-slate-100'
-    }`}>
-      {loading ? (
-        <div className="w-4 h-4 border-2 border-[#6236CC] border-t-transparent rounded-full animate-spin" />
-      ) : file ? (
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M3.75 9.75L7.5 13.5L14.25 5.25" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      ) : native ? (
-        <Camera size={18} className="text-slate-400" />
-      ) : (
-        <Upload size={18} className="text-slate-400" />
-      )}
-    </div>
-
-    {/* Text */}
-    <div className="flex-1 min-w-0">
-      {file ? (
-        <>
-          <p className="text-sm font-bold text-emerald-700 truncate w-full">{file.name}</p>
-          <p className="text-xs text-emerald-500 mt-0.5">{(file.size / 1024).toFixed(0)} KB</p>
-        </>
-      ) : (
-        <>
-          <p className="text-sm font-bold text-slate-600">
-            {native ? t('take_photo') || 'Prendre une photo' : t('upload_click')}
-          </p>
-          <p className="text-xs text-slate-400 mt-0.5">{t('png_jpg_only')}</p>
-        </>
-      )}
-    </div>
-
-    {/* Status badge */}
-    {file && (
-      <span className="shrink-0 text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg uppercase tracking-wider">
-        ✓
-      </span>
-    )}
-  </>
-);

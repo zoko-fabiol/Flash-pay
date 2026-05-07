@@ -19,19 +19,10 @@ import {
   Upload,
   Settings2,
   Zap,
-  ArrowRightLeft
+  ArrowRightLeft,
+  X,
+  ChevronRight
 } from 'lucide-react';
-
-const Toggle = ({ enabled, onChange }: { enabled: boolean; onChange: (e: React.MouseEvent) => void }) => (
-  <button
-    onClick={(e) => { e.stopPropagation(); onChange(e); }}
-    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-all duration-300 focus:outline-none ${enabled ? 'bg-brand shadow-[0_0_15px_rgba(98,54,204,0.4)]' : 'bg-slate-700'}`}
-  >
-    <span
-      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all duration-300 shadow-md ${enabled ? 'translate-x-7' : 'translate-x-1'}`}
-    />
-  </button>
-);
 
 const CountriesListPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'countries' | 'operators' | 'banks'>('countries');
@@ -89,7 +80,7 @@ const CountriesListPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string, collectionName: string) => {
-    if (confirm('Voulez-vous vraiment supprimer cet élément ?')) {
+    if (window.confirm('Voulez-vous vraiment supprimer cet élément ?')) {
       try {
         await adminService.deleteDocument(collectionName, id);
         toast.success('Supprimé avec succès');
@@ -101,518 +92,424 @@ const CountriesListPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Gestion Réseau</h2>
-          <p className="text-slate-400 text-sm">Configuration des pays, opérateurs et comptes bancaires</p>
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight">Gestion du Réseau</h2>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Configurez les pays, opérateurs et comptes bancaires</p>
         </div>
         <button
           onClick={() => { setEditingItem(null); setTempOperators([]); setBankLogo(''); setIsModalOpen(true); }}
-          className="bg-brand hover:bg-brand-dark text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-brand/20 transition-all"
+          className="m3-btn-filled"
         >
           <Plus size={20} /> Ajouter un élément
         </button>
       </div>
 
-      <div className="flex gap-2 border-b border-border-dark pb-px">
+      {/* Tabs */}
+      <div className="flex bg-[#F3EDF7] p-1.5 rounded-full shadow-sm w-full lg:w-auto overflow-x-auto scrollbar-hide">
         {[
           { id: 'countries', label: 'Pays Africains', icon: Globe },
-          { id: 'operators', label: 'Opérateurs Télécom', icon: Smartphone },
+          { id: 'operators', label: 'Opérateurs', icon: Smartphone },
           { id: 'banks', label: 'Banques Russes', icon: Landmark }
         ].map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`
-              flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2
-              ${activeTab === tab.id
-                ? 'border-brand text-brand bg-brand/5'
-                : 'border-transparent text-slate-500 hover:text-slate-300'}
+              flex-1 lg:flex-none flex items-center gap-3 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap
+              ${activeTab === tab.id 
+                ? 'bg-[#6750A4] text-white shadow-lg shadow-[#6750A4]/20' 
+                : 'text-[#49454F] hover:bg-[#EADDFF] hover:text-[#21005D]'}
             `}
           >
-            <tab.icon size={18} />
+            <tab.icon size={16} />
             {tab.label}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {/* TAB: COUNTRIES */}
         {activeTab === 'countries' && sortedCountries.map(country => (
-          <div key={country.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl group hover:border-brand/30 transition-all shadow-lg">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-700/50 shadow-inner">
+          <div key={country.id} className="m3-card-elevated group relative overflow-hidden">
+            <div className="flex justify-between items-start mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-[#F3EDF7] rounded-[20px] flex items-center justify-center overflow-hidden border border-[#E7E0EB] shadow-inner group-hover:scale-105 transition-transform duration-500">
                   <img 
                     src={`https://flagcdn.com/${country.code.toLowerCase()}.svg`} 
                     alt={country.name}
                     className="w-full h-full object-cover scale-110"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://flagcdn.com/un.svg';
-                    }}
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://flagcdn.com/un.svg'; }}
                   />
                 </div>
                 <div>
-                  <h3 className="text-white font-bold">{country.name}</h3>
-                  <div className="flex items-center gap-2">
-                    <span className="text-brand text-[10px] font-bold">{(country as any).dialCode || '+???'}</span>
-                    <span className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">• {country.currency}</span>
+                  <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">{country.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[#6750A4] text-[10px] font-black uppercase tracking-widest bg-[#EADDFF] px-2 py-0.5 rounded-md">{(country as any).dialCode || '+???'}</span>
+                    <span className="text-[#49454F] text-[10px] font-bold uppercase tracking-widest">• {country.currency}</span>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button
-                  onClick={() => handleEdit(country)}
-                  className="p-2 text-slate-400 hover:text-brand hover:bg-brand/10 rounded-lg"
-                >
-                  <Edit3 size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(country.id, 'countries')}
-                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                >
-                  <Trash2 size={16} />
-                </button>
+              <div className="flex gap-2">
+                <button onClick={() => handleEdit(country)} className="p-2.5 bg-[#F3EDF7] text-[#6750A4] rounded-full hover:bg-[#EADDFF] transition-all"><Edit3 size={16} /></button>
+                <button onClick={() => handleDelete(country.id, 'countries')} className="p-2.5 bg-[#F9DEDC] text-[#B3261E] rounded-full hover:bg-[#B3261E] hover:text-white transition-all"><Trash2 size={16} /></button>
               </div>
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Opérateurs</span>
-                <span className="text-white font-medium">{country.operators.length} actifs</span>
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-[#49454F]">
+                <span>Opérateurs actifs</span>
+                <span className="text-[#1D1B20]">{country.operators.length}</span>
               </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Comptes dépôt</span>
-                <span className="text-white font-medium">{country.depositAccounts?.length || 0} configurés</span>
+              <div className="h-1.5 bg-[#F3EDF7] rounded-full overflow-hidden">
+                <div className="h-full bg-[#6750A4] rounded-full" style={{ width: `${Math.min(100, country.operators.length * 20)}%` }}></div>
               </div>
-              <div className="pt-4 mt-4 border-t border-slate-800/50 flex justify-between items-center">
-                <div className="flex flex-col gap-1">
-                   <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Statut Réseau</span>
-                   <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${country.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-slate-600'}`}></div>
-                      <span className={`text-[10px] font-bold ${country.enabled ? 'text-emerald-500' : 'text-slate-500'}`}>
-                        {country.enabled ? (
-                          (country as any).canSendToRussia === false ? 'RU ➔ AF UNIQUE' :
-                          (country as any).canReceiveFromRussia === false ? 'AF ➔ RU UNIQUE' : 'OPÉRATIONNEL'
-                        ) : 'DÉSACTIVÉ'}
-                      </span>
-                   </div>
-                </div>
-                <Toggle 
-                  enabled={country.enabled} 
-                  onChange={() => setRestrictionModal({ open: true, country })} 
-                />
+              <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-[#49454F]">
+                <span>Comptes dépôt</span>
+                <span className="text-[#1D1B20]">{country.depositAccounts?.length || 0}</span>
               </div>
+            </div>
+
+            <div className="pt-6 border-t border-[#E7E0EB] flex justify-between items-center">
+              <div>
+                 <p className="text-[9px] font-black text-[#6750A4] uppercase tracking-widest mb-1">Status Réseau</p>
+                 <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${country.enabled ? 'bg-emerald-500' : 'bg-[#CAC4D0]'}`}></div>
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${country.enabled ? 'text-emerald-600' : 'text-[#49454F]'}`}>
+                      {country.enabled ? 'Opérationnel' : 'Désactivé'}
+                    </span>
+                 </div>
+              </div>
+              <button onClick={() => setRestrictionModal({ open: true, country })} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-[0.2em] shadow-sm">
+                Configurer <ChevronRight size={14} />
+              </button>
             </div>
           </div>
         ))}
 
+        {/* TAB: OPERATORS (Table Style) */}
         {activeTab === 'operators' && (
-          <div className="col-span-full bg-card-dark border border-border-dark rounded-3xl overflow-hidden shadow-xl">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-800/50 text-slate-500 text-[10px] uppercase font-black tracking-[0.2em] border-b border-border-dark">
-                  <th className="px-6 py-4">Opérateur</th>
-                  <th className="px-6 py-4">Pays</th>
-                  <th className="px-6 py-4">Préfixes</th>
-                  <th className="px-6 py-4">Statut Dépôt</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm divide-y divide-slate-800/50">
-                {sortedOperators.map((op, idx) => (
-                  <tr key={idx} className="hover:bg-slate-800/20 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-slate-800 rounded-lg border border-slate-700 flex items-center justify-center text-[10px] font-bold text-brand">
-                          {op.name.charAt(0)}
-                        </div>
-                        <span className="text-white font-bold">{op.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-400 font-medium">{op.countryName}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-brand/70">{(op as any).prefixes?.join(', ') || 'Tous'}</td>
-                    <td className="px-6 py-4">
-                      <span className="flex items-center gap-1.5 text-emerald-400 text-[10px] font-bold">
-                        <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                        Opérationnel
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => { setActiveTab('countries'); handleEdit(op.parentCountry); }}
-                        className="text-slate-500 hover:text-white transition-colors"
-                      >
-                        <Edit3 size={14} />
-                      </button>
-                    </td>
+          <div className="col-span-full m3-card-elevated !p-0 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] uppercase font-black tracking-[0.2em]">
+                    <th className="px-8 py-5">Opérateur</th>
+                    <th className="px-8 py-5">Pays d'origine</th>
+                    <th className="px-8 py-5">Préfixes Autorisés</th>
+                    <th className="px-8 py-5">Statut Système</th>
+                    <th className="px-8 py-5 text-right">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#E7E0EB]">
+                  {sortedOperators.map((op, idx) => (
+                    <tr key={idx} className="hover:bg-[#F3EDF7]/30 transition-all group">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-[#EADDFF] text-[#21005D] rounded-xl flex items-center justify-center font-black text-xs shadow-sm">
+                            {op.logo ? <img src={op.logo} className="w-full h-full object-contain p-1" alt="logo" /> : op.name.charAt(0)}
+                          </div>
+                          <span className="text-[#1D1B20] font-black text-sm">{op.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                         <span className="text-[#49454F] font-bold text-xs uppercase tracking-wider">{op.countryName}</span>
+                      </td>
+                      <td className="px-8 py-5">
+                         <div className="flex flex-wrap gap-1.5">
+                           {(op as any).prefixes?.map((p: string, i: number) => (
+                             <span key={i} className="px-2 py-0.5 bg-[#F3EDF7] text-[#6750A4] rounded text-[9px] font-mono font-bold border border-[#E7E0EB]">{p}</span>
+                           )) || <span className="text-[#CAC4D0] italic text-[10px]">Tous</span>}
+                         </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-1.5">
+                           <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>
+                           <span className="text-emerald-600 text-[10px] font-black uppercase tracking-widest">Actif</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <button onClick={() => { setActiveTab('countries'); handleEdit(op.parentCountry); }} className="p-2.5 bg-[#F3EDF7] text-[#6750A4] rounded-xl hover:bg-[#EADDFF] transition-all opacity-0 group-hover:opacity-100"><Edit3 size={16} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
+        {/* TAB: BANKS */}
         {activeTab === 'banks' && sortedBanks.map(bank => (
-          <div key={bank.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl group hover:border-brand/30 transition-all">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 border border-slate-700 overflow-hidden shrink-0">
-                  {bank.logo ? (
-                    <img src={bank.logo} alt={bank.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <Landmark size={24} />
-                  )}
+          <div key={bank.id} className="m3-card-elevated group">
+            <div className="flex justify-between items-start mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-[#EADDFF] rounded-[20px] flex items-center justify-center text-[#21005D] border border-[#6750A4]/10 shadow-sm overflow-hidden">
+                  {bank.logo ? <img src={bank.logo} alt={bank.name} className="w-full h-full object-cover" /> : <Landmark size={28} />}
                 </div>
                 <div>
-                  <h3 className="text-white font-bold">{bank.name}</h3>
-                  <span className="text-slate-500 text-[10px] uppercase font-bold tracking-widest">
-                    {bank.type === 'phone' ? 'Virement Téléphone' : 'Carte/Compte'}
-                  </span>
+                  <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">{bank.name}</h3>
+                  <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest mt-1 opacity-60">
+                    {bank.type === 'phone' ? 'SBP / Mobile' : 'Compte Bancaire'}
+                  </p>
                 </div>
               </div>
-              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button
-                  onClick={() => handleEdit(bank)}
-                  className="p-2 text-slate-400 hover:text-brand hover:bg-brand/10 rounded-lg"
-                >
-                  <Edit3 size={16} />
-                </button>
-                <button
-                  onClick={() => handleDelete(bank.id, 'banks')}
-                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg"
-                >
-                  <Trash2 size={16} />
-                </button>
+              <div className="flex gap-2">
+                <button onClick={() => handleEdit(bank)} className="p-2.5 bg-[#F3EDF7] text-[#6750A4] rounded-full hover:bg-[#EADDFF] transition-all"><Edit3 size={16} /></button>
+                <button onClick={() => handleDelete(bank.id, 'banks')} className="p-2.5 bg-[#F9DEDC] text-[#B3261E] rounded-full hover:bg-[#B3261E] hover:text-white transition-all"><Trash2 size={16} /></button>
               </div>
             </div>
 
-            <div className="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50 mb-4">
-              <div className="flex items-center gap-2 text-brand text-sm font-mono font-bold">
-                <Phone size={14} /> {bank.number}
-              </div>
-              {bank.holder && <p className="text-slate-500 text-[10px] mt-1 italic">{bank.holder}</p>}
+            <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] mb-8 group/num relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-4 opacity-[0.05]"><Phone size={60} /></div>
+               <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Identifiant / Numéro</p>
+               <p className="text-[#1D1B20] font-mono font-black text-lg tracking-tight flex items-center gap-2">
+                 <Phone size={14} className="text-[#6750A4]" /> {bank.number}
+               </p>
+               {bank.holder && <p className="text-[10px] font-bold text-[#6750A4] mt-2 uppercase tracking-wide opacity-70 truncate">{bank.holder}</p>}
             </div>
 
-            <div className="pt-2">
-              <span className={`px-2 py-1 rounded-full text-[10px] font-bold ${bank.active ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-slate-800 text-slate-500 border border-slate-700'}`}>
-                {bank.active ? 'EN SERVICE' : 'HORS SERVICE'}
-              </span>
+            <div className="flex justify-between items-center">
+               <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                 bank.active ? 'bg-[#E8DEF8] text-[#1D192B] border border-[#EADDFF]' : 'bg-[#F3EDF7] text-[#49454F]'
+               }`}>
+                 {bank.active ? 'EN SERVICE' : 'HORS SERVICE'}
+               </span>
+               <div className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${bank.active ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                  <span className="text-[9px] font-black uppercase text-[#49454F] tracking-widest">{bank.active ? 'Connecté' : 'Offline'}</span>
+               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Management Modals */}
+      {/* MODAL: ADD/EDIT COUNTRY OR BANK */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-bg-dark/80 backdrop-blur-sm overflow-y-auto py-12">
-          <div className="bg-card-dark border border-border-dark w-full max-w-2xl rounded-3xl shadow-2xl animate-in fade-in zoom-in duration-300 my-auto">
-            <div className="p-6 border-b border-border-dark flex justify-between items-center bg-slate-800/30">
-              <h3 className="text-xl font-bold text-white">
-                {activeTab === 'countries' ? 'Configurer un Pays' : 'Ajouter une Banque Russe'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                <Plus size={24} className="rotate-45" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="relative bg-[#FEF7FF] w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
+            <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[16px] flex items-center justify-center shadow-sm">
+                  {activeTab === 'banks' ? <Landmark size={24} /> : <Globe size={24} />}
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight">
+                    {editingItem ? 'Modifier' : 'Ajouter'} {activeTab === 'banks' ? 'une Banque' : 'un Pays'}
+                  </h3>
+                  <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest opacity-60">Configuration réseau système</p>
+                </div>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
+                <X size={24} />
               </button>
             </div>
 
-            <div className="p-8">
-              <form className="space-y-6" onSubmit={async (e) => {
+            <div className="p-8 overflow-y-auto scrollbar-hide flex-1">
+              <form className="space-y-8" onSubmit={async (e) => {
                 e.preventDefault();
+                const t = toast.loading('Enregistrement...');
                 const formData = new FormData(e.currentTarget);
-                if (activeTab === 'countries') {
-                  const cleanedOperators = tempOperators.map(op => ({
-                    ...op,
-                    prefixes: op.prefixes?.filter((p: string) => p.trim() !== '') || []
-                  }));
-                  await adminService.saveCountry(editingItem?.id || null, {
-                    name: formData.get('name'),
-                    code: formData.get('code'),
-                    currency: formData.get('currency'),
-                    dialCode: formData.get('dialCode'),
-                    enabled: editingItem ? editingItem.enabled : true,
-                    operators: cleanedOperators,
-                    depositAccounts: editingItem ? editingItem.depositAccounts : []
-                  });
-                } else {
-                  await adminService.saveBank(editingItem?.id || null, {
-                    name: formData.get('name'),
-                    number: formData.get('number'),
-                    type: formData.get('type'),
-                    holder: formData.get('holder'),
-                    logo: bankLogo || editingItem?.logo || '',
-                    active: editingItem ? editingItem.active : true
-                  });
+                try {
+                  if (activeTab === 'countries') {
+                    const cleanedOperators = tempOperators.map(op => ({
+                      ...op,
+                      prefixes: op.prefixes?.filter((p: string) => p.trim() !== '') || []
+                    }));
+                    await adminService.saveCountry(editingItem?.id || null, {
+                      name: formData.get('name'),
+                      code: formData.get('code'),
+                      currency: formData.get('currency'),
+                      dialCode: formData.get('dialCode'),
+                      enabled: editingItem ? editingItem.enabled : true,
+                      operators: cleanedOperators,
+                      depositAccounts: editingItem ? editingItem.depositAccounts : []
+                    });
+                  } else {
+                    await adminService.saveBank(editingItem?.id || null, {
+                      name: formData.get('name'),
+                      number: formData.get('number'),
+                      type: formData.get('type'),
+                      holder: formData.get('holder'),
+                      logo: bankLogo || editingItem?.logo || '',
+                      active: editingItem ? editingItem.active : true
+                    });
+                  }
+                  toast.success('Modifications enregistrées', { id: t });
+                  setIsModalOpen(false);
+                } catch (err) {
+                  toast.error('Erreur lors de l\'enregistrement', { id: t });
                 }
-                setIsModalOpen(false);
               }}>
                 {activeTab === 'countries' ? (
                   <div className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Nom du Pays</label>
-                        <input name="name" required defaultValue={editingItem?.name} placeholder="Cameroun" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all" />
+                        <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Nom du Pays</label>
+                        <input name="name" required defaultValue={editingItem?.name} placeholder="Cameroun" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Code (ISO)</label>
-                        <input name="code" required defaultValue={editingItem?.code} placeholder="CM" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all" />
+                        <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Code ISO (CM, CI...)</label>
+                        <input name="code" required defaultValue={editingItem?.code} placeholder="CM" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Devise locale</label>
-                        <input name="currency" required defaultValue={editingItem?.currency} placeholder="XAF" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all" />
+                        <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Devise Locale</label>
+                        <input name="currency" required defaultValue={editingItem?.currency} placeholder="XAF" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Indicatif (+)</label>
-                        <input name="dialCode" required defaultValue={editingItem?.dialCode} placeholder="+237" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all" />
+                        <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Indicatif (+)</label>
+                        <input name="dialCode" required defaultValue={editingItem?.dialCode} placeholder="+237" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                       </div>
                     </div>
 
-                    {/* Operators Management inside Modal */}
-                    <div className="border-t border-slate-800 pt-6">
-                      <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                        <Smartphone size={16} className="text-brand" />
-                        Opérateurs & Détection automatique
-                      </h4>
-                      <div className="space-y-4 max-h-60 overflow-y-auto pr-2">
-                        {tempOperators.map((op: any, i: number) => (
-                          <div key={i} className="p-4 bg-slate-800/50 rounded-2xl border border-slate-700 relative group/op">
-                            <button
-                              type="button"
-                              onClick={() => setTempOperators(tempOperators.filter((_, idx) => idx !== i))}
-                              className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/op:opacity-100 transition-all shadow-lg"
-                            >
-                              <Plus size={14} className="rotate-45" />
+                    <div className="space-y-6 pt-4 border-t border-[#E7E0EB]">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-sm font-black text-[#1D1B20] uppercase tracking-widest flex items-center gap-2">
+                          <Smartphone size={16} className="text-[#6750A4]" /> Gestion des Opérateurs
+                        </h4>
+                        <button type="button" onClick={() => setTempOperators([...tempOperators, { name: '', prefixes: [], logo: '', id: Date.now().toString() }])} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">
+                          <Plus size={14} /> Ajouter un réseau
+                        </button>
+                      </div>
+                      <div className="space-y-4">
+                        {tempOperators.map((op, i) => (
+                          <div key={i} className="bg-[#F3EDF7] p-6 rounded-[28px] border border-[#E7E0EB] relative group/op">
+                            <button type="button" onClick={() => setTempOperators(tempOperators.filter((_, idx) => idx !== i))} className="absolute -top-2 -right-2 p-2 bg-[#F9DEDC] text-[#B3261E] rounded-full shadow-lg hover:scale-110 transition-all">
+                              <X size={14} />
                             </button>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold uppercase">Nom de l'opérateur</label>
-                                <input
-                                  value={op.name}
-                                  onChange={(e) => {
-                                    const newOps = [...tempOperators];
-                                    newOps[i].name = e.target.value;
-                                    setTempOperators(newOps);
-                                  }}
-                                  placeholder="Orange Money"
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold uppercase">Préfixes (655, 699...)</label>
-                                <input
-                                  value={op.prefixes?.join(', ')}
-                                  onChange={(e) => {
-                                    const newOps = [...tempOperators];
-                                    // Allow typing (trailing commas) by not filtering empty strings immediately
-                                    newOps[i].prefixes = e.target.value.split(',').map(p => p.trim());
-                                    setTempOperators(newOps);
-                                  }}
-                                  placeholder="655, 699"
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold uppercase">Numéro de Dépôt (Client)</label>
-                                <input
-                                  value={op.depositNumber || ''}
-                                  onChange={(e) => {
-                                    const newOps = [...tempOperators];
-                                    newOps[i].depositNumber = e.target.value;
-                                    setTempOperators(newOps);
-                                  }}
-                                  placeholder="6xx xx xx xx"
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-emerald-400 font-bold"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold uppercase">Nom du Titulaire</label>
-                                <input
-                                  value={op.depositHolder || ''}
-                                  onChange={(e) => {
-                                    const newOps = [...tempOperators];
-                                    newOps[i].depositHolder = e.target.value;
-                                    setTempOperators(newOps);
-                                  }}
-                                  placeholder="FLASH PAY SERVICES"
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white"
-                                />
-                              </div>
-                              <div className="col-span-full space-y-1">
-                                <label className="text-[10px] text-slate-500 font-bold uppercase">Logo de l'opérateur (Upload)</label>
-                                <div className="flex items-center gap-3 bg-slate-900 p-2 rounded-xl border border-slate-700">
-                                  {op.logo ? (
-                                    <img src={op.logo} className="w-10 h-10 rounded-lg object-contain bg-white border border-slate-600" alt="logo" />
-                                  ) : (
-                                    <div className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 border border-dashed border-slate-600">
-                                      <Upload size={14} />
-                                    </div>
-                                  )}
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={async (e) => {
-                                      const file = e.target.files?.[0];
-                                      if (file) {
-                                        toast.dismiss();
-                                        const t = toast.loading('Compression et envoi...');
-                                        try {
-                                          const safeName = (op.name || 'unnamed').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                                          const url = await adminService.uploadFile(`operators/${safeName}_${Date.now()}.jpg`, file);
-                                          const newOps = [...tempOperators];
-                                          newOps[i].logo = url;
-                                          setTempOperators(newOps);
-                                          toast.success('Logo téléchargé !', { id: t });
-                                        } catch (err: any) {
-                                          console.error('Erreur détaillée:', err);
-                                          toast.error(`Échec: ${err.message || 'Erreur inconnue'}`, { id: t });
-                                        }
-                                      }
-                                    }}
-                                    className="block w-full text-[10px] text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer"
-                                  />
-                                </div>
-                              </div>
+                               <input value={op.name} onChange={e => { const n = [...tempOperators]; n[i].name = e.target.value; setTempOperators(n); }} placeholder="Nom (ex: MTN Money)" className="bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-bold" />
+                               <input value={op.prefixes?.join(', ')} onChange={e => { const n = [...tempOperators]; n[i].prefixes = e.target.value.split(',').map(p => p.trim()); setTempOperators(n); }} placeholder="Préfixes (ex: 655, 677)" className="bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-mono" />
+                               <div className="col-span-full flex items-center gap-4 bg-white/50 p-3 rounded-2xl border border-dashed border-[#E7E0EB]">
+                                  <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-[#E7E0EB]">
+                                    {op.logo ? <img src={op.logo} className="w-full h-full object-contain p-1" /> : <Upload size={14} className="text-[#6750A4]/30" />}
+                                  </div>
+                                  <input type="file" accept="image/*" onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const u = toast.loading('Upload logo...');
+                                      try {
+                                        const url = await adminService.uploadFile(`operators/${op.id || Date.now()}.jpg`, file);
+                                        const n = [...tempOperators]; n[i].logo = url; setTempOperators(n);
+                                        toast.success('Logo mis à jour', { id: u });
+                                      } catch (err) { toast.error('Échec upload', { id: u }); }
+                                    }
+                                  }} className="flex-1 text-[10px] text-[#49454F] file:m3-btn-tonal file:!py-1.5 file:!px-3 file:mr-4 file:border-none" />
+                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setTempOperators([...tempOperators, { name: '', prefixes: [], logo: '' }])}
-                        className="mt-4 text-xs font-bold text-brand hover:text-brand-dark flex items-center gap-1 transition-all"
-                      >
-                        <Plus size={14} /> Ajouter un opérateur
-                      </button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Nom de la Banque</label>
-                      <input name="name" required defaultValue={editingItem?.name} placeholder="Sberbank" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand" />
+                      <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Nom de la Banque</label>
+                      <input name="name" required defaultValue={editingItem?.name} placeholder="Sberbank" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                     </div>
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Type</label>
-                        <select name="type" defaultValue={editingItem?.type || 'phone'} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand">
+                        <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Type de Compte</label>
+                        <select name="type" defaultValue={editingItem?.type || 'phone'} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all appearance-none">
                           <option value="phone">Virement SBP (Téléphone)</option>
-                          <option value="card">Numéro de Carte</option>
+                          <option value="card">Numéro de Carte / IBAN</option>
                         </select>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase">Numéro / ID</label>
-                        <input name="number" required defaultValue={editingItem?.number} placeholder="+7 900..." className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand" />
+                        <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Numéro / Identifiant</label>
+                        <input name="number" required defaultValue={editingItem?.number} placeholder="+7 900..." className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-mono font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">TITULAIRE DU COMPTE</label>
-                      <input name="holder" defaultValue={editingItem?.holder} placeholder="Ex: Claus Wan" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand" />
+                      <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Titulaire du Compte</label>
+                      <input name="holder" defaultValue={editingItem?.holder} placeholder="Nom du détenteur" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Logo de la Banque</label>
-                      <div className="flex items-center gap-3 bg-slate-800/70 border border-slate-700 rounded-xl p-3">
-                        <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
-                          {bankLogo ? (
-                            <img src={bankLogo} alt="Logo banque" className="w-full h-full object-cover" />
-                          ) : (
-                            <Landmark size={20} className="text-slate-500" />
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              toast.dismiss();
-                              const t = toast.loading('Upload du logo...');
+                      <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Logo Banque</label>
+                      <div className="flex items-center gap-4 bg-[#F3EDF7] p-5 rounded-[28px] border border-[#E7E0EB]">
+                         <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-inner border border-[#E7E0EB] overflow-hidden">
+                           {bankLogo ? <img src={bankLogo} className="w-full h-full object-cover" /> : <Landmark size={24} className="opacity-20" />}
+                         </div>
+                         <input type="file" accept="image/*" onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const u = toast.loading('Upload logo...');
                               try {
-                                const safeName = (editingItem?.name || 'bank').toString().replace(/[^a-z0-9]/gi, '_').toLowerCase();
-                                const url = await adminService.uploadFile(`banks/${safeName}_${Date.now()}.jpg`, file);
-                                setBankLogo(url);
-                                toast.success('Logo téléchargé !', { id: t });
-                              } catch (err: any) {
-                                console.error(err);
-                                toast.error(`Échec: ${err.message || 'Erreur inconnue'}`, { id: t });
-                              }
-                            }}
-                            className="block w-full text-[10px] text-slate-400 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 transition-all cursor-pointer"
-                          />
-                        </div>
+                                const url = await adminService.uploadFile(`banks/${editingItem?.id || Date.now()}.jpg`, file);
+                                setBankLogo(url); toast.success('Upload réussi', { id: u });
+                              } catch (err) { toast.error('Échec upload', { id: u }); }
+                            }
+                         }} className="text-[10px] text-[#49454F] file:m3-btn-tonal file:mr-4" />
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="flex gap-4 pt-4">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-slate-800 text-slate-300 font-bold rounded-2xl hover:bg-slate-700 transition-all">
-                    Annuler
-                  </button>
-                  <button type="submit" className="flex-1 py-4 bg-brand text-white font-bold rounded-2xl hover:bg-brand-dark shadow-lg shadow-brand/20 transition-all">
-                    Enregistrer
-                  </button>
+                <div className="flex gap-4 pt-8 sticky bottom-0 bg-[#FEF7FF] py-4 border-t border-[#E7E0EB]">
+                   <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-[#F3EDF7] text-[#49454F] font-black uppercase text-[10px] tracking-widest rounded-full hover:bg-[#E7E0EB] transition-all">Annuler</button>
+                   <button type="submit" className="flex-1 m3-btn-filled py-4 text-[10px] uppercase tracking-widest">Enregistrer les données</button>
                 </div>
               </form>
             </div>
           </div>
         </div>
       )}
-      {/* Restriction Popup Modal */}
+
+      {/* MODAL: RESTRICTION CONFIG */}
       {restrictionModal.open && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-[#1a1c24] border border-white/10 w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl shadow-black/50 p-8">
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => setRestrictionModal({ open: false, country: null })} />
+          <div className="relative bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden p-8 border border-[#E7E0EB]">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-brand/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand/20">
-                 <ArrowRightLeft className="text-brand" size={32} />
+              <div className="w-20 h-20 bg-[#EADDFF] text-[#21005D] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-lg">
+                 <ArrowRightLeft size={40} />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Configuration de flux</h3>
-              <p className="text-slate-400 text-sm">Définissez les restrictions pour <span className="text-brand font-bold">{restrictionModal.country?.name}</span></p>
+              <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-2">Flux de Transfert</h3>
+              <p className="text-[#49454F] text-sm font-medium">Définissez les restrictions pour <span className="text-[#6750A4] font-black">{restrictionModal.country?.name}</span></p>
             </div>
 
             <div className="space-y-3">
                {[
-                 { id: 'full', label: 'Service Complet', desc: 'Russie ↔ Afrique (Double sens)', icon: Zap, color: 'brand' },
-                 { id: 'ru-af', label: 'Russie ➔ Afrique Uniquement', desc: 'Envoi depuis la Russie seulement', icon: Globe, color: 'emerald' },
-                 { id: 'af-ru', label: 'Afrique ➔ Russie Uniquement', desc: 'Envoi depuis l\'Afrique seulement', icon: Settings2, color: 'amber' },
-                 { id: 'off', label: 'Désactiver le pays', desc: 'Aucun transfert autorisé', icon: Trash2, color: 'rose' }
+                 { id: 'full', label: 'Service Complet', desc: 'Double sens (RU ↔ AF)', icon: Zap, color: '#6750A4' },
+                 { id: 'ru-af', label: 'RU ➔ AF Unique', desc: 'Réception uniquement', icon: Globe, color: '#10B981' },
+                 { id: 'af-ru', label: 'AF ➔ RU Unique', desc: 'Envoi uniquement', icon: Settings2, color: '#F59E0B' },
+                 { id: 'off', label: 'Désactiver le Pays', desc: 'Maintenance / Bloqué', icon: Trash2, color: '#EF4444' }
                ].map((opt) => (
                  <button
                    key={opt.id}
                    onClick={async () => {
                       const c = restrictionModal.country;
-                      let updates = {};
-                      if (opt.id === 'full') updates = { enabled: true, canSendToRussia: true, canReceiveFromRussia: true };
-                      if (opt.id === 'ru-af') updates = { enabled: true, canSendToRussia: false, canReceiveFromRussia: true };
-                      if (opt.id === 'af-ru') updates = { enabled: true, canSendToRussia: true, canReceiveFromRussia: false };
-                      if (opt.id === 'off') updates = { enabled: false };
+                      let u = {};
+                      if (opt.id === 'full') u = { enabled: true, canSendToRussia: true, canReceiveFromRussia: true };
+                      if (opt.id === 'ru-af') u = { enabled: true, canSendToRussia: false, canReceiveFromRussia: true };
+                      if (opt.id === 'af-ru') u = { enabled: true, canSendToRussia: true, canReceiveFromRussia: false };
+                      if (opt.id === 'off') u = { enabled: false };
 
                       try {
-                        await adminService.saveCountry(c.id, { ...c, ...updates });
+                        await adminService.saveCountry(c.id, { ...c, ...u });
                         toast.success('Configuration mise à jour');
-                      } catch (err) {
-                        toast.error('Erreur de mise à jour');
-                      }
+                      } catch (err) { toast.error('Erreur'); }
                       setRestrictionModal({ open: false, country: null });
                    }}
-                   className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all text-left group"
+                   className="w-full flex items-center gap-4 p-5 rounded-[28px] bg-[#F3EDF7] border border-transparent hover:border-[#6750A4]/20 hover:bg-white transition-all text-left shadow-sm group"
                  >
-                    <div className={`w-10 h-10 rounded-xl bg-${opt.color}-500/10 flex items-center justify-center text-${opt.color}-500 group-hover:scale-110 transition-transform`}>
-                       <opt.icon size={20} />
+                    <div className="w-12 h-12 rounded-[16px] bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                       <opt.icon size={24} style={{ color: opt.color }} />
                     </div>
                     <div>
-                       <p className="text-sm font-bold text-white leading-none mb-1">{opt.label}</p>
-                       <p className="text-[10px] text-slate-500 font-medium">{opt.desc}</p>
+                       <p className="text-sm font-black text-[#1D1B20] leading-none mb-1">{opt.label}</p>
+                       <p className="text-[10px] text-[#49454F] font-bold opacity-60 uppercase tracking-widest">{opt.desc}</p>
                     </div>
                  </button>
                ))}
             </div>
 
-            <button 
-              onClick={() => setRestrictionModal({ open: false, country: null })}
-              className="w-full mt-6 py-3 text-slate-500 font-bold text-sm hover:text-white transition-colors"
-            >
-              Annuler
+            <button onClick={() => setRestrictionModal({ open: false, country: null })} className="w-full mt-8 py-4 text-[#49454F] font-black uppercase text-[10px] tracking-[0.2em] hover:text-[#B3261E] transition-colors">
+              Fermer sans changer
             </button>
           </div>
         </div>

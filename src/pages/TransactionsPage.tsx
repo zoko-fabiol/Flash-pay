@@ -6,6 +6,7 @@ import { Layout } from '../components/Layout';
 import { db } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { Loading } from '../components/UI';
+import { Users } from 'lucide-react';
 
 export const TransactionsPage: React.FC = () => {
   const { user } = useAuth();
@@ -108,22 +109,22 @@ export const TransactionsPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-5">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{t('history_title')}</h1>
-          <p className="text-slate-600">{t('history_desc')}</p>
+      <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="px-2">
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2 sm:text-5xl">{t('history_title')}</h1>
+          <p className="text-slate-500 font-bold uppercase text-[11px] tracking-[0.2em] opacity-70">{t('history_desc')}</p>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
+        {/* Filters - High Contrast M3 Style */}
+        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide px-2">
           {(['all', 'completed', 'pending', 'failed'] as const).map(status => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-5 py-2.5 rounded-full font-bold text-sm whitespace-nowrap transition-all ${
+              className={`px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-sm ${
                 filter === status
-                  ? 'bg-brand text-white shadow-md shadow-brand/20'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                  ? 'bg-[#6750A4] text-white shadow-xl shadow-[#6750A4]/20'
+                  : 'bg-[#F3EDF7] text-[#6750A4] hover:bg-[#EADDFF]'
               }`}
             >
               {t(`filter_${status}`)}
@@ -133,60 +134,93 @@ export const TransactionsPage: React.FC = () => {
 
         {/* Transactions List */}
         {loading ? (
-          <Loading />
+          <div className="py-20 flex justify-center"><Loading /></div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="bg-white rounded-[28px] p-12 text-center border border-[#eadfff] shadow-[0_14px_40px_rgba(15,23,42,0.06)]">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">📭</div>
-            <p className="text-slate-900 font-bold text-lg mb-1">{t('no_transactions')}</p>
-            <p className="text-slate-500">{t('no_transactions_filter')}</p>
+          <div className="mx-2 bg-white rounded-[40px] p-16 text-center border border-[#eadfff] shadow-xl shadow-slate-900/5">
+            <div className="w-24 h-24 bg-[#F3EDF7] rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">📭</div>
+            <p className="text-slate-900 font-black text-2xl tracking-tight mb-2">{t('no_transactions')}</p>
+            <p className="text-slate-400 font-medium">{t('no_transactions_filter')}</p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-6 px-2">
             {filteredTransactions.map(tx => {
               const logoUrl = getOperatorLogo(tx);
+              const isBulk = tx.isBulk || (tx.bulkRecipients && tx.bulkRecipients.length > 0);
+              const displayName = isBulk 
+                ? (tx.bulkRecipients && tx.bulkRecipients.length > 0 
+                    ? `${tx.bulkRecipients[0].name.split(' ')[0]} et d'autres`
+                    : "Transfert Multiple")
+                : (tx.recipientName || t('unknown_recipient'));
+              
+              const displayPhone = isBulk 
+                ? `${tx.bulkRecipients?.length || 0} bénéficiaires`
+                : (tx.recipientPhone || tx.recipientAccount || tx.beneficiaryAccount || t('unknown_number'));
+
               return (
-              <button
-                key={tx.id}
-                onClick={() => navigate(`/transactions/${tx.id}`)}
-                className="bg-white p-5 rounded-[28px] border border-[#eadfff] hover:border-brand/30 hover:shadow-[0_18px_45px_rgba(98,54,204,0.10)] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-5 group text-left"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-xl bg-brand/5 text-brand border border-brand/10 font-black shrink-0 overflow-hidden">
-                    {logoUrl ? (
-                      <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-1" />
-                    ) : (
-                      tx.recipientName?.charAt(0) || '?'
-                    )}
-                  </div>
-                  <div>
-                    <div className="font-bold text-slate-900 text-lg">{tx.recipientName || t('unknown_recipient')}</div>
-                    <div className="text-sm text-slate-500 font-medium">
-                      {tx.recipientPhone || tx.recipientAccount || tx.beneficiaryAccount || t('unknown_number')} • {getCountryName(tx)}
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end gap-2 border-t border-slate-100 sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
-                  <div className="text-left sm:text-right">
-                    <div className="font-black text-xl text-slate-900">{formatNumber(tx.amount, tx.currency)}</div>
-                    {tx.fee > 0 && <div className="text-xs font-bold text-rose-500">{t('fees')}: {formatNumber(tx.fee, 'XAF')}</div>}
-                  </div>
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-                      {tx.isBulk && (
-                        <span className="px-2 py-0.5 bg-brand/10 text-brand text-[9px] font-black rounded uppercase tracking-tighter">
-                          {tx.bulkRecipients?.length || 0} Destinataires
-                        </span>
+                <button
+                  key={tx.id}
+                  onClick={() => navigate(`/transactions/${tx.id}`)}
+                  className={`bg-white p-6 sm:p-8 rounded-[40px] border transition-all duration-500 flex flex-col lg:flex-row lg:items-center justify-between gap-6 group text-left relative overflow-hidden ${
+                    isBulk 
+                      ? 'border-[#6236CC]/30 bg-gradient-to-br from-white via-white to-[#F3EDF7]/40 shadow-2xl shadow-[#6236CC]/10' 
+                      : 'border-[#eadfff] hover:border-[#6236CC]/40 hover:shadow-2xl hover:shadow-[#6236CC]/15 shadow-xl shadow-slate-900/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-6 relative z-10">
+                    <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center text-2xl text-[#6236CC] border border-slate-100 font-black shrink-0 overflow-hidden shadow-sm group-hover:scale-110 transition-transform duration-500">
+                      {logoUrl ? (
+                        <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-2" />
+                      ) : (
+                        <div className="w-full h-full bg-[#F3EDF7] flex items-center justify-center">
+                          {displayName.charAt(0).toUpperCase()}
+                        </div>
                       )}
-                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                        {tx.createdAt?.toDate ? tx.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('fr-FR')}
-                      </span>
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-black tracking-widest ${getStatusClass(tx.status)}`}>
-                        {getStatusLabel(tx.status)}
-                      </span>
                     </div>
-                </div>
-              </button>
-            )})}
+                    <div>
+                      <div className="font-black text-slate-900 text-xl tracking-tight mb-1 group-hover:text-[#6236CC] transition-colors">{displayName}</div>
+                      <div className="text-[11px] text-slate-400 font-black uppercase tracking-[0.1em] opacity-80 flex items-center gap-2">
+                        {displayPhone}
+                        <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                        {getCountryName(tx)}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4 relative z-10 border-t border-slate-50 lg:border-0 pt-6 lg:pt-0">
+                    <div className="text-left lg:text-right">
+                      <div className="font-black text-3xl text-slate-900 tracking-tighter mb-1">
+                        {formatNumber(tx.amount, tx.currency)}
+                      </div>
+                      {tx.fee > 0 && (
+                        <div className="inline-flex px-2 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-black rounded-lg border border-rose-100 uppercase tracking-widest">
+                          {t('fees')}: {formatNumber(tx.fee, 'RUB')}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1.5 opacity-60">
+                          {tx.createdAt?.toDate 
+                            ? tx.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) 
+                            : new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                        </span>
+                        <span className={`px-4 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-widest shadow-sm border border-current/10 ${getStatusClass(tx.status)}`}>
+                          {getStatusLabel(tx.status)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Decorative element for Bulk */}
+                  {isBulk && (
+                    <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Users size={80} className="text-[#6236CC]" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>

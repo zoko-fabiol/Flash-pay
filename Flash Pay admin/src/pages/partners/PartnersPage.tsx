@@ -14,29 +14,35 @@ import {
   Users, 
   Gift, 
   ArrowUpRight, 
-  Search
+  Search,
+  Award,
+  TrendingUp,
+  Mail,
+  MoreVertical
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const PartnersPage: React.FC = () => {
   const [partners, setPartners] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you might have a flag 'isPartner' on users
     const q = query(collection(db, 'users'), where('isPartner', '==', true));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setPartners(snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })));
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   const handlePayout = async (partner: any) => {
     const amount = partner.earnings || 0;
-    if (amount <= 0) return alert('Solde insuffisant.');
+    if (amount <= 0) return toast.error('Solde insuffisant pour un virement.');
     
-    if (confirm(`Confirmer le paiement de ${amount} RUB à ${partner.displayName} ?`)) {
+    if (window.confirm(`Confirmer le virement de ${amount} RUB à ${partner.displayName || 'ce partenaire'} ?`)) {
+       const t = toast.loading('Traitement du paiement...');
        try {
-         // Reset earnings and log payout
          await updateDoc(doc(db, 'users', partner.id), {
            earnings: 0,
            totalPaidOut: (partner.totalPaidOut || 0) + amount,
@@ -50,107 +56,145 @@ const PartnersPage: React.FC = () => {
            status: 'completed'
          });
 
-         alert('Paiement enregistré avec succès.');
+         toast.success('Paiement validé avec succès', { id: t });
        } catch (e) {
          console.error(e);
-         alert('Erreur lors du paiement.');
+         toast.error('Erreur lors du traitement', { id: t });
        }
     }
   };
 
+  const filteredPartners = partners.filter(p => 
+    (p.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.referralCode || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Gestion des Partenaires</h2>
-          <p className="text-slate-400 text-sm">Suivi des parrainages et reversements des commissions</p>
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Award size={24} /></div>
+            Gestion des Partenaires
+          </h2>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Suivi des parrainages et reversements de commissions</p>
         </div>
-        <div className="flex gap-4">
-           <div className="bg-card-dark border border-border-dark px-4 py-2 rounded-xl flex items-center gap-3">
-              <div className="p-2 bg-brand/10 text-brand rounded-lg">
-                <Gift size={20} />
-              </div>
-              <div>
-                <p className="text-[10px] text-slate-500 uppercase font-bold">Total Partenaires</p>
-                <p className="text-white font-bold">{partners.length}</p>
-              </div>
+        
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="m3-search flex-1 lg:w-80">
+            <Search className="text-[#49454F]" size={18} />
+            <input 
+              type="text"
+              placeholder="Rechercher nom, code, email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-transparent border-none outline-none text-sm font-medium w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="m3-card-elevated bg-[#F3EDF7]/50 flex items-center gap-5 border-[#E7E0EB]">
+           <div className="w-14 h-14 bg-white text-[#6750A4] rounded-2xl flex items-center justify-center shadow-sm"><Gift size={28} /></div>
+           <div>
+              <p className="text-[#49454F] text-[9px] font-black uppercase tracking-[0.2em] mb-1">Partenaires Actifs</p>
+              <p className="text-2xl font-black text-[#1D1B20]">{partners.length}</p>
+           </div>
+        </div>
+        <div className="m3-card-elevated bg-[#F3EDF7]/50 flex items-center gap-5 border-[#E7E0EB]">
+           <div className="w-14 h-14 bg-white text-emerald-600 rounded-2xl flex items-center justify-center shadow-sm"><TrendingUp size={28} /></div>
+           <div>
+              <p className="text-[#49454F] text-[9px] font-black uppercase tracking-[0.2em] mb-1">Gains en Attente</p>
+              <p className="text-2xl font-black text-[#1D1B20]">{partners.reduce((acc, p) => acc + (p.earnings || 0), 0).toLocaleString()} <span className="text-[10px] opacity-40">RUB</span></p>
+           </div>
+        </div>
+        <div className="m3-card-elevated bg-[#6750A4] text-white flex items-center gap-5 shadow-xl shadow-[#6750A4]/20">
+           <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center"><Users size={28} /></div>
+           <div>
+              <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-1">Filleuls Totaux</p>
+              <p className="text-2xl font-black text-white">{partners.reduce((acc, p) => acc + (p.referralCount || 0), 0)}</p>
            </div>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-          <input 
-            type="text" 
-            placeholder="Rechercher un partenaire (Nom, Code...)" 
-            className="w-full bg-card-dark border border-border-dark rounded-2xl py-3 pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-brand transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
       {/* Partners List */}
-      <div className="bg-card-dark border border-border-dark rounded-3xl overflow-hidden shadow-xl">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="bg-slate-800/30 border-b border-border-dark text-slate-500 text-[10px] uppercase font-black tracking-widest">
-              <th className="px-6 py-4">Partenaire</th>
-              <th className="px-6 py-4">Code de Parrainage</th>
-              <th className="px-6 py-4">Filleuls Actifs</th>
-              <th className="px-6 py-4">Gains Actuels</th>
-              <th className="px-6 py-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800/30">
-            {partners.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">
-                  Aucun partenaire trouvé.
-                </td>
+      <div className="m3-card-elevated !p-0 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] uppercase font-black tracking-[0.2em] border-b border-[#E7E0EB]">
+                <th className="px-8 py-5">Partenaire</th>
+                <th className="px-8 py-5">Code & Filleuls</th>
+                <th className="px-8 py-5">Finances & Gains</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
-            ) : (
-              partners.map((partner) => (
-                <tr key={partner.id} className="hover:bg-slate-800/20 transition-colors group">
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-slate-400 font-bold border border-slate-700">
-                        {partner.displayName?.charAt(0) || <Users size={18} />}
-                      </div>
-                      <div>
-                        <p className="text-white font-bold text-sm">{partner.displayName || 'Utilisateur'}</p>
-                        <p className="text-slate-500 text-xs">{partner.email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <span className="bg-brand/10 text-brand px-3 py-1 rounded-lg font-mono text-xs font-bold border border-brand/20">
-                      {partner.referralCode || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-5 text-white font-medium">
-                    {partner.referralCount || 0}
-                  </td>
-                  <td className="px-6 py-5">
-                    <p className="text-emerald-500 font-black text-lg">{(partner.earnings || 0).toLocaleString()} RUB</p>
-                    <p className="text-slate-500 text-[10px]">Total payé : {(partner.totalPaidOut || 0).toLocaleString()} RUB</p>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <button 
-                      onClick={() => handlePayout(partner)}
-                      disabled={!partner.earnings || partner.earnings <= 0}
-                      className="px-4 py-2 bg-emerald-500 text-white text-xs font-bold rounded-xl hover:bg-emerald-600 transition-all disabled:opacity-20 flex items-center gap-2 ml-auto"
-                    >
-                      <ArrowUpRight size={14} /> Payer le partenaire
-                    </button>
-                  </td>
+            </thead>
+            <tbody className="divide-y divide-[#E7E0EB]">
+              {loading ? (
+                <tr>
+                   <td colSpan={4} className="px-8 py-32 text-center text-[#49454F]/30 italic text-sm">Chargement des données partenaires...</td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : filteredPartners.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-8 py-32 text-center text-[#49454F]/30 italic text-sm">Aucun partenaire trouvé</td>
+                </tr>
+              ) : (
+                filteredPartners.map((partner) => (
+                  <tr key={partner.id} className="hover:bg-[#F3EDF7]/30 transition-all group">
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[18px] flex items-center justify-center font-black text-lg border border-[#6750A4]/10 shadow-sm group-hover:scale-110 transition-transform">
+                          {partner.displayName?.charAt(0) || <Users size={20} />}
+                        </div>
+                        <div>
+                          <p className="text-[#1D1B20] font-black tracking-tight">{partner.displayName || 'Ambassadeur'}</p>
+                          <div className="flex items-center gap-2 mt-1 text-[#49454F] opacity-60">
+                             <Mail size={12} className="text-[#6750A4]" />
+                             <span className="text-[10px] font-bold">{partner.email}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                       <div className="flex flex-col gap-2">
+                          <span className="inline-flex items-center bg-[#F3EDF7] text-[#6750A4] px-3 py-1 rounded-full text-[10px] font-mono font-black tracking-widest border border-[#E7E0EB] shadow-sm w-fit">
+                            {partner.referralCode || 'N/A'}
+                          </span>
+                          <p className="text-[9px] font-black text-[#49454F] uppercase tracking-[0.2em] opacity-40 ml-1">{partner.referralCount || 0} Clients recrutés</p>
+                       </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                         <div className="flex flex-col">
+                            <p className="text-xl font-black text-emerald-600 tracking-tighter">{(partner.earnings || 0).toLocaleString()} <span className="text-[10px] opacity-40">RUB</span></p>
+                            <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40 mt-0.5">Cumul payé : {(partner.totalPaidOut || 0).toLocaleString()} RUB</p>
+                         </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6 text-right">
+                      <div className="flex justify-end gap-3">
+                         <button 
+                          onClick={() => handlePayout(partner)}
+                          disabled={!partner.earnings || partner.earnings <= 0}
+                          className="m3-btn-filled !py-2.5 !px-5 text-[9px] uppercase tracking-widest flex items-center gap-2 disabled:opacity-20 shadow-lg"
+                        >
+                          <ArrowUpRight size={14} /> Payer
+                        </button>
+                        <button className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#F3EDF7] rounded-xl transition-all shadow-sm">
+                           <MoreVertical size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

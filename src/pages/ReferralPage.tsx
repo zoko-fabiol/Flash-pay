@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { userService, db } from '../services/firebase';
 import { collection, onSnapshot, query, limit } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
-import { Copy, Share2, Users, Gift, Clock, TrendingUp } from 'lucide-react';
+import { Copy, Share2, Users, Gift, Clock, TrendingUp, Sparkles } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { copyToClipboard, nativeShare } from '../utils/capacitorUtils';
 import toast from 'react-hot-toast';
@@ -84,115 +84,128 @@ export const ReferralPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-5 pb-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-        {/* Hero */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] p-6 text-white shadow-[0_16px_40px_rgba(98,54,204,0.28)]">
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
-          <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
-          <div className="relative">
-            <Share2 size={28} className="mb-3 opacity-90" />
-            <h1 className="text-2xl font-black tracking-tight mb-1">{t('referral_title')}</h1>
-            <p className="text-white/70 text-sm font-medium">
-              Gagnez {formatNumber(referralBonusRUB, 'RUB')} pour chaque ami parrainé qui valide son compte.
-            </p>
+        {/* Hero Section - Premium Expressive */}
+        <div className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[#6750A4] via-[#6236CC] to-[#4d259f] p-8 text-white shadow-2xl shadow-[#6236CC]/20">
+          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-[80px] animate-pulse"></div>
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-[#7C4DFF]/20 blur-[60px]"></div>
+          
+          <div className="relative z-10 space-y-6">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
+              <Share2 size={28} className="text-white drop-shadow-md" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-black tracking-tighter sm:text-3xl">{t('referral_title')}</h1>
+              <p className="text-white/70 text-sm font-bold leading-relaxed max-w-[80%]">
+                Gagnez <span className="text-white">{formatNumber(referralBonusRUB, 'RUB')}</span> pour chaque ami parrainé qui valide son compte.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - Premium Cards */}
         <div className="grid grid-cols-2 gap-4">
           {stats.map(({ icon: Icon, label, value, color, bg }) => (
-            <div key={label} className={`rounded-[24px] ${bg} border border-slate-100 p-5 flex flex-col gap-2`}>
-              <div className="flex items-center gap-2">
-                <Icon size={16} className={color} />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
+            <div key={label} className={`rounded-[32px] ${bg} border border-slate-100 p-6 flex flex-col gap-3 shadow-lg shadow-slate-900/5 hover:scale-[1.02] transition-all group`}>
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm group-hover:scale-110 transition-transform`}>
+                   <Icon size={18} className={color} />
+                </div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{label}</span>
               </div>
-              <p className={`text-xl font-black ${color}`}>{value}</p>
+              <p className={`text-2xl font-black tracking-tighter ${color}`}>{value}</p>
             </div>
           ))}
         </div>
 
-        {/* Referral Code + Link */}
-        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-6 pt-5 pb-3 border-b border-slate-100">
-            <h2 className="font-black text-slate-900">{t('referral_code')}</h2>
+        {/* Referral Code + Link Card */}
+        <div className="rounded-[40px] bg-white border border-[#eadfff] shadow-xl shadow-slate-900/5 overflow-hidden">
+          <div className="px-8 pt-8 pb-4 border-b border-slate-50 flex items-center justify-between">
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">{t('referral_code')}</h2>
+            <Sparkles className="text-[#6236CC] opacity-30" size={20} />
           </div>
 
-          {/* Code display */}
-          <div className="px-6 py-5 border-b border-slate-50">
+          {/* Code display - Modern Glass/Gradient */}
+          <div className="px-8 py-8 border-b border-slate-50 bg-[#F3EDF7]/30 backdrop-blur-xl">
             <div 
               onClick={handleCopyCode}
-              className="bg-gradient-to-br from-[#f7f3ff] to-[#ede7ff] border border-[#e0d6ff] rounded-2xl p-5 text-center cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all group/code relative"
+              className="bg-white border-2 border-[#6236CC]/10 rounded-[32px] p-6 text-center cursor-pointer hover:shadow-2xl hover:shadow-[#6236CC]/10 active:scale-[0.98] transition-all group/code relative overflow-hidden"
             >
-              <div className="absolute top-3 right-3 opacity-0 group-hover/code:opacity-100 transition-opacity">
-                <Copy size={14} className="text-[#6236CC]/40" />
+              <div className="absolute top-4 right-4 opacity-0 group-hover/code:opacity-100 transition-opacity">
+                <Copy size={16} className="text-[#6236CC]/40" />
               </div>
-              <p className="text-[11px] font-bold text-[#6236CC]/60 uppercase tracking-widest mb-2">{t('referral_code')}</p>
-              <p className="text-4xl font-black text-[#6236CC] tracking-[0.3em] font-mono">{referralCode || '...'}</p>
-              <p className="mt-2 text-[10px] font-bold text-[#6236CC]/40 uppercase tracking-wider opacity-0 group-hover/code:opacity-100 transition-opacity">Cliquer pour copier le code</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4">{t('votre_code_unique') || 'VOTRE CODE UNIQUE'}</p>
+              <p className="text-4xl font-black text-[#6236CC] tracking-[0.2em] sm:text-5xl">{referralCode || '...'}</p>
+              <p className="mt-4 text-[10px] font-black text-[#6236CC] uppercase tracking-[0.2em] opacity-0 group-hover/code:opacity-100 transition-all translate-y-2 group-hover/code:translate-y-0">Cliquer pour copier</p>
+              
+              {/* Animated Background Highlight */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#6236CC]/5 to-transparent opacity-0 group-hover/code:opacity-100 transition-opacity" />
             </div>
           </div>
 
-          {/* Link copy */}
-          <div className="px-6 py-5 flex flex-col gap-3">
-            <div className="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-3 border border-slate-100">
-              <p className="flex-1 text-xs text-slate-500 font-medium truncate">{referralLink}</p>
+          {/* Link copy section */}
+          <div className="px-8 py-6 flex flex-col gap-4">
+            <div className="flex items-center gap-4 bg-[#F8F9FC] rounded-[24px] p-2 border border-slate-100 shadow-inner">
+              <p className="flex-1 text-xs text-slate-400 font-bold px-4 truncate">{referralLink}</p>
               <button
                 onClick={handleCopy}
                 disabled={!referralCode}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#6236CC] text-white rounded-xl font-bold text-xs shrink-0 hover:bg-[#4A1FA0] transition"
+                className="flex items-center gap-2 px-6 py-4 bg-[#6236CC] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-[#6236CC]/30 hover:bg-[#4A1FA0] transition active:scale-95"
               >
-                <Copy size={13} /> {copied ? t('copied') : t('copy_link')}
+                <Copy size={14} /> {copied ? t('copied') : t('copy_link')}
               </button>
             </div>
             <button
               onClick={handleShare}
               disabled={!referralCode}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl border-2 border-[#6236CC]/20 text-[#6236CC] font-bold hover:bg-[#f7f3ff] transition"
+              className="w-full flex items-center justify-center gap-3 py-5 rounded-[24px] border-2 border-[#6236CC]/10 text-[#6236CC] font-black uppercase text-xs tracking-widest hover:bg-[#F3EDF7] transition active:scale-95"
             >
-              <Share2 size={16} /> {t('share')}
+              <Share2 size={18} /> {t('share')}
             </button>
           </div>
         </div>
 
-        {/* How it works */}
-        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-6 pt-5 pb-3 border-b border-slate-100">
-            <h2 className="font-black text-slate-900">{t('how_it_works')}</h2>
+        {/* How it works - Refined steps */}
+        <div className="rounded-[40px] bg-white border border-[#eadfff] shadow-xl shadow-slate-900/5 overflow-hidden">
+          <div className="px-8 pt-8 pb-4 border-b border-slate-50">
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">{t('how_it_works')}</h2>
           </div>
           <div className="divide-y divide-slate-50">
             {[
-              { num: 1, title: t('step1_title'), desc: t('step1_desc') },
-              { num: 2, title: t('step2_title'), desc: t('step2_desc') },
-              { num: 3, title: t('step3_title'), desc: t('step3_desc') },
-            ].map(({ num, title, desc }) => (
-              <div key={num} className="flex gap-4 px-6 py-4 items-start">
-                <div className="w-8 h-8 rounded-xl bg-[#f7f3ff] flex items-center justify-center text-[#6236CC] font-black text-sm shrink-0">
-                  {num}
+              { num: 1, title: t('step1_title'), desc: t('step1_desc'), icon: Share2 },
+              { num: 2, title: t('step2_title'), desc: t('step2_desc'), icon: Users },
+              { num: 3, title: t('step3_title'), desc: t('step3_desc'), icon: Gift },
+            ].map(({ num, title, desc, icon: StepIcon }) => (
+              <div key={num} className="flex gap-6 px-8 py-6 items-start group hover:bg-[#F3EDF7]/20 transition-colors">
+                <div className="w-12 h-12 rounded-2xl bg-[#F3EDF7] flex items-center justify-center text-[#6236CC] font-black text-lg shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                  <StepIcon size={22} />
                 </div>
-                <div>
-                  <p className="font-bold text-slate-900 text-sm">{title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{desc}</p>
+                <div className="space-y-1">
+                  <p className="font-black text-slate-900 text-lg tracking-tight">{title}</p>
+                  <p className="text-sm text-slate-500 font-medium leading-relaxed opacity-80">{desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Referred users list */}
+        {/* Referred users list - Minimal Premium */}
         {referredUsers.length > 0 && (
-          <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-6 pt-5 pb-3 border-b border-slate-100">
-              <h2 className="font-black text-slate-900">{t('referred_users')}</h2>
+          <div className="rounded-[40px] bg-white border border-[#eadfff] shadow-xl shadow-slate-900/5 overflow-hidden">
+            <div className="px-8 pt-8 pb-4 border-b border-slate-50">
+              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">{t('referred_users')}</h2>
             </div>
             <div className="divide-y divide-slate-50">
               {referredUsers.map((userId, idx) => (
-                <div key={userId} className="flex items-center justify-between px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm">{idx + 1}</div>
-                    <span className="text-slate-700 font-medium text-sm">{t('user')} {idx + 1}</span>
+                <div key={userId} className="flex items-center justify-between px-8 py-6 hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 font-black text-xs border border-slate-100">{idx + 1}</div>
+                    <span className="text-slate-900 font-black text-sm tracking-tight">{t('user')} {idx + 1}</span>
                   </div>
-                  <span className="text-sm font-black text-emerald-600">+{formatNumber(referralBonusRUB, 'RUB')}</span>
+                  <div className="flex items-center gap-2">
+                     <span className="text-xs font-black text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">+{formatNumber(referralBonusRUB, 'RUB')}</span>
+                  </div>
                 </div>
               ))}
             </div>

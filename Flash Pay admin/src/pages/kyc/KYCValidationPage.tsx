@@ -11,15 +11,16 @@ import { adminService } from '../../services/adminService';
 import { 
   ShieldCheck, 
   User, 
-  Mail, 
   Calendar, 
   CheckCircle2, 
   XCircle,
   Eye,
   Search,
   ExternalLink,
-  X
+  X,
+  FileText
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const KYCValidationPage: React.FC = () => {
   const [requests, setRequests] = useState<KYCRequest[]>([]);
@@ -45,123 +46,126 @@ const KYCValidationPage: React.FC = () => {
 
   const handleReview = async (id: string, status: 'approved' | 'rejected') => {
     setIsActionLoading(true);
+    const t = toast.loading('Traitement du dossier...');
     try {
       if (status === 'approved') {
         await adminService.approveKYC(id);
+        toast.success('Dossier approuvé avec succès', { id: t });
       } else {
         await adminService.rejectKYC(id, rejectionReason);
+        toast.success('Dossier rejeté', { id: t });
       }
 
       setSelectedRequest(null);
       setRejectionReason('');
     } catch (err) {
       console.error(err);
-      alert('Erreur lors de la mise à jour du dossier.');
+      toast.error('Erreur lors du traitement', { id: t });
     } finally {
       setIsActionLoading(false);
     }
   };
 
   const handleViewImage = (url: string) => {
-    const win = window.open();
-    if (win) {
-      win.document.write(`<img src="${url}" style="max-width: 100%; height: auto;" />`);
-    }
+    window.open(url, '_blank');
   };
 
   const filteredRequests = requests.filter(req => {
-    const matchesSearch = req.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         req.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (req.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         (req.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || req.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Validation KYC</h2>
-          <p className="text-slate-400 text-sm">Vérification des documents d'identité et conformité</p>
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight">Validation KYC</h2>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Examen des dossiers de conformité client</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="m3-search flex-1 lg:w-80">
+            <Search className="text-[#49454F]" size={18} />
             <input 
               type="text"
-              placeholder="Rechercher par nom, email..."
+              placeholder="Nom, Email, ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand"
+              className="bg-transparent border-none outline-none text-sm font-medium w-full"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-2">
+      {/* Quick Filters */}
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {['all', 'pending', 'approved', 'rejected'].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status as any)}
             className={`
-              px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all
+              px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm
               ${statusFilter === status 
-                ? 'bg-brand text-white shadow-lg shadow-brand/20' 
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}
+                ? 'bg-[#6750A4] text-white shadow-lg shadow-[#6750A4]/20' 
+                : 'bg-white text-[#49454F] border border-[#E7E0EB] hover:bg-[#F3EDF7]'}
             `}
           >
-            {status === 'all' ? 'Tous les dossiers' : status.toUpperCase()}
+            {status === 'all' ? 'Tous les dossiers' : status}
           </button>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Grid of Requests */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 bg-card-dark border border-border-dark rounded-3xl col-span-full">
-            <div className="w-10 h-10 border-3 border-brand border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-4 text-slate-500">Chargement des dossiers KYC...</p>
+          <div className="col-span-full py-32 flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-[#6750A4] border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Chargement de la base KYC...</p>
           </div>
         ) : filteredRequests.length === 0 ? (
-          <div className="bg-card-dark border border-border-dark p-20 rounded-3xl text-center col-span-full">
-            <ShieldCheck className="mx-auto text-slate-700 mb-4" size={64} strokeWidth={1} />
-            <p className="text-slate-500">Aucun dossier KYC ne correspond à votre recherche.</p>
+          <div className="col-span-full m3-card-elevated p-20 text-center bg-[#F3EDF7]/30 border-dashed border-2">
+            <ShieldCheck className="mx-auto text-[#6750A4]/20 mb-6" size={64} />
+            <p className="text-[#49454F] font-black uppercase text-[10px] tracking-widest">Aucun dossier trouvé</p>
           </div>
         ) : (
           filteredRequests.map((req) => (
-            <div key={req.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl hover:border-brand/30 transition-all group">
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-brand font-bold text-lg border border-slate-700">
-                    {req.fullName.charAt(0).toUpperCase()}
+            <div key={req.id} className="m3-card-elevated group hover:border-[#6750A4]/30">
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-[#EADDFF] text-[#21005D] rounded-[20px] flex items-center justify-center font-black text-xl shadow-sm border border-[#6750A4]/10 group-hover:scale-110 transition-transform">
+                    {req.fullName?.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <h3 className="text-white font-bold">{req.fullName}</h3>
-                    <p className="text-slate-500 text-xs flex items-center gap-1"><Mail size={12} /> {req.email}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-black text-[#1D1B20] tracking-tight truncate">{req.fullName}</h3>
+                    <p className="text-[#49454F] text-[10px] font-bold truncate mt-1 opacity-60">{req.email}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-[10px] font-bold border ${
-                  req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                  req.status === 'rejected' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
-                  'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                <div className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                  req.status === 'approved' ? 'bg-[#E8DEF8] text-[#1D192B]' :
+                  req.status === 'rejected' ? 'bg-[#F9DEDC] text-[#B3261E]' :
+                  'bg-[#F3EDF7] text-[#49454F]'
                 }`}>
-                  {req.status.toUpperCase()}
-                </span>
+                  {req.status}
+                </div>
               </div>
 
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span className="flex items-center gap-1"><Calendar size={14} /> Soumis le</span>
-                  <span className="text-slate-300 font-medium">{req.submittedAt.toDate().toLocaleDateString()}</span>
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[#49454F]">
+                  <span className="flex items-center gap-2 opacity-50"><Calendar size={14} /> Soumis le</span>
+                  <span className="text-[#1D1B20]">{req.submittedAt?.toDate().toLocaleDateString('fr-FR')}</span>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span className="flex items-center gap-1"><User size={14} /> ID Utilisateur</span>
-                  <span className="text-slate-300 font-mono">#{req.userId.substring(0, 8)}</span>
+                <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[#49454F]">
+                  <span className="flex items-center gap-2 opacity-50"><User size={14} /> ID Système</span>
+                  <span className="text-[#6750A4] font-mono">#{req.userId.substring(0, 8).toUpperCase()}</span>
                 </div>
               </div>
 
               <button 
                 onClick={() => setSelectedRequest(req)}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-bold rounded-xl flex items-center justify-center gap-2 transition-all"
+                className="w-full m3-btn-tonal !rounded-[20px] group-hover:bg-[#6750A4] group-hover:text-white transition-all shadow-sm"
               >
                 <Eye size={18} /> Examiner le dossier
               </button>
@@ -172,99 +176,133 @@ const KYCValidationPage: React.FC = () => {
 
       {/* Review Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-bg-dark/90 backdrop-blur-md">
-          <div className="bg-card-dark border border-border-dark w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-border-dark flex justify-between items-center bg-slate-800/30">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <ShieldCheck className="text-brand" size={24} />
-                Examen du dossier : {selectedRequest.fullName}
-              </h3>
-              <button onClick={() => setSelectedRequest(null)} className="text-slate-500 hover:text-white p-1">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setSelectedRequest(null)} />
+          <div className="relative bg-[#FEF7FF] w-full max-w-5xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
+            <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg">
+                  <ShieldCheck size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight">Vérification de Conformité</h3>
+                  <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest opacity-60">Dossier : {selectedRequest.fullName}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedRequest(null)} className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
                 <X size={24} />
               </button>
             </div>
             
-            <div className="p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
-              {/* Documents */}
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Pièce d'Identité</h4>
-                  <div className="relative group rounded-2xl overflow-hidden border border-slate-700 bg-slate-900">
-                    <img src={selectedRequest.documents.idProof.url} alt="ID Proof" className="w-full object-contain aspect-video" />
-                    <button onClick={() => handleViewImage(selectedRequest.documents.idProof.url)} className="absolute top-4 right-4 p-2 bg-black/60 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ExternalLink size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Selfie de Vérification</h4>
-                  <div className="relative group rounded-2xl overflow-hidden border border-slate-700 bg-slate-900">
-                    <img src={selectedRequest.documents.selfie.url} alt="Selfie" className="w-full object-contain aspect-video" />
-                    <button onClick={() => handleViewImage(selectedRequest.documents.selfie.url)} className="absolute top-4 right-4 p-2 bg-black/60 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ExternalLink size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Preuve d'Adresse</h4>
-                  <div className="relative group rounded-2xl overflow-hidden border border-slate-700 bg-slate-900">
-                    <img src={selectedRequest.documents.addressProof.url} alt="Address" className="w-full object-contain aspect-video" />
-                    <button onClick={() => handleViewImage(selectedRequest.documents.addressProof.url)} className="absolute top-4 right-4 p-2 bg-black/60 rounded-lg text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ExternalLink size={16} />
-                    </button>
-                  </div>
-                </div>
+            <div className="p-8 overflow-y-auto scrollbar-hide flex-1 grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Document Previews */}
+              <div className="space-y-8">
+                <h4 className="text-xs font-black text-[#49454F] uppercase tracking-[0.2em] border-b border-[#E7E0EB] pb-2">Documents Transmis</h4>
+                
+                {[
+                  { label: "Pièce d'Identité", key: 'idProof' },
+                  { label: "Selfie de Vérification", key: 'selfie' },
+                  { label: "Preuve de Domicile", key: 'addressProof' }
+                ].map((docType) => {
+                  const docData = (selectedRequest.documents as any)?.[docType.key];
+                  return (
+                    <div key={docType.key} className="space-y-4">
+                      <div className="flex justify-between items-center px-1">
+                        <span className="text-[10px] font-black text-[#1D1B20] uppercase tracking-widest">{docType.label}</span>
+                        <span className="text-[9px] font-bold text-[#6750A4] uppercase opacity-40">{docData?.type || 'Image'}</span>
+                      </div>
+                      <div className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner">
+                        {docData?.url ? (
+                          <>
+                            <img src={docData.url} alt={docType.label} className="w-full aspect-video object-contain bg-black/5" />
+                            <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                               <button onClick={() => handleViewImage(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
+                                 <ExternalLink size={24} />
+                               </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="aspect-video flex items-center justify-center text-[#49454F]/20 italic text-xs">Non fourni</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-              {/* Action Sidebar */}
+              {/* Action Controls */}
               <div className="space-y-8">
-                <div className="bg-slate-800/50 p-6 rounded-2xl border border-slate-700/50 space-y-4">
-                  <h4 className="text-white font-bold">Informations Client</h4>
-                  <div className="space-y-2">
-                    <p className="text-slate-400 text-sm flex justify-between"><span>Email:</span> <span className="text-white font-medium">{selectedRequest.email}</span></p>
-                    <p className="text-slate-400 text-sm flex justify-between"><span>ID:</span> <span className="text-white font-mono">{selectedRequest.userId}</span></p>
-                    <p className="text-slate-400 text-sm flex justify-between"><span>Type ID:</span> <span className="text-white">{selectedRequest.documents.idProof.type}</span></p>
-                  </div>
+                <div className="bg-[#F3EDF7] p-8 rounded-[32px] border border-[#E7E0EB] space-y-6">
+                   <div className="flex items-center gap-3 border-b border-[#E7E0EB] pb-4">
+                     <FileText size={20} className="text-[#6750A4]" />
+                     <h3 className="font-black text-[#1D1B20] text-sm uppercase tracking-widest">Informations Dossier</h3>
+                   </div>
+                   <div className="grid grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">Email Principal</p>
+                        <p className="text-xs font-black text-[#1D1B20] truncate">{selectedRequest.email}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">ID Utilisateur</p>
+                        <p className="text-xs font-mono font-black text-[#6750A4]">#{selectedRequest.userId.substring(0, 10).toUpperCase()}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">Type de Document</p>
+                        <p className="text-xs font-black text-[#1D1B20] uppercase">{selectedRequest.documents.idProof.type}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">Statut Actuel</p>
+                        <p className="text-xs font-black text-[#6750A4] uppercase">{selectedRequest.status}</p>
+                      </div>
+                   </div>
                 </div>
 
                 {selectedRequest.status === 'pending' ? (
                   <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-400 mb-2">Note / Raison du rejet</label>
-                      <textarea 
-                        placeholder="Ex: Document flou, date expirée..."
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 block">Motif du rejet (si applicable)</label>
+                       <textarea 
+                        placeholder="Ex: La pièce d'identité est floue ou expirée..."
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand h-32"
-                      />
+                        className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] p-5 text-sm font-medium text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all h-32"
+                       />
                     </div>
 
                     <div className="flex gap-4">
                       <button 
                         onClick={() => handleReview(selectedRequest.id, 'rejected')}
                         disabled={isActionLoading}
-                        className="flex-1 px-6 py-4 bg-rose-500/10 text-rose-500 font-bold rounded-2xl hover:bg-rose-500 hover:text-white border border-rose-500/20 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 py-4 bg-[#F9DEDC] text-[#B3261E] font-black uppercase text-[10px] tracking-widest rounded-full hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50"
                       >
-                        <XCircle size={20} /> Rejeter le dossier
+                        Rejeter le dossier
                       </button>
                       <button 
                         onClick={() => handleReview(selectedRequest.id, 'approved')}
                         disabled={isActionLoading}
-                        className="flex-1 px-6 py-4 bg-emerald-500 text-white font-bold rounded-2xl hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
+                        className="flex-1 m3-btn-filled py-4 text-[10px] tracking-widest uppercase"
                       >
-                        <CheckCircle2 size={20} /> Approuver
+                        Valider le profil
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className={`p-6 rounded-2xl border ${
-                    selectedRequest.status === 'approved' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                  <div className={`p-8 rounded-[32px] border flex flex-col items-center text-center gap-4 ${
+                    selectedRequest.status === 'approved' ? 'bg-[#E8DEF8] border-[#6750A4]/20' : 'bg-[#F9DEDC] border-[#B3261E]/20'
                   }`}>
-                    <p className="text-center font-bold">Dossier déjà traité : {selectedRequest.status.toUpperCase()}</p>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sm ${
+                       selectedRequest.status === 'approved' ? 'bg-white text-emerald-500' : 'bg-white text-[#B3261E]'
+                    }`}>
+                       {selectedRequest.status === 'approved' ? <CheckCircle2 size={32} /> : <XCircle size={32} />}
+                    </div>
+                    <div>
+                      <p className="text-[#1D1B20] font-black uppercase tracking-widest text-sm">Dossier Traité</p>
+                      <p className="text-[10px] font-bold opacity-60 uppercase mt-1">Status : {selectedRequest.status}</p>
+                    </div>
                     {selectedRequest.rejectionReason && (
-                      <p className="mt-2 text-xs text-center opacity-80 italic">Raison: {selectedRequest.rejectionReason}</p>
+                      <div className="mt-4 p-4 bg-white/50 rounded-2xl border border-white text-[11px] font-medium text-[#B3261E] italic">
+                        "{selectedRequest.rejectionReason}"
+                      </div>
                     )}
                   </div>
                 )}

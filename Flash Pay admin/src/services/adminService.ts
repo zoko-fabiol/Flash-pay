@@ -54,6 +54,7 @@ export const adminService = {
       const txData = txDoc.data();
       const userId = txData.userId;
       if (userId) {
+        // Send notification
         await addDoc(collection(db, 'notifications'), {
           userId,
           title: `Mise à jour de votre transfert`,
@@ -63,6 +64,78 @@ export const adminService = {
           createdAt: Timestamp.now(),
           link: '/transactions'
         });
+
+        // Referral Bonus Logic on First Completed Transfer
+        if (newStatus === 'completed') {
+          const userRef = doc(db, 'users', userId);
+          const userDoc = await getDoc(userRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const referrerId = userData.referredBy;
+            
+            if (referrerId && !userData.referralBonusOnTransferPaid) {
+              // Check if this is the first completed transaction for this user
+              const q = query(
+                collection(db, 'transactions'),
+                where('userId', '==', userId),
+                where('status', '==', 'completed')
+              );
+              const txsSnapshot = await getDocs(q);
+              
+              // If this is the first one (including the one just updated)
+              if (txsSnapshot.size <= 1) {
+                // Fetch referral bonus amount from settings
+                let bonusAmount = 500; // Default
+                const settingsSnapshot = await getDocs(query(collection(db, 'settings')));
+                if (!settingsSnapshot.empty) {
+                  bonusAmount = settingsSnapshot.docs[0].data().referralBonusRUB || 500;
+                }
+
+                // Award bonus to referrer
+                const referrerRef = doc(db, 'users', referrerId);
+                await updateDoc(referrerRef, {
+                  solde_bonus: increment(bonusAmount),
+                  'referralStats.rewarded': increment(1),
+                  referralRewards: arrayUnion({
+                    referredUserId: userId,
+                    amount: bonusAmount,
+                    type: 'first_transfer',
+                    awardedAt: Timestamp.now(),
+                    transactionId
+                  }),
+                  updatedAt: Timestamp.now()
+                });
+
+                // Mark user as rewarded for transfer
+                await updateDoc(userRef, {
+                  referralBonusOnTransferPaid: true,
+                  referralRewardedAt: Timestamp.now(),
+                  updatedAt: Timestamp.now()
+                });
+
+                // Log bonus award
+                await addDoc(collection(db, 'admin_logs'), {
+                  adminId,
+                  action: 'REFERRAL_BONUS_AWARDED',
+                  details: { referrerId, referredUserId: userId, amount: bonusAmount, transactionId },
+                  timestamp: Timestamp.now()
+                });
+
+                // Notify referrer
+                await addDoc(collection(db, 'notifications'), {
+                  userId: referrerId,
+                  title: `Bonus de parrainage reçu !`,
+                  message: `Vous avez reçu un bonus de ${bonusAmount} RUB car votre filleul ${userData.nom || 'un utilisateur'} a effectué son premier transfert.`,
+                  type: 'referral_bonus',
+                  read: false,
+                  createdAt: Timestamp.now(),
+                  link: '/partners'
+                });
+              }
+            }
+          }
+        }
       }
     }
 

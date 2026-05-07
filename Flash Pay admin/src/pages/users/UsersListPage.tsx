@@ -11,8 +11,11 @@ import {
   Calendar,
   ShieldCheck,
   Award,
-  Link as LinkIcon
+  TrendingUp,
+  Copy,
+  User as UserIcon
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const UsersListPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -42,115 +45,121 @@ const UsersListPage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Users className="text-brand" /> Gestion des Utilisateurs
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Users size={24} /></div>
+            Gestion des Utilisateurs
           </h2>
-          <p className="text-slate-400 text-sm">Consultez et gérez la base de données clients</p>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Base de données clients et suivi de fidélité</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="m3-search flex-1 lg:w-80">
+            <Search className="text-[#49454F]" size={18} />
             <input 
               type="text"
-              placeholder="Rechercher (nom, email, tel, code...)"
+              placeholder="Rechercher nom, email, tel..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand"
+              className="bg-transparent border-none outline-none text-sm font-medium w-full"
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-card-dark border border-border-dark rounded-3xl overflow-hidden shadow-xl">
+      {/* Users Container */}
+      <div className="m3-card-elevated !p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-300">
-            <thead className="bg-slate-800/50 text-slate-400 text-xs uppercase font-semibold">
-              <tr>
-                <th className="px-6 py-4">Utilisateur</th>
-                <th className="px-6 py-4">Contact</th>
-                <th className="px-6 py-4">Statut KYC</th>
-                <th className="px-6 py-4">Code Parrainage</th>
-                <th className="px-6 py-4">Date d'inscription</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] uppercase font-black tracking-[0.2em] border-b border-[#E7E0EB]">
+                <th className="px-8 py-5">Utilisateur</th>
+                <th className="px-8 py-5">Contact & Identité</th>
+                <th className="px-8 py-5">Niveau KYC</th>
+                <th className="px-8 py-5">Fidélité & Parrainage</th>
+                <th className="px-8 py-5">Inscription</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className="divide-y divide-[#E7E0EB]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                    <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-                    Chargement des utilisateurs...
+                  <td colSpan={6} className="px-8 py-32 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-[#6750A4] border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Initialisation des profils...</span>
+                    </div>
                   </td>
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                    Aucun utilisateur trouvé.
+                  <td colSpan={6} className="px-8 py-32 text-center">
+                    <div className="flex flex-col items-center gap-4 text-[#49454F]/30">
+                      <Search size={64} strokeWidth={1} />
+                      <span className="text-sm font-black uppercase tracking-widest">Aucun client trouvé</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center text-brand font-bold">
+                  <tr key={user.id} className="hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer" onClick={() => setSelectedUser(user)}>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-[14px] bg-[#EADDFF] text-[#21005D] flex items-center justify-center font-black text-xs border border-[#6750A4]/10 shadow-sm group-hover:scale-110 transition-transform">
                           {user.nom?.charAt(0).toUpperCase() || '?'}
                         </div>
-                        <div>
-                          <button onClick={() => setSelectedUser(user)} className="font-bold text-white hover:text-brand transition-colors text-left">
-                            {user.nom || 'Sans Nom'}
-                          </button>
-                          <p className="text-xs text-slate-500">ID: {user.id.substring(0, 8)}</p>
+                        <div className="flex flex-col">
+                          <span className="text-[#1D1B20] font-black tracking-tight">{user.nom || 'Client Anonyme'}</span>
+                          <span className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mt-0.5">ID: {user.id.substring(0, 8).toUpperCase()}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Mail size={12} className="text-slate-500"/> 
-                        <a href={`mailto:${user.email}`} className="hover:text-brand transition-colors">{user.email}</a>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone size={12} className="text-slate-500"/> 
-                        {user.tel ? (
-                          <a href={`tel:${user.tel}`} className="hover:text-brand transition-colors">{user.tel}</a>
-                        ) : (
-                          'N/A'
-                        )}
+                    <td className="px-8 py-6">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2 text-xs text-[#1D1B20] font-bold">
+                          <Mail size={12} className="text-[#6750A4]" /> 
+                          {user.email ? <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a> : 'Pas d\'email'}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-[#49454F] font-medium opacity-60">
+                          <Phone size={12} className="text-[#6750A4]/40" /> 
+                          {user.tel ? <a href={`tel:${user.tel}`} className="hover:underline">{user.tel}</a> : 'Sans numéro'}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        user.statut_kyc === 'Expert' ? 'bg-emerald-500/10 text-emerald-500' :
-                        user.statut_kyc === 'Pending' ? 'bg-amber-500/10 text-amber-500' :
-                        user.statut_kyc === 'Rejected' ? 'bg-rose-500/10 text-rose-500' :
-                        'bg-slate-500/10 text-slate-400'
+                    <td className="px-8 py-6">
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
+                        user.statut_kyc === 'Expert' ? 'bg-[#E8DEF8] text-[#1D192B]' :
+                        user.statut_kyc === 'Pending' ? 'bg-[#F3EDF7] text-[#49454F] border border-[#E7E0EB]' :
+                        user.statut_kyc === 'Rejected' ? 'bg-[#F9DEDC] text-[#B3261E]' :
+                        'bg-white text-[#49454F] border border-[#E7E0EB]'
                       }`}>
                         {user.statut_kyc || 'Standard'}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
-                      {user.referralCode ? (
-                        <span className="font-mono text-brand bg-brand/10 px-2 py-1 rounded text-xs border border-brand/20">
-                          {user.referralCode}
-                        </span>
-                      ) : (
-                        <span className="text-slate-500 italic text-xs">Aucun</span>
-                      )}
+                    <td className="px-8 py-6">
+                       <div className="flex flex-col gap-1">
+                          {user.referralCode && (
+                            <span className="font-mono text-[10px] font-black text-[#6750A4] tracking-widest">{user.referralCode}</span>
+                          )}
+                          <div className="flex items-center gap-2">
+                             <TrendingUp size={12} className="text-emerald-500" />
+                             <span className="text-[10px] font-black text-[#1D1B20]">{user.solde_bonus || 0} RUB</span>
+                          </div>
+                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={14} className="text-slate-500"/>
-                        {user.createdAt ? (user.createdAt.toDate ? user.createdAt.toDate().toLocaleDateString() : new Date(user.createdAt).toLocaleDateString()) : 'N/A'}
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2 text-[#49454F]">
+                        <Calendar size={14} className="opacity-40"/>
+                        <span className="text-[10px] font-black uppercase">{user.createdAt ? (user.createdAt.toDate ? user.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(user.createdAt).toLocaleDateString('fr-FR')) : 'N/A'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
                       <button 
                         onClick={() => setSelectedUser(user)}
-                        className="p-2 bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-all"
+                        className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
                       >
                         <Eye size={18} />
                       </button>
@@ -165,144 +174,117 @@ const UsersListPage: React.FC = () => {
 
       {/* User Details Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-bg-dark/90 backdrop-blur-md">
-          <div className="bg-card-dark border border-border-dark w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setSelectedUser(null)} />
+          <div className="relative bg-[#FEF7FF] w-full max-w-4xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
             
-            <div className="p-6 border-b border-border-dark flex justify-between items-center bg-slate-800/30">
-              <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-brand flex items-center justify-center text-white">
+            <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg font-black text-xl">
                   {selectedUser.nom?.charAt(0).toUpperCase() || '?'}
                 </div>
-                Détails du profil
-              </h3>
-              <button onClick={() => setSelectedUser(null)} className="text-slate-500 hover:text-white p-1">
+                <div>
+                  <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight">{selectedUser.nom || 'Profil Utilisateur'}</h3>
+                  <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest opacity-60">ID: {selectedUser.id}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedUser(null)} className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
                 <X size={24} />
               </button>
             </div>
             
-            <div className="p-6 md:p-8 overflow-y-auto scrollbar-hide flex-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                {/* Informations Principales */}
-                <div className="space-y-6">
-                  <h4 className="text-sm font-bold text-brand uppercase tracking-widest flex items-center gap-2">
-                    <Users size={16} /> Identité
-                  </h4>
-                  <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50 space-y-4">
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Nom Complet</p>
-                      <p className="text-white font-medium text-lg">{selectedUser.nom || 'N/A'}</p>
+            <div className="p-8 overflow-y-auto scrollbar-hide flex-1 grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Identity & Contact */}
+              <div className="space-y-8">
+                 <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
+                    <h4 className="text-[10px] font-black text-[#6750A4] uppercase tracking-[0.2em] flex items-center gap-2">
+                       <UserIcon size={16} /> Informations Personnelles
+                    </h4>
+                    <div className="space-y-6">
+                       <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                          <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Nom Complet</p>
+                          <p className="text-[#1D1B20] font-black text-lg tracking-tight">{selectedUser.nom || 'N/A'}</p>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                          <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Téléphone</p>
+                          <p className="text-[#1D1B20] font-black text-sm tracking-tight">
+                            {selectedUser.tel ? <a href={`tel:${selectedUser.tel}`} className="text-[#6750A4] hover:underline">{selectedUser.tel}</a> : 'Non renseigné'}
+                          </p>
+                        </div>
+                          <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                            <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Inscription</p>
+                            <p className="text-[#1D1B20] font-black text-sm tracking-tight">
+                              {selectedUser.createdAt ? (selectedUser.createdAt.toDate ? selectedUser.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(selectedUser.createdAt).toLocaleDateString('fr-FR')) : 'N/A'}
+                            </p>
+                          </div>
+                       </div>
+                       <div className="bg-[#F3EDF7] p-5 rounded-[24px] flex justify-between items-center group/mail">
+                          <div>
+                            <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Adresse Email</p>
+                            <p className="text-[#1D1B20] font-black text-sm tracking-tight">
+                              <a href={`mailto:${selectedUser.email}`} className="text-[#6750A4] hover:underline">{selectedUser.email}</a>
+                            </p>
+                          </div>
+                          <button onClick={() => { navigator.clipboard.writeText(selectedUser.email); toast.success('Copié'); }} className="p-2 bg-white text-[#6750A4] rounded-full shadow-sm opacity-0 group-hover/mail:opacity-100 transition-all active:scale-90"><Copy size={14} /></button>
+                       </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">ID Utilisateur</p>
-                      <p className="text-slate-300 font-mono text-sm">{selectedUser.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Date d'inscription</p>
-                      <p className="text-slate-300">
-                        {selectedUser.createdAt ? (selectedUser.createdAt.toDate ? selectedUser.createdAt.toDate().toLocaleString() : new Date(selectedUser.createdAt).toLocaleString()) : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
+                 </div>
+              </div>
 
-                  <h4 className="text-sm font-bold text-brand uppercase tracking-widest flex items-center gap-2 pt-4">
-                    <Phone size={16} /> Contact
-                  </h4>
-                  <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <Mail className="text-slate-500" size={18} />
-                      <div>
-                        <p className="text-xs text-slate-500">Email</p>
-                        <a href={`mailto:${selectedUser.email}`} className="text-white hover:text-brand transition-colors">{selectedUser.email}</a>
-                      </div>
+              {/* Status & Wallet */}
+              <div className="space-y-8">
+                 <div className="bg-[#6750A4] p-8 rounded-[32px] shadow-2xl shadow-[#6750A4]/20 text-white space-y-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
+                       <ShieldCheck size={16} /> Conformité KYC
+                    </h4>
+                    <div className="flex justify-between items-center bg-white/10 p-5 rounded-[24px] border border-white/20">
+                       <div>
+                          <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1">Niveau Actuel</p>
+                          <p className="text-xl font-black tracking-tight">{selectedUser.statut_kyc || 'Standard'}</p>
+                       </div>
+                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#6750A4] shadow-lg">
+                          <ShieldCheck size={24} />
+                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Phone className="text-slate-500" size={18} />
-                      <div>
-                        <p className="text-xs text-slate-500">Téléphone</p>
-                        {selectedUser.tel ? (
-                          <a href={`tel:${selectedUser.tel}`} className="text-white hover:text-brand transition-colors">{selectedUser.tel}</a>
-                        ) : (
-                          <p className="text-slate-500 italic">Non renseigné</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Statut & Finances */}
-                <div className="space-y-6">
-                  <h4 className="text-sm font-bold text-brand uppercase tracking-widest flex items-center gap-2">
-                    <ShieldCheck size={16} /> Statut KYC
-                  </h4>
-                  <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-slate-400">Niveau actuel</span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        selectedUser.statut_kyc === 'Expert' ? 'bg-emerald-500/10 text-emerald-500' :
-                        selectedUser.statut_kyc === 'Pending' ? 'bg-amber-500/10 text-amber-500' :
-                        selectedUser.statut_kyc === 'Rejected' ? 'bg-rose-500/10 text-rose-500' :
-                        'bg-slate-500/10 text-slate-400'
-                      }`}>
-                        {selectedUser.statut_kyc || 'Standard'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-3">
-                      {selectedUser.statut_kyc === 'Expert' 
-                        ? 'Le compte est entièrement vérifié et bénéficie des limites de transfert maximales.' 
-                        : 'Vérification incomplète. Limites réduites.'}
+                    <p className="text-[10px] font-medium leading-relaxed opacity-60 italic">
+                       {selectedUser.statut_kyc === 'Expert' 
+                         ? 'Ce client est entièrement vérifié et autorisé à effectuer des transactions sans limites restrictives.' 
+                         : 'Vérification de niveau intermédiaire. Les transactions peuvent être limitées.'}
                     </p>
-                  </div>
+                 </div>
 
-                  <h4 className="text-sm font-bold text-brand uppercase tracking-widest flex items-center gap-2 pt-4">
-                    <Award size={16} /> Parrainage & Bonus
-                  </h4>
-                  <div className="bg-gradient-to-br from-brand/10 to-transparent border border-brand/20 rounded-2xl p-5 space-y-4">
-                    <div>
-                      <p className="text-xs text-brand mb-1 font-bold">Code Parrainage Personnel</p>
-                      <div className="flex items-center justify-between bg-slate-900 rounded-lg p-3 border border-slate-700">
-                        <span className="font-mono text-xl text-white font-bold tracking-widest">
-                          {selectedUser.referralCode || 'Aucun'}
-                        </span>
-                      </div>
+                 <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
+                    <h4 className="text-[10px] font-black text-[#6750A4] uppercase tracking-[0.2em] flex items-center gap-2">
+                       <Award size={16} /> Fidélité & Récompenses
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] text-center">
+                          <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">Solde Bonus</p>
+                          <p className="text-2xl font-black text-[#6750A4] tracking-tighter">{selectedUser.solde_bonus || 0} <span className="text-[10px] opacity-40">RUB</span></p>
+                       </div>
+                       <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] text-center">
+                          <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">Invités</p>
+                          <p className="text-2xl font-black text-[#1D1B20] tracking-tighter">{selectedUser.referralStats?.invited || selectedUser.referredUsers?.length || 0}</p>
+                       </div>
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 mt-2">
-                      <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50 text-center">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Solde Bonus</p>
-                        <p className="text-lg font-bold text-emerald-400">{selectedUser.solde_bonus || 0} XAF</p>
-                      </div>
-                      <div className="bg-slate-900/50 p-3 rounded-xl border border-slate-700/50 text-center">
-                        <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Parrainés</p>
-                        <p className="text-lg font-bold text-blue-400">{selectedUser.referralStats?.invited || selectedUser.referredUsers?.length || 0}</p>
-                      </div>
+                    <div className="bg-[#EADDFF] p-5 rounded-[24px] border border-[#6750A4]/10 flex justify-between items-center group/ref">
+                       <div>
+                          <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Code Parrainage</p>
+                          <p className="text-[#21005D] font-mono font-black text-xl tracking-[0.2em]">{selectedUser.referralCode || 'NÉANT'}</p>
+                       </div>
+                       <button onClick={() => { navigator.clipboard.writeText(selectedUser.referralCode || ''); toast.success('Code Copié'); }} className="p-3 bg-white text-[#6750A4] rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-all"><Copy size={18} /></button>
                     </div>
-
-                    {selectedUser.referredBy && (
-                      <div className="pt-2 border-t border-brand/10 mt-2">
-                        <p className="text-xs text-slate-500 flex items-center gap-2">
-                          <LinkIcon size={12} /> Parrainé par: <span className="text-white font-mono">{selectedUser.referredBy}</span>
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
+                 </div>
               </div>
             </div>
             
-            <div className="p-6 border-t border-border-dark bg-slate-800/30 flex justify-end">
-              <button 
-                onClick={() => setSelectedUser(null)}
-                className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl transition-colors"
-              >
-                Fermer
-              </button>
+            <div className="p-8 bg-[#F3EDF7]/30 border-t border-[#E7E0EB] flex justify-end">
+               <button onClick={() => setSelectedUser(null)} className="m3-btn-tonal !px-10 py-4 !rounded-full text-[10px] tracking-widest uppercase">Fermer le Profil</button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

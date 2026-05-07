@@ -3,26 +3,28 @@ import {
   collection, 
   onSnapshot, 
   query, 
-  doc,
-  updateDoc,
-  addDoc,
-  deleteDoc,
-  Timestamp,
-  orderBy,
-  limit
+  doc, 
+  updateDoc, 
+  addDoc, 
+  deleteDoc, 
+  Timestamp, 
+  orderBy, 
+  limit 
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { Commission } from '../../types';
 import { 
   Save, 
-  History,
-  ArrowRightLeft,
-  Plus,
-  Trash2,
-  X,
-  Globe,
-  Smartphone,
-  Info
+  History, 
+  ArrowRightLeft, 
+  Plus, 
+  Trash2, 
+  X, 
+  Globe, 
+  Smartphone, 
+  Info,
+  Settings,
+  Percent
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -70,6 +72,7 @@ const CommissionsPage: React.FC = () => {
   const handleSave = async () => {
     if (isSaving) return;
     setIsSaving(true);
+    const t = toast.loading('Enregistrement de la règle...');
     try {
       const data = {
         ...formData,
@@ -79,10 +82,10 @@ const CommissionsPage: React.FC = () => {
 
       if (editingId) {
         await updateDoc(doc(db, 'commissions', editingId), data);
-        toast.success('Règle mise à jour');
+        toast.success('Règle mise à jour', { id: t });
       } else {
         await addDoc(collection(db, 'commissions'), data);
-        toast.success('Nouvelle règle ajoutée');
+        toast.success('Nouvelle règle ajoutée', { id: t });
       }
       
       setIsAdding(false);
@@ -98,7 +101,7 @@ const CommissionsPage: React.FC = () => {
       });
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de l\'enregistrement');
+      toast.error('Erreur lors de l\'enregistrement', { id: t });
     } finally {
       setIsSaving(false);
     }
@@ -106,64 +109,70 @@ const CommissionsPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Supprimer cette règle de commission ?')) return;
+    const t = toast.loading('Suppression...');
     try {
       await deleteDoc(doc(db, 'commissions', id));
-      toast.success('Règle supprimée');
+      toast.success('Règle supprimée', { id: t });
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de la suppression');
+      toast.error('Erreur', { id: t });
     }
   };
 
   const getTransferLabel = (type: string) => {
-    if (type === 'russia-africa') return 'Russie → Afrique';
-    if (type === 'africa-russia') return 'Afrique → Russie';
-    return 'Russie → Russie';
+    if (type === 'russia-africa') return 'Russie ➔ Afrique';
+    if (type === 'africa-russia') return 'Afrique ➔ Russie';
+    return 'Russie ➔ Russie';
   };
 
   const selectedCountryData = countries.find(c => c.code === formData.destinationCountry);
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Configuration des Frais</h2>
-          <p className="text-slate-400 text-sm">Gérez les commissions par destination et type de transfert</p>
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
+            <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Percent size={24} /></div>
+            Gestion des Frais
+          </h2>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Structure tarifaire et commissions réseau</p>
         </div>
         <button 
           onClick={() => { setIsAdding(true); setEditingId(null); }}
-          className="flex items-center gap-2 bg-brand text-white px-6 py-3 rounded-2xl font-bold hover:bg-brand-dark transition-all shadow-lg shadow-brand/20"
+          className="m3-btn-filled flex items-center gap-3"
         >
           <Plus size={20} /> Nouvelle Règle
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Rules List */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {commissions.length === 0 ? (
-            <div className="bg-card-dark border border-border-dark p-12 rounded-3xl text-center text-slate-500">
-              Aucune règle de commission configurée.
+            <div className="m3-card-elevated p-20 text-center bg-[#F3EDF7]/30 border-2 border-dashed">
+               <Settings className="mx-auto text-[#6750A4]/20 mb-6" size={64} />
+               <p className="text-[#49454F] font-black uppercase text-[10px] tracking-widest">Aucune règle tarifaire configurée</p>
             </div>
           ) : (
             commissions.sort((a, b) => a.transferType.localeCompare(b.transferType)).map(rule => (
-              <div key={rule.id} className="bg-card-dark border border-border-dark p-5 rounded-3xl hover:border-brand/30 transition-all group relative">
+              <div key={rule.id} className="m3-card-elevated group relative overflow-hidden transition-all hover:border-[#6750A4]/30">
                 <div className="flex justify-between items-start">
-                  <div className="flex gap-4">
-                    <div className={`p-3 rounded-2xl ${rule.transferType === 'russia-africa' ? 'bg-emerald-500/10 text-emerald-500' : rule.transferType === 'africa-russia' ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                      <ArrowRightLeft size={24} />
+                  <div className="flex gap-5">
+                    <div className={`p-4 rounded-[20px] shadow-sm border border-black/5 ${rule.transferType === 'russia-africa' ? 'bg-[#E8DEF8] text-[#1D192B]' : 'bg-[#EADDFF] text-[#21005D]'}`}>
+                      <ArrowRightLeft size={28} />
                     </div>
                     <div>
-                      <h3 className="text-white font-bold">{getTransferLabel(rule.transferType)}</h3>
-                      <div className="flex items-center gap-2 mt-1">
+                      <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">{getTransferLabel(rule.transferType)}</h3>
+                      <div className="flex flex-wrap gap-2 mt-2">
                         {rule.destinationCountry && (
-                          <div className="flex items-center gap-1.5 bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-300 font-bold uppercase">
-                            <Globe size={10} /> {rule.destinationCountry}
+                          <div className="flex items-center gap-1.5 bg-[#F3EDF7] px-3 py-1 rounded-full text-[9px] text-[#6750A4] font-black uppercase tracking-widest border border-[#E7E0EB]">
+                            <Globe size={12} /> {rule.destinationCountry}
                           </div>
                         )}
                         {rule.destinationOperator && (
-                          <div className="flex items-center gap-1.5 bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-300 font-bold uppercase">
-                            <Smartphone size={10} /> {rule.destinationOperator}
+                          <div className="flex items-center gap-1.5 bg-[#EADDFF] px-3 py-1 rounded-full text-[9px] text-[#21005D] font-black uppercase tracking-widest border border-[#6750A4]/10">
+                            <Smartphone size={12} /> {rule.destinationOperator}
                           </div>
                         )}
                       </div>
@@ -171,27 +180,27 @@ const CommissionsPage: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <p className="text-2xl font-black text-brand">
+                    <p className="text-3xl font-black text-[#6750A4] tracking-tighter">
                       {rule.feeType === 'fixed' ? `${rule.fixedAmount} ${rule.currency}` : `${rule.percentage}%`}
                     </p>
-                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                    <p className="text-[10px] text-[#49454F] font-black uppercase tracking-widest mt-1 opacity-60">
                       {rule.minAmount.toLocaleString()} - {rule.maxAmount.toLocaleString()} {rule.currency}
                     </p>
                   </div>
                 </div>
 
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all flex gap-2">
+                <div className="absolute top-6 right-8 opacity-0 group-hover:opacity-100 transition-all flex gap-3 translate-x-4 group-hover:translate-x-0">
                   <button 
                     onClick={() => { setEditingId(rule.id); setFormData(rule); setIsAdding(true); }}
-                    className="p-2 bg-slate-800 text-slate-400 hover:text-white rounded-lg"
+                    className="p-3 bg-white border border-[#E7E0EB] text-[#6750A4] hover:bg-[#6750A4] hover:text-white rounded-xl shadow-lg transition-all"
                   >
-                    <Save size={16} />
+                    <Save size={18} />
                   </button>
                   <button 
                     onClick={() => handleDelete(rule.id)}
-                    className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg"
+                    className="p-3 bg-white border border-[#E7E0EB] text-[#B3261E] hover:bg-[#B3261E] hover:text-white rounded-xl shadow-lg transition-all"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={18} />
                   </button>
                 </div>
               </div>
@@ -200,23 +209,23 @@ const CommissionsPage: React.FC = () => {
         </div>
 
         {/* Sidebar: Add/Edit Form & Logs */}
-        <div className="space-y-6">
+        <div className="space-y-8">
           {isAdding && (
-            <div className="bg-card-dark border border-brand/30 p-6 rounded-3xl shadow-xl shadow-brand/5 relative animate-in fade-in slide-in-from-right-4">
-              <button onClick={() => setIsAdding(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white">
-                <X size={20} />
+            <div className="m3-card-elevated !bg-[#FEF7FF] border-[#6750A4]/20 relative animate-in slide-in-from-right-10 duration-500 shadow-2xl">
+              <button onClick={() => setIsAdding(false)} className="absolute top-6 right-6 p-2 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
+                <X size={18} />
               </button>
-              <h3 className="text-lg font-bold text-white mb-6">
+              <h3 className="text-xl font-black text-[#1D1B20] tracking-tight mb-8">
                 {editingId ? 'Modifier la règle' : 'Nouvelle règle'}
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type de transfert</label>
+                  <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 mb-2 block">Type de transfert</label>
                   <select 
                     value={formData.transferType}
                     onChange={e => setFormData({ ...formData, transferType: e.target.value as any })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-brand outline-none"
+                    className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all outline-none appearance-none"
                   >
                     <option value="russia-africa">Russie → Afrique</option>
                     <option value="africa-russia">Afrique → Russie</option>
@@ -226,81 +235,81 @@ const CommissionsPage: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Pays (Optionnel)</label>
+                    <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 mb-2 block">Pays Destination</label>
                     <select 
                       value={formData.destinationCountry || ''}
                       onChange={e => setFormData({ ...formData, destinationCountry: e.target.value || undefined, destinationOperator: undefined })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-brand outline-none"
+                      className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-4 py-3.5 text-[11px] font-bold text-[#1D1B20] outline-none"
                     >
                       <option value="">Tous les pays</option>
                       {countries.map(c => <option key={c.id} value={c.code}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Opérateur (Optionnel)</label>
+                    <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 mb-2 block">Opérateur</label>
                     <select 
                       value={formData.destinationOperator || ''}
                       onChange={e => setFormData({ ...formData, destinationOperator: e.target.value || undefined })}
                       disabled={!formData.destinationCountry}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-brand outline-none disabled:opacity-50"
+                      className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-4 py-3.5 text-[11px] font-bold text-[#1D1B20] outline-none disabled:opacity-30"
                     >
-                      <option value="">Tous les opérateurs</option>
+                      <option value="">Tous les réseaux</option>
                       {selectedCountryData?.operators?.map((op: any) => <option key={op.name} value={op.name}>{op.name}</option>)}
                     </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Type de frais</label>
-                  <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+                  <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 mb-3 block">Type de tarification</label>
+                  <div className="flex bg-[#F3EDF7] p-1.5 rounded-full border border-[#E7E0EB] shadow-inner">
                     <button 
                       onClick={() => setFormData({ ...formData, feeType: 'percentage' })}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${formData.feeType === 'percentage' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-400 hover:text-white'}`}
+                      className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${formData.feeType === 'percentage' ? 'bg-[#6750A4] text-white shadow-md' : 'text-[#49454F] hover:bg-white/50'}`}
                     >
-                      Pourcentage (%)
+                      Pourcentage
                     </button>
                     <button 
                       onClick={() => setFormData({ ...formData, feeType: 'fixed' })}
-                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${formData.feeType === 'fixed' ? 'bg-brand text-white shadow-lg shadow-brand/20' : 'text-slate-400 hover:text-white'}`}
+                      className={`flex-1 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${formData.feeType === 'fixed' ? 'bg-[#6750A4] text-white shadow-md' : 'text-[#49454F] hover:bg-white/50'}`}
                     >
-                      Fixe (Somme)
+                      Somme Fixe
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Valeur des frais</label>
-                  <div className="relative">
+                  <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 mb-2 block">Valeur des frais</label>
+                  <div className="relative group">
                     <input 
                       type="number"
                       step="0.01"
                       value={formData.feeType === 'percentage' ? formData.percentage : formData.fixedAmount}
                       onChange={e => setFormData({ ...formData, [formData.feeType === 'percentage' ? 'percentage' : 'fixedAmount']: parseFloat(e.target.value) })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-brand outline-none font-bold"
+                      className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-lg font-black text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all outline-none"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[#6750A4] font-black text-sm">
                       {formData.feeType === 'percentage' ? '%' : formData.currency}
                     </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Min. ({formData.currency})</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Min. Transfert</label>
                     <input 
                       type="number"
                       value={formData.minAmount}
                       onChange={e => setFormData({ ...formData, minAmount: parseFloat(e.target.value) })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-brand outline-none font-mono"
+                      className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-xl px-4 py-3 text-xs font-bold text-[#1D1B20] outline-none"
                     />
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Max. ({formData.currency})</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Max. Transfert</label>
                     <input 
                       type="number"
                       value={formData.maxAmount}
                       onChange={e => setFormData({ ...formData, maxAmount: parseFloat(e.target.value) })}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-brand outline-none font-mono"
+                      className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-xl px-4 py-3 text-xs font-bold text-[#1D1B20] outline-none"
                     />
                   </div>
                 </div>
@@ -308,37 +317,38 @@ const CommissionsPage: React.FC = () => {
                 <button 
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="w-full py-4 bg-brand text-white font-black rounded-2xl shadow-lg shadow-brand/20 hover:bg-brand-dark transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full m3-btn-filled py-4 text-[11px] uppercase tracking-widest mt-4 shadow-xl"
                 >
-                  <Save size={20} /> {isSaving ? 'Enregistrement...' : 'Enregistrer la règle'}
+                  <Save size={20} /> {isSaving ? 'Synchronisation...' : 'Enregistrer la règle'}
                 </button>
               </div>
             </div>
           )}
 
-          <div className="bg-card-dark border border-border-dark p-6 rounded-3xl">
-            <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-              <History className="text-brand" size={20} />
-              Logs récents
+          <div className="m3-card-elevated border-[#E7E0EB] !p-8">
+            <h3 className="text-lg font-black text-[#1D1B20] tracking-tight mb-8 flex items-center gap-3">
+              <History className="text-[#6750A4]" size={20} />
+              Historique des Modifications
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-6">
                {logs.length === 0 ? (
-                 <p className="text-slate-500 text-xs italic">Aucun log disponible.</p>
+                 <p className="text-[#49454F] text-[10px] font-bold italic opacity-40 uppercase tracking-widest text-center py-6">Aucun log récent</p>
                ) : (
                  logs.map(log => (
-                   <div key={log.id} className="border-l-2 border-slate-800 pl-4">
-                     <p className="text-white text-xs font-bold leading-tight">{log.action?.replace(/_/g, ' ')}</p>
-                     <p className="text-slate-500 text-[9px] mt-1">{log.timestamp?.toDate().toLocaleString()}</p>
+                   <div key={log.id} className="relative pl-6 border-l-2 border-[#F3EDF7] group/log">
+                     <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-[#6750A4] group-hover/log:scale-150 transition-transform"></div>
+                     <p className="text-[#1D1B20] text-[11px] font-black uppercase tracking-tight leading-tight mb-1">{log.action?.replace(/_/g, ' ')}</p>
+                     <p className="text-[#49454F] text-[9px] font-bold opacity-60">{log.timestamp?.toDate().toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                    </div>
                  ))
                )}
             </div>
           </div>
 
-          <div className="bg-brand/10 border border-brand/20 p-5 rounded-2xl flex gap-4">
-             <Info className="text-brand shrink-0" size={20} />
-             <p className="text-[11px] text-brand/80 leading-relaxed">
-               Le système cherche la règle la plus précise. Une règle pour un <strong>pays spécifique</strong> sera prioritaire sur une règle générale.
+          <div className="bg-[#EADDFF] p-6 rounded-[28px] border border-[#6750A4]/10 flex gap-5 items-start">
+             <div className="p-3 bg-white rounded-2xl shadow-sm text-[#6750A4]"><Info size={24} /></div>
+             <p className="text-[11px] text-[#21005D] font-bold leading-relaxed">
+                Priorité du système : Les règles par <span className="font-black underline">pays spécifique</span> prévalent toujours sur les configurations générales. Assurez-vous d'éviter les conflits de plages de montants.
              </p>
           </div>
         </div>

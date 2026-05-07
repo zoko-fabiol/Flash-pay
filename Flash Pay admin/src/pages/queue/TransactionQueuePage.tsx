@@ -12,19 +12,20 @@ import {
   Search, 
   Filter, 
   Eye, 
-  CheckCircle2, 
-  AlertTriangle,
-  ArrowRightLeft
+  Clock,
+  ArrowUpRight,
+  MoreVertical,
+  Globe
 } from 'lucide-react';
 
 const StatusBadge = ({ status }: { status: TransactionStatus }) => {
   const styles: Record<string, string> = {
-    pending: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-    proof_received: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    confirmed: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    failed: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    flagged_problem: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    pending: 'bg-[#ECE6F0] text-[#49454F]',
+    proof_received: 'bg-[#EADDFF] text-[#21005D]',
+    confirmed: 'bg-[#E8DEF8] text-[#1D192B]',
+    completed: 'bg-[#E8DEF8] text-[#1D192B] border border-[#6750A4]/10',
+    failed: 'bg-[#F9DEDC] text-[#B3261E]',
+    flagged_problem: 'bg-[#FFFBFE] text-[#B3261E] border border-[#B3261E]',
   };
 
   const labels: Record<string, string> = {
@@ -37,7 +38,7 @@ const StatusBadge = ({ status }: { status: TransactionStatus }) => {
   };
 
   return (
-    <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${styles[status] || styles.pending}`}>
+    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${styles[status] || styles.pending}`}>
       {labels[status] || status}
     </span>
   );
@@ -76,154 +77,155 @@ const TransactionQueuePage: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header & Controls */}
-      <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Header & Stats Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">Queue de Transactions</h2>
-          <p className="text-slate-400 text-sm">Gestion et validation des flux financiers</p>
+          <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight">Queue de Transactions</h2>
+          <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Suivi en temps réel des flux financiers</p>
         </div>
         
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="m3-search flex-1 lg:w-80">
+            <Search className="text-[#49454F]" size={18} />
             <input 
               type="text"
-              placeholder="Rechercher ID, Utilisateur..."
+              placeholder="ID, Client, Téléphone..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand"
+              className="bg-transparent border-none outline-none text-sm font-medium w-full"
             />
           </div>
-          <button className="p-2 bg-slate-800 border border-slate-700 rounded-xl text-slate-400 hover:text-white transition-colors">
+          <button className="p-3.5 bg-white border border-[#E7E0EB] rounded-full text-[#49454F] hover:bg-[#F3EDF7] transition-all shadow-sm">
             <Filter size={20} />
           </button>
         </div>
       </div>
 
-      {/* Tabs / Filters */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      {/* Quick Filters */}
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {['all', 'pending', 'proof_received', 'flagged_problem', 'completed'].map((status) => (
           <button
             key={status}
             onClick={() => setStatusFilter(status as any)}
             className={`
-              px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all
+              px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm
               ${statusFilter === status 
-                ? 'bg-brand text-white shadow-lg shadow-brand/20' 
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}
+                ? 'bg-[#6750A4] text-white shadow-lg shadow-[#6750A4]/20' 
+                : 'bg-white text-[#49454F] border border-[#E7E0EB] hover:bg-[#F3EDF7]'}
             `}
           >
-            {status === 'all' ? 'Toutes' : status.replace('_', ' ').toUpperCase()}
+            {status === 'all' ? 'Toutes les transactions' : status.replace('_', ' ')}
           </button>
         ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-card-dark border border-border-dark rounded-3xl overflow-hidden">
+      {/* Transactions Container */}
+      <div className="m3-card-elevated !p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-800/50 text-slate-400 text-[11px] uppercase tracking-wider">
-                <th className="px-6 py-4 font-semibold">Transaction</th>
-                <th className="px-6 py-4 font-semibold">Client</th>
-                <th className="px-6 py-4 font-semibold">Type</th>
-                <th className="px-6 py-4 font-semibold">Montant</th>
-                <th className="px-6 py-4 font-semibold">Commission</th>
-                <th className="px-6 py-4 font-semibold">À Recevoir</th>
-                <th className="px-6 py-4 font-semibold">Statut</th>
-                <th className="px-6 py-4 font-semibold">Date</th>
-                <th className="px-6 py-4 font-semibold text-right">Actions</th>
+              <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] uppercase font-black tracking-[0.2em] border-b border-[#E7E0EB]">
+                <th className="px-8 py-5">Identifiant</th>
+                <th className="px-8 py-5">Expéditeur</th>
+                <th className="px-8 py-5">Flux & Montant</th>
+                <th className="px-8 py-5">Destination</th>
+                <th className="px-8 py-5">Statut</th>
+                <th className="px-8 py-5">Horodatage</th>
+                <th className="px-8 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-dark">
+            <tbody className="divide-y divide-[#E7E0EB]">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-slate-500 text-sm">Chargement des transactions...</span>
+                  <td colSpan={7} className="px-8 py-32 text-center">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-[#6750A4] border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Analyse de la file d'attente...</span>
                     </div>
                   </td>
                 </tr>
               ) : filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3 text-slate-500">
-                      <Search size={48} strokeWidth={1} />
-                      <span>Aucune transaction trouvée</span>
+                  <td colSpan={7} className="px-8 py-32 text-center">
+                    <div className="flex flex-col items-center gap-4 text-[#49454F]/30">
+                      <Search size={64} strokeWidth={1} />
+                      <span className="text-sm font-black uppercase tracking-widest">Aucune transaction correspondante</span>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors group">
-                    <td className="px-6 py-4">
+                  <tr key={tx.id} className="hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer" onClick={() => navigate(`/admin/queue/${tx.id}`)}>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 bg-[#EADDFF] text-[#21005D] rounded-xl flex items-center justify-center font-mono font-black text-xs">
+                           #{tx.id.substring(0, 2)}
+                         </div>
+                         <div className="flex flex-col">
+                            <span className="text-[#1D1B20] font-mono text-sm font-black tracking-tight">#{tx.id.substring(0, 10).toUpperCase()}</span>
+                            <span className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mt-0.5">{tx.isBulk ? 'Multi-Envoi' : 'Unique'}</span>
+                         </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="text-white font-mono text-sm font-semibold">#{tx.id.substring(0, 8)}</span>
-                        <span className="text-slate-500 text-[10px]">{tx.operator}</span>
+                        <span className="text-[#1D1B20] text-sm font-black tracking-tight">{tx.clientName || 'Anonyme'}</span>
+                        <div className="flex flex-col mt-0.5">
+                          {tx.clientPhone && (
+                            <a href={`tel:${tx.clientPhone}`} className="text-[#6750A4] text-[10px] font-bold hover:underline">{tx.clientPhone}</a>
+                          )}
+                          {tx.clientEmail && (
+                            <a href={`mailto:${tx.clientEmail}`} className="text-[#49454F] text-[10px] font-bold opacity-60 hover:underline">{tx.clientEmail}</a>
+                          )}
+                          {!tx.clientPhone && !tx.clientEmail && <span className="text-[#49454F] text-[10px] font-bold opacity-60">Pas de contact</span>}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="text-slate-200 text-sm font-semibold">{tx.clientName || 'Client inconnu'}</span>
-                        {tx.clientPhone ? (
-                          <a href={`tel:${tx.clientPhone}`} className="text-slate-500 text-[10px] hover:text-brand transition-colors">{tx.clientPhone}</a>
-                        ) : tx.clientEmail ? (
-                          <a href={`mailto:${tx.clientEmail}`} className="text-slate-500 text-[10px] hover:text-brand transition-colors">{tx.clientEmail}</a>
-                        ) : (
-                          <span className="text-slate-500 text-[10px]">{tx.userId.substring(0, 12)}...</span>
-                        )}
+                        <div className="flex items-center gap-2 mb-1">
+                           <span className="text-sm font-black text-[#1D1B20]">{tx.amount.toLocaleString()}</span>
+                           <span className="text-[10px] font-black text-[#6750A4] uppercase">{tx.currency}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">
+                           <ArrowUpRight size={10} /> {tx.operator || 'Système'}
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <ArrowRightLeft size={14} className="text-brand" />
-                        <span className="text-xs">{tx.type}</span>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                         <div className="w-8 h-8 bg-[#F3EDF7] rounded-full flex items-center justify-center text-[#6750A4] border border-[#E7E0EB]">
+                            <Globe size={14} />
+                         </div>
+                         <div className="flex flex-col">
+                            <span className="text-sm font-black text-[#1D1B20]">{(tx.receivedAmount || 0).toLocaleString()} {tx.destinationCurrency}</span>
+                            <span className="text-[9px] font-bold text-[#49454F] opacity-50 uppercase">{tx.toCountry || 'Afrique'}</span>
+                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="text-white font-bold">{tx.amount.toLocaleString()} {tx.currency}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {tx.fee !== undefined && tx.commissionPercentage !== undefined ? (
-                        <span className="text-amber-400 text-sm font-semibold">{tx.fee.toLocaleString()} {tx.currency} ({tx.commissionPercentage}%)</span>
-                      ) : (
-                        <span className="text-slate-500 text-xs">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      {tx.receivedAmount !== undefined && tx.destinationCurrency ? (
-                        <span className="text-emerald-400 font-bold">{tx.receivedAmount.toLocaleString(undefined, {maximumFractionDigits: 2})} {tx.destinationCurrency}</span>
-                      ) : (
-                        <span className="text-slate-500 text-xs">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
+                    <td className="px-8 py-6">
                       <StatusBadge status={tx.status} />
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-slate-300 text-xs">{tx.createdAt.toDate().toLocaleDateString()}</span>
-                        <span className="text-slate-500 text-[10px]">{tx.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2 text-[#49454F]">
+                         <Clock size={14} className="opacity-40" />
+                         <div className="flex flex-col">
+                           <span className="text-[10px] font-black text-[#1D1B20] uppercase">{tx.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}</span>
+                           <span className="text-[9px] font-bold opacity-40">{tx.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex justify-end gap-2">
                         <button 
                           onClick={() => navigate(`/admin/queue/${tx.id}`)}
-                          className="p-2 bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-all" 
-                          title="Voir détails"
+                          className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm" 
                         >
-                          <Eye size={16} />
+                          <Eye size={18} />
                         </button>
-                        {tx.status === 'proof_received' && (
-                          <button className="p-2 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg transition-all" title="Valider">
-                            <CheckCircle2 size={16} />
-                          </button>
-                        )}
-                        <button className="p-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg transition-all" title="Signaler problème">
-                          <AlertTriangle size={16} />
+                        <button className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#B3261E] hover:text-white rounded-xl transition-all shadow-sm">
+                          <MoreVertical size={18} />
                         </button>
                       </div>
                     </td>
@@ -234,12 +236,12 @@ const TransactionQueuePage: React.FC = () => {
           </table>
         </div>
         
-        {/* Pagination placeholder */}
-        <div className="px-6 py-4 bg-slate-800/30 border-t border-border-dark flex justify-between items-center">
-          <span className="text-slate-500 text-xs">Affichage de {filteredTransactions.length} transactions</span>
-          <div className="flex gap-2">
-             <button className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-lg text-slate-500 text-xs disabled:opacity-50" disabled>Précédent</button>
-             <button className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-lg text-slate-500 text-xs disabled:opacity-50" disabled>Suivant</button>
+        {/* Footer Info */}
+        <div className="px-8 py-6 bg-[#F3EDF7]/30 border-t border-[#E7E0EB] flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-[#49454F] text-[10px] font-black uppercase tracking-[0.2em]">Affichage de {filteredTransactions.length} flux monétaires actifs</p>
+          <div className="flex gap-3">
+             <button className="m3-btn-tonal !py-2 !px-5 !text-[9px] opacity-50 cursor-not-allowed">Précédent</button>
+             <button className="m3-btn-tonal !py-2 !px-5 !text-[9px] opacity-50 cursor-not-allowed">Suivant</button>
           </div>
         </div>
       </div>

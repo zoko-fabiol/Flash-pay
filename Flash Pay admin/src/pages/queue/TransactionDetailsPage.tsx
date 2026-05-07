@@ -11,34 +11,25 @@ import {
   ExternalLink, 
   Clock, 
   CheckCircle2, 
-  XCircle, 
-  User,
+  User as UserIcon,
   CreditCard,
-  ShieldCheck,
   Copy,
   Printer,
-  Smartphone
+  Smartphone,
+  Activity,
+  AlertCircle,
+  FileText,
+  Check
 } from 'lucide-react';
 
-type ClientProfile = {
-  nom?: string;
-  tel?: string;
-  email?: string;
-  kyc?: {
-    status: string;
-  };
-  statut_kyc?: string;
-};
 
 const TransactionDetailsPage: React.FC = () => {
   const { transactionId } = useParams();
   const navigate = useNavigate();
   const [transaction, setTransaction] = useState<Transaction | null>(null);
-  const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [adminNote, setAdminNote] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
-
   useEffect(() => {
     if (!transactionId) return;
 
@@ -49,37 +40,20 @@ const TransactionDetailsPage: React.FC = () => {
       setLoading(false);
     });
 
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [transactionId]);
-
-  useEffect(() => {
-    if (!transaction?.userId) {
-      setClientProfile(null);
-      return;
-    }
-
-    const unsubscribeUser = onSnapshot(doc(db, 'users', transaction.userId), (userDoc) => {
-      if (userDoc.exists()) {
-        setClientProfile(userDoc.data() as ClientProfile);
-      } else {
-        setClientProfile(null);
-      }
-    });
-
-    return () => unsubscribeUser();
-  }, [transaction?.userId]);
 
   const handleStatusUpdate = async (status: any) => {
     if (!transaction) return;
     setIsActionLoading(true);
+    const t = toast.loading('Mise à jour du statut...');
     try {
       await adminService.updateTransactionStatus(transaction.id, status, adminNote);
       setAdminNote('');
+      toast.success(`Transaction marquée comme ${status}`, { id: t });
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise à jour', { id: t });
     } finally {
       setIsActionLoading(false);
     }
@@ -89,6 +63,7 @@ const TransactionDetailsPage: React.FC = () => {
     if (!transaction || !transaction.bulkRecipients) return;
     
     setIsActionLoading(true);
+    const t = toast.loading('Validation du destinataire...');
     try {
       const updatedRecipients = transaction.bulkRecipients.map(r => {
         if (r.id === recipientId) {
@@ -99,16 +74,15 @@ const TransactionDetailsPage: React.FC = () => {
 
       await updateDoc(doc(db, 'transactions', transaction.id), {
         bulkRecipients: updatedRecipients,
-        // Optional: auto-complete global status if all are done
         status: updatedRecipients.every(r => r.status === 'completed' || r.status === 'failed') 
           ? 'completed' 
           : 'proof_received'
       });
       
-      toast.success('Statut du destinataire mis à jour');
+      toast.success('Statut mis à jour', { id: t });
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise à jour', { id: t });
     } finally {
       setIsActionLoading(false);
     }
@@ -119,7 +93,6 @@ const TransactionDetailsPage: React.FC = () => {
     const t_toast = toast.loading('Génération du reçu...');
     
     try {
-      // Use A5 for bulk, A6 for standard if preferred, but A5 is requested for bulk
       const isA5 = !!recipient || transaction.isBulk;
       
       const pdf = new jsPDF({
@@ -133,13 +106,11 @@ const TransactionDetailsPage: React.FC = () => {
       const margin = 12;
       let y = 15;
 
-      const mainColor = [115, 78, 212]; // #734ED4
+      const mainColor = [103, 80, 164]; // M3 Primary #6750A4
 
-      // Header background
       pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
       pdf.rect(0, 0, pageWidth, 28, 'F');
 
-      // Title
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(22);
       pdf.setFont('helvetica', 'bold');
@@ -151,7 +122,6 @@ const TransactionDetailsPage: React.FC = () => {
       y = 42;
       pdf.setTextColor(60, 60, 60);
       
-      // Transaction Info
       pdf.setFontSize(9);
       pdf.setFont('helvetica', 'bold');
       pdf.text('REFERENCE', margin, y);
@@ -173,13 +143,10 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.text(formatDate(new Date()), pageWidth - margin, y + 7, { align: 'right' });
 
       y += 24;
-
-      // Divider
       pdf.setDrawColor(240, 240, 240);
       pdf.line(margin, y, pageWidth - margin, y);
       y += 10;
       
-      // Parties
       pdf.setFontSize(10);
       pdf.setFont('helvetica', 'bold');
       pdf.text('EXPEDITEUR', margin, y);
@@ -194,9 +161,7 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.text(recipient ? (recipient.phone || '') : (transaction.recipientPhone || ''), pageWidth - margin, y + 12, { align: 'right' });
 
       y += 28;
-
-      // Amount Box
-      pdf.setFillColor(250, 250, 252);
+      pdf.setFillColor(243, 237, 247); // M3 Surface Variant
       pdf.roundedRect(margin, y, pageWidth - (margin * 2), 48, 4, 4, 'F');
       
       y += 12;
@@ -209,8 +174,6 @@ const TransactionDetailsPage: React.FC = () => {
       const rate = transaction.exchangeRate || 1;
       const sendAmt = recipient ? recipient.amount : transaction.amount;
       const recvAmt = Math.floor(sendAmt * rate);
-      
-      // Helper to format number with space to avoid encoding issues
       const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
       pdf.text(`${formatNumber(sendAmt)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 8, y, { align: 'right' });
@@ -230,35 +193,31 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.text(`${formatNumber(recvAmt)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
 
       y += 28;
-
-      // Status Badge
       const status = recipient ? (recipient.status || 'pending') : transaction.status;
       const isSuccess = status === 'completed';
       
       if (isSuccess) {
-        pdf.setFillColor(232, 252, 241); // Light emerald
+        pdf.setFillColor(232, 252, 241);
         pdf.roundedRect(pageWidth / 2 - 25, y, 50, 12, 6, 6, 'F');
-        pdf.setTextColor(16, 124, 65); // Dark emerald
+        pdf.setTextColor(16, 124, 65);
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
         pdf.text('TRANSFERE', pageWidth / 2, y + 7.5, { align: 'center' });
       } else {
-        pdf.setFillColor(255, 241, 242); // Light rose
+        pdf.setFillColor(255, 241, 242);
         pdf.roundedRect(pageWidth / 2 - 25, y, 50, 12, 6, 6, 'F');
-        pdf.setTextColor(225, 29, 72); // Dark rose
+        pdf.setTextColor(225, 29, 72);
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
         pdf.text('EN ATTENTE', pageWidth / 2, y + 7.5, { align: 'center' });
       }
 
-      // Footer
       pdf.setTextColor(180, 180, 180);
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Ceci est un document genere electroniquement.', pageWidth / 2, pageHeight - 15, { align: 'center' });
-      pdf.text('Flash Pay - La rapidite au service de vos transferts.', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      pdf.text('Document généré par Flash Pay Admin.', pageWidth / 2, pageHeight - 15, { align: 'center' });
       
-      pdf.save(`FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}_${transaction.id.substring(0, 5)}.pdf`);
+      pdf.save(`FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}_${transaction.id.substring(0, 8)}.pdf`);
       toast.success('Reçu généré !', { id: t_toast });
     } catch (error) {
       console.error(error);
@@ -268,321 +227,339 @@ const TransactionDetailsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center py-32">
+        <div className="w-12 h-12 border-4 border-[#6750A4] border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-6 text-[#49454F] font-black uppercase text-[10px] tracking-widest">Chargement des détails...</p>
       </div>
     );
   }
 
   if (!transaction) {
     return (
-      <div className="bg-card-dark border border-border-dark p-12 rounded-3xl text-center">
-        <h2 className="text-2xl font-bold text-white mb-4">Transaction introuvable</h2>
-        <button 
-          onClick={() => navigate('/admin/queue')}
-          className="text-brand hover:underline flex items-center justify-center gap-2 mx-auto"
-        >
-          <ArrowLeft size={16} /> Retour à la liste
+      <div className="m3-card p-12 text-center max-w-xl mx-auto">
+        <h2 className="text-2xl font-black text-[#1D1B20] mb-4 tracking-tight">Transaction Introuvable</h2>
+        <p className="text-[#49454F] mb-8 font-medium">Cette transaction n'existe pas ou a été supprimée.</p>
+        <button onClick={() => navigate('/admin/queue')} className="m3-btn-filled mx-auto">
+          <ArrowLeft size={20} /> Retour à la liste
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <button 
-          onClick={() => navigate('/admin/queue')}
-          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={20} /> Retour à la queue
-        </button>
-        
-        {transaction.isBulk && (
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-brand/10 border border-brand/20 rounded-full">
-            <ShieldCheck size={16} className="text-brand" />
-            <span className="text-[10px] font-black text-brand uppercase tracking-widest">Envoi Multiple</span>
+    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
+      {/* Top Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <div>
+          <button onClick={() => navigate('/admin/queue')} className="flex items-center gap-2 text-[#6750A4] font-black uppercase text-[10px] tracking-widest mb-4 hover:translate-x-[-4px] transition-transform">
+            <ArrowLeft size={16} /> Retour à la file d'attente
+          </button>
+          <div className="flex items-center gap-4">
+             <h2 className="text-3xl font-black text-[#1D1B20] tracking-tighter">Transaction <span className="font-mono text-[#6750A4]">#{transaction.id.substring(0, 10)}</span></h2>
           </div>
-        )}
+        </div>
+        
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+           <div className={`px-5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+             transaction.status === 'completed' ? 'bg-[#E8DEF8] text-[#1D192B]' : 
+             transaction.status === 'failed' ? 'bg-[#F9DEDC] text-[#B3261E]' : 
+             'bg-[#ECE6F0] text-[#49454F]'
+           }`}>
+             {transaction.status.replace('_', ' ')}
+           </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Details */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* Premium Status Header (Image 2 style) */}
+      {transaction.status === 'completed' && (
+        <div className="m3-card-elevated flex flex-col items-center justify-center py-16 text-center animate-in zoom-in duration-700 border-b-4 border-[#6750A4]">
+          <div className="w-24 h-24 bg-[#6750A4] text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-[#6750A4]/40 scale-110">
+            <Check size={48} strokeWidth={4} />
+          </div>
+          <h2 className="text-2xl font-black text-[#6750A4] tracking-tight uppercase mb-2">Transfert effectué</h2>
+          <p className="text-5xl font-black text-[#1D1B20] tracking-tighter">
+            {transaction.amount.toLocaleString()} <span className="text-xl opacity-40 uppercase">roubles</span>
+          </p>
+          <p className="text-[#49454F] text-sm font-bold mt-6 opacity-60 flex items-center gap-2">
+            <Clock size={16} />
+            {transaction.createdAt ? (typeof transaction.createdAt.toDate === 'function' ? transaction.createdAt.toDate().toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : new Date(transaction.createdAt as any).toLocaleString('fr-FR')) : ''}
+          </p>
           
-          {/* Main Transaction Card */}
-          <div className="bg-card-dark border border-border-dark p-8 rounded-3xl">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <span className="text-[10px] font-bold text-brand uppercase tracking-widest bg-brand/10 px-2 py-0.5 rounded">Transaction ID</span>
-                <h2 className="text-2xl font-mono font-bold text-white mt-1">#{transaction.id}</h2>
-              </div>
-              <div className="text-right">
-                <span className="text-slate-500 text-xs">Effectuée le</span>
-                <p className="text-white font-medium">{transaction.createdAt.toDate().toLocaleString()}</p>
-              </div>
+          <div className="flex items-center gap-4 mt-12">
+            <div className="px-8 py-3 bg-[#F3EDF7] text-[#6750A4] rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Mise à jour</div>
+            <div className="px-8 py-3 bg-white border border-[#E7E0EB] text-[#49454F] rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Détails</div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left: Main Info */}
+        <div className="lg:col-span-2 space-y-8">
+          
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="m3-card flex flex-col justify-between">
+               <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 bg-[#EADDFF] text-[#21005D] rounded-[16px]"><UserIcon size={24} /></div>
+                 <button onClick={() => { navigator.clipboard.writeText(transaction.userId); toast.success('ID Copié'); }} className="p-2 text-[#49454F] hover:bg-[#F3EDF7] rounded-full transition-all"><Copy size={14} /></button>
+               </div>
+                <div>
+                  <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Expéditeur</p>
+                  <h3 className="text-lg font-black text-[#1D1B20] tracking-tight truncate">{transaction.clientName || 'Inconnu'}</h3>
+                  <div className="flex flex-col mt-1">
+                    {transaction.clientPhone && <a href={`tel:${transaction.clientPhone}`} className="text-[#6750A4] text-[10px] font-bold hover:underline">{transaction.clientPhone}</a>}
+                    {transaction.clientEmail && <a href={`mailto:${transaction.clientEmail}`} className="text-[#49454F] text-[9px] font-bold opacity-60 hover:underline">{transaction.clientEmail}</a>}
+                  </div>
+                </div>
             </div>
 
-            <div className={`grid grid-cols-1 ${transaction.isBulk ? 'md:grid-cols-2' : 'lg:grid-cols-3 md:grid-cols-2'} gap-8`}>
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-                  <User size={16} /> Information Expéditeur
-                </h3>
-                <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                  <p className="text-white font-bold text-lg">{transaction.clientName || clientProfile?.nom || 'Client inconnu'}</p>
-                  <p className="text-slate-400 text-sm mt-1">ID: {transaction.userId}</p>
-                  {(transaction.clientPhone || clientProfile?.tel) && (
-                    <div className="flex items-center justify-between group/field mt-2">
-                      <a href={`tel:${transaction.clientPhone || clientProfile?.tel}`} className="text-slate-500 text-xs hover:text-brand hover:underline transition-all">Tél: {transaction.clientPhone || clientProfile?.tel}</a>
-                      <button 
-                        onClick={() => { navigator.clipboard.writeText(transaction.clientPhone || clientProfile?.tel || ''); toast.success('Copié'); }}
-                        className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
-                      >
-                        <Copy size={12} />
-                      </button>
-                    </div>
-                  )}
-                  {clientProfile?.email && (
-                    <div className="flex items-center justify-between group/field mt-1">
-                      <a href={`mailto:${clientProfile.email}`} className="text-slate-500 text-xs hover:text-brand hover:underline transition-all">Email: {clientProfile.email}</a>
-                      <button 
-                        onClick={() => { navigator.clipboard.writeText(clientProfile.email || ''); toast.success('Copié'); }}
-                        className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
-                      >
-                        <Copy size={12} />
-                      </button>
-                    </div>
-                  )}
-                  <p className="text-slate-400 text-sm mt-1">
-                    Status KYC: <span className={`${
-                      (clientProfile?.kyc?.status === 'approved' || clientProfile?.statut_kyc === 'Expert' || clientProfile?.statut_kyc === 'Approved') ? 'text-emerald-500' : 'text-amber-500'
-                    } font-bold text-xs uppercase`}>
-                      {clientProfile?.statut_kyc || clientProfile?.kyc?.status || 'Inconnu'}
-                    </span>
-                  </p>
-                </div>
-              </div>
+            <div className="m3-card flex flex-col justify-between">
+               <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 bg-[#F3EDF7] text-[#6750A4] rounded-[16px]"><CreditCard size={24} /></div>
+                 <div className="text-[9px] font-black uppercase tracking-widest text-[#6750A4] bg-[#EADDFF] px-2 py-0.5 rounded-md">{transaction.currency}</div>
+               </div>
+               <div>
+                 <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Montant Envoyé</p>
+                 <h3 className="text-2xl font-black text-[#1D1B20] tracking-tighter">{transaction.amount.toLocaleString()} <span className="text-sm opacity-40">{transaction.currency}</span></h3>
+               </div>
+            </div>
 
-              {!transaction.isBulk && (
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-                    <Smartphone size={16} /> Information Destinataire
-                  </h3>
-                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                    <p className="text-white font-bold text-lg">{transaction.recipientName || 'Destinataire inconnu'}</p>
-                    <div className="flex items-center justify-between group/field mt-2">
-                      <a href={`tel:${transaction.recipientPhone}`} className="text-slate-400 text-sm hover:text-brand hover:underline transition-all">Tél: {transaction.recipientPhone}</a>
-                      <button 
-                        onClick={() => { navigator.clipboard.writeText(transaction.recipientPhone || ''); toast.success('Copié'); }}
-                        className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
-                      >
-                        <Copy size={12} />
-                      </button>
-                    </div>
-                    <p className="text-brand text-xs font-black uppercase mt-1 tracking-widest">{transaction.recipientOperator}</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-                  <CreditCard size={16} /> Résumé du Transfert
-                </h3>
-                <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-slate-500 text-xs uppercase font-bold">Total Envoyé</span>
-                    <span className="text-white font-black">{transaction.amount.toLocaleString()} {transaction.currency}</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-slate-500 text-xs uppercase font-bold">Frais</span>
-                    <span className="text-slate-300 font-bold">{transaction.fee?.toLocaleString()} {transaction.currency}</span>
-                  </div>
-                  <div className="pt-2 border-t border-slate-700 flex justify-between">
-                    <span className="text-brand text-xs uppercase font-black">Net à distribuer</span>
-                    <span className="text-brand font-black">{(transaction.receivedAmount || transaction.amount).toLocaleString()} {transaction.destinationCurrency}</span>
-                  </div>
-                </div>
-              </div>
+            <div className="m3-card bg-[#EADDFF] border-transparent flex flex-col justify-between relative overflow-hidden">
+               <div className="absolute -right-4 -bottom-4 opacity-[0.05]"><Activity size={100} /></div>
+               <div className="flex justify-between items-start mb-4">
+                 <div className="p-3 bg-white text-[#6750A4] rounded-[16px] shadow-sm"><Activity size={24} /></div>
+                 <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-white px-2 py-0.5 rounded-md">{transaction.destinationCurrency}</div>
+               </div>
+               <div>
+                 <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net à Distribuer</p>
+                 <h3 className="text-2xl font-black text-[#21005D] tracking-tighter">{(transaction.receivedAmount || transaction.amount).toLocaleString()} <span className="text-sm opacity-40">{transaction.destinationCurrency}</span></h3>
+               </div>
             </div>
           </div>
 
-          {/* BULK RECIPIENTS SECTION */}
-          {transaction.isBulk && transaction.bulkRecipients && (
-            <div className="bg-card-dark border border-border-dark p-8 rounded-3xl animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-black text-white flex items-center gap-2">
-                  <ShieldCheck size={24} className="text-brand" />
-                  Liste des Bénéficiaires ({transaction.bulkRecipients.length})
-                </h3>
-                <div className="flex items-center gap-4 text-xs font-bold">
-                  <div className="flex items-center gap-1.5 text-emerald-500">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    {transaction.bulkRecipients.filter(r => r.status === 'completed').length} Validés
-                  </div>
-                  <div className="flex items-center gap-1.5 text-amber-500">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    {transaction.bulkRecipients.filter(r => r.status === 'pending' || !r.status).length} En attente
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-2xl border border-slate-800">
-                <table className="w-full text-left border-collapse">
-                  <thead className="bg-slate-800/50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                    <tr>
-                      <th className="px-6 py-4">Bénéficiaire</th>
-                      <th className="px-6 py-4">Détails</th>
-                      <th className="px-6 py-4">Montant (Net)</th>
-                      <th className="px-6 py-4">Statut</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {transaction.bulkRecipients.map((recipient) => {
-                      const netAmount = recipient.amount * (transaction.exchangeRate || 1);
-                      const status = recipient.status || 'pending';
-                      
-                      return (
-                        <tr key={recipient.id} className="hover:bg-slate-800/30 transition-colors group">
-                          <td className="px-6 py-4">
-                            <p className="text-sm font-bold text-white">{recipient.name}</p>
-                            <span className="text-[10px] text-slate-500 font-mono">ID: {recipient.id.substring(0, 8)}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <a href={`tel:${recipient.phone || recipient.account}`} className="text-sm text-slate-300 font-medium hover:text-brand hover:underline transition-all">{recipient.phone || recipient.account}</a>
-                            <span className="text-[10px] text-brand font-black uppercase block">{recipient.operator}</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="text-sm font-black text-white">{Math.floor(netAmount).toLocaleString()} {transaction.destinationCurrency}</p>
-                            <span className="text-[10px] text-slate-500">Basé sur {recipient.amount} RUB</span>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                              status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 
-                              status === 'failed' ? 'bg-rose-500/10 text-rose-500' : 
-                              'bg-amber-500/10 text-amber-500'
+          {/* Recipient(s) Section */}
+          {transaction.isBulk ? (
+            <div className="m3-card-elevated !p-0 overflow-hidden">
+               <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#F3EDF7]/30">
+                 <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Smartphone size={24} /></div>
+                   <div>
+                     <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Liste des Bénéficiaires</h3>
+                     <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">{transaction.bulkRecipients?.length || 0} destinataires groupés</p>
+                   </div>
+                 </div>
+               </div>
+               
+               <div className="overflow-x-auto">
+                 <table className="w-full text-left border-collapse">
+                   <thead>
+                     <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] font-black uppercase tracking-[0.2em]">
+                       <th className="px-8 py-5">Destinataire</th>
+                       <th className="px-8 py-5">Réseau</th>
+                       <th className="px-8 py-5">Montant Net</th>
+                       <th className="px-8 py-5">Statut</th>
+                       <th className="px-8 py-5 text-right">Actions</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-[#E7E0EB]">
+                     {transaction.bulkRecipients?.map((recipient) => (
+                       <tr key={recipient.id} className="hover:bg-[#F3EDF7]/30 transition-all group">
+                         <td className="px-8 py-6">
+                            <p className="text-sm font-black text-[#1D1B20]">{recipient.name}</p>
+                            <div className="mt-1 flex flex-col">
+                                {recipient.phone && <a href={`tel:${recipient.phone}`} className="text-[10px] font-bold text-[#6750A4] hover:underline">{recipient.phone}</a>}
+                                {recipient.account && <span className="text-[10px] font-bold text-[#49454F] opacity-60">Acc: {recipient.account}</span>}
+                             </div>
+                         </td>
+                         <td className="px-8 py-6">
+                            <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 bg-[#EADDFF] text-[#21005D] rounded-md">{recipient.operator}</span>
+                         </td>
+                         <td className="px-8 py-6">
+                            <p className="text-sm font-black text-[#1D1B20]">{Math.floor(recipient.amount * (transaction.exchangeRate || 1)).toLocaleString()} {transaction.destinationCurrency}</p>
+                         </td>
+                         <td className="px-8 py-6">
+                            <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
+                              recipient.status === 'completed' ? 'bg-[#E8DEF8] text-[#1D192B]' :
+                              recipient.status === 'failed' ? 'bg-[#F9DEDC] text-[#B3261E]' :
+                              'bg-[#ECE6F0] text-[#49454F]'
                             }`}>
-                              {status === 'completed' ? 'Validé' : status === 'failed' ? 'Échec' : 'En attente'}
+                              {recipient.status || 'En attente'}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {status === 'pending' && (
-                                <>
-                                  <button 
-                                    onClick={() => handleUpdateBulkRecipientStatus(recipient.id, 'completed')}
-                                    className="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all"
-                                    title="Valider ce destinataire"
-                                  >
-                                    <CheckCircle2 size={16} />
-                                  </button>
-                                  <button 
-                                    onClick={() => handleUpdateBulkRecipientStatus(recipient.id, 'failed')}
-                                    className="p-2 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all"
-                                    title="Marquer comme échec"
-                                  >
-                                    <XCircle size={16} />
-                                  </button>
-                                </>
+                         </td>
+                         <td className="px-8 py-6 text-right">
+                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                              {recipient.status !== 'completed' && (
+                                <button onClick={() => handleUpdateBulkRecipientStatus(recipient.id, 'completed')} className="p-2 bg-[#E8DEF8] text-[#6750A4] rounded-lg hover:shadow-md"><CheckCircle2 size={16} /></button>
                               )}
-                              <button 
-                                onClick={() => handleGeneratePDF(recipient)}
-                                className="p-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-brand hover:text-white transition-all"
-                                title="Imprimer le reçu A5"
-                              >
-                                <Printer size={16} />
-                              </button>
+                              <button onClick={() => handleGeneratePDF(recipient)} className="p-2 bg-[#F3EDF7] text-[#49454F] rounded-lg hover:shadow-md"><Printer size={16} /></button>
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+            </div>
+          ) : (
+            <div className="m3-card-elevated">
+               <div className="flex justify-between items-start mb-8">
+                 <div className="flex items-center gap-4">
+                   <div className="w-12 h-12 bg-[#F3EDF7] text-[#6750A4] rounded-[16px] flex items-center justify-center"><Smartphone size={24} /></div>
+                   <div>
+                     <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Détails du Destinataire</h3>
+                     <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Transfert unique direct</p>
+                   </div>
+                 </div>
+                 <button onClick={() => handleGeneratePDF()} className="m3-btn-tonal !py-2 !px-4"><Printer size={16} /> Reçu PDF</button>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="space-y-4">
+                   <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                     <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Nom Complet</p>
+                     <p className="text-[#1D1B20] font-black text-lg tracking-tight">{transaction.recipientName || 'N/A'}</p>
+                   </div>
+                   <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                     <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Réseau / Opérateur</p>
+                     <p className="text-[#6750A4] font-black text-lg tracking-tight uppercase">{transaction.recipientOperator || 'Inconnu'}</p>
+                   </div>
+                 </div>
+                 <div className="space-y-4">
+                   <div className="bg-[#F3EDF7] p-5 rounded-[24px] group flex justify-between items-end">
+                      <div>
+                        <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Numéro de Téléphone</p>
+                        <p className="text-[#1D1B20] font-black text-lg tracking-tight">
+                           {transaction.recipientPhone ? <a href={`tel:${transaction.recipientPhone}`} className="text-[#6750A4] hover:underline">{transaction.recipientPhone}</a> : 'N/A'}
+                        </p>
+                      </div>
+                     <button onClick={() => { navigator.clipboard.writeText(transaction.recipientPhone || ''); toast.success('Copié'); }} className="p-2 bg-white text-[#6750A4] rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"><Copy size={16} /></button>
+                   </div>
+                   <div className="bg-[#EADDFF] p-5 rounded-[24px]">
+                     <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net à Percevoir</p>
+                     <p className="text-[#21005D] font-black text-xl tracking-tighter">{(transaction.receivedAmount || transaction.amount).toLocaleString()} {transaction.destinationCurrency}</p>
+                   </div>
+                 </div>
+               </div>
             </div>
           )}
 
           {/* Proof of Payment */}
-          <div className="bg-card-dark border border-border-dark p-8 rounded-3xl">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                Preuve de Transfert
-              </h3>
-            </div>
-            {transaction.proofUrl ? (
-              <div className="relative group">
-                <img 
-                  src={transaction.proofUrl} 
-                  alt="Preuve" 
-                  className="w-full rounded-2xl border border-slate-700 shadow-xl"
-                />
-                <a 
-                  href={transaction.proofUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="absolute top-4 right-4 p-3 bg-black/60 backdrop-blur-md text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <ExternalLink size={20} />
-                </a>
-              </div>
-            ) : (
-              <div className="bg-slate-800/50 border-2 border-dashed border-slate-700 p-12 rounded-2xl text-center">
-                <p className="text-slate-500">Aucune preuve soumise.</p>
-              </div>
-            )}
+          <div className="m3-card-elevated">
+             <div className="flex justify-between items-center mb-8">
+               <h3 className="text-xl font-black text-[#1D1B20] tracking-tight flex items-center gap-3">
+                 <div className="w-10 h-10 bg-[#F3EDF7] text-[#6750A4] rounded-[12px] flex items-center justify-center"><FileText size={20} /></div>
+                 Preuve de Règlement
+               </h3>
+             </div>
+             
+             {transaction.proofUrl ? (
+               <div className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner">
+                 <img src={transaction.proofUrl} alt="Preuve" className="w-full object-contain max-h-[600px] transition-transform duration-700 group-hover:scale-[1.02]" />
+                 <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <a href={transaction.proofUrl} target="_blank" rel="noreferrer" className="p-5 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
+                      <ExternalLink size={28} />
+                    </a>
+                 </div>
+               </div>
+             ) : (
+               <div className="p-20 text-center bg-[#F3EDF7] rounded-[32px] border-2 border-dashed border-[#E7E0EB]">
+                 <AlertCircle size={48} className="mx-auto text-[#6750A4]/20 mb-4" />
+                 <p className="text-[#49454F] font-black uppercase text-[10px] tracking-widest">Aucune preuve soumise pour le moment</p>
+               </div>
+             )}
           </div>
         </div>
 
-        {/* Right Column: Global Actions */}
-        <div className="space-y-6">
-          <div className="bg-gradient-to-br from-brand/20 to-transparent border border-brand/20 p-6 rounded-3xl shadow-xl">
-             <h3 className="text-sm font-bold text-brand uppercase tracking-widest mb-4">Actions Globales</h3>
-             {!transaction.isBulk && (
-               <button 
-                onClick={() => handleGeneratePDF()}
-                className="w-full py-3 bg-brand text-white font-bold rounded-xl hover:bg-brand-dark transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand/20 mb-3"
-               >
-                 <Printer size={18} /> Générer le Reçu Standard
-               </button>
-             )}
-             <div className="space-y-3">
-               <textarea 
-                placeholder="Note pour le client (optionnel)..."
-                value={adminNote}
-                onChange={(e) => setAdminNote(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-1 focus:ring-brand h-20"
-               />
+        {/* Right: Actions & Timeline */}
+        <div className="space-y-8 lg:sticky lg:top-24 h-fit">
+          {/* Main Action Card */}
+          <div className="bg-[#6750A4] p-8 rounded-[32px] shadow-2xl shadow-[#6750A4]/30 text-white space-y-6">
+             <div className="flex items-center gap-3 border-b border-white/20 pb-4">
+               <Activity size={24} />
+               <h3 className="font-black uppercase text-xs tracking-[0.2em]">Actions Administrateur</h3>
+             </div>
+             
+             <div className="space-y-4">
+               <div>
+                 <label className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 block">Note administrative (visible client)</label>
+                 <textarea 
+                  placeholder="Ex: Virement effectué avec succès via Orange Money..."
+                  value={adminNote}
+                  onChange={(e) => setAdminNote(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-[20px] p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-4 focus:ring-white/10 transition-all h-24"
+                 />
+               </div>
+               
                <button 
                 onClick={() => handleStatusUpdate('completed')}
                 disabled={isActionLoading || transaction.status === 'completed'}
-                className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-white text-[#6750A4] font-black uppercase text-[10px] tracking-widest rounded-full hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50"
                >
-                 <CheckCircle2 size={18} /> Valider la Transaction
+                 Valider la Transaction
                </button>
+               
                <button 
                 onClick={() => handleStatusUpdate('failed')}
                 disabled={isActionLoading || transaction.status === 'failed'}
-                className="w-full py-3 bg-rose-600/20 text-rose-500 border border-rose-500/20 font-bold rounded-xl hover:bg-rose-600 hover:text-white transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-[#B3261E] text-white font-black uppercase text-[10px] tracking-widest rounded-full hover:shadow-2xl hover:scale-[1.02] transition-all disabled:opacity-50"
                >
-                 <XCircle size={18} /> Rejeter tout
+                 Rejeter la demande
                </button>
              </div>
           </div>
 
-          {/* History */}
-          <div className="bg-card-dark border border-border-dark p-6 rounded-3xl">
-            <h3 className="text-sm font-semibold text-slate-400 mb-6 flex items-center gap-2">
-              <Clock size={16} /> Historique
-            </h3>
-            <div className="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-px before:bg-slate-700">
-              {transaction.statusHistory.map((history, idx) => (
-                <div key={idx} className="relative pl-8">
-                  <div className={`absolute left-0 top-1 w-4 h-4 rounded-full border-2 border-card-dark bg-slate-600 ${idx === 0 ? 'bg-brand' : ''}`}></div>
-                  <p className="text-white text-xs font-bold uppercase">{history.status.replace('_', ' ')}</p>
-                  <p className="text-slate-500 text-[10px]">{history.timestamp.toDate().toLocaleString()}</p>
-                </div>
-              ))}
+          {/* Timeline */}
+          <div className="m3-card-elevated space-y-8 !p-8">
+             <h3 className="text-sm font-black text-[#1D1B20] uppercase tracking-widest flex items-center gap-3">
+               <Clock size={20} className="text-[#6750A4]" /> Chronologie du transfert
+             </h3>
+             <div className="space-y-10 relative ml-3">
+               <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-[#F3EDF7]" />
+               {transaction.statusHistory?.slice().reverse().map((entry, i) => (
+                 <div key={i} className="relative pl-12">
+                   <div className={`absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center z-10 ${
+                     i === 0 ? 'bg-[#6750A4] text-white shadow-lg shadow-[#6750A4]/20' : 'bg-[#EADDFF] text-[#6750A4]'
+                   }`}>
+                     <Check size={14} strokeWidth={4} />
+                   </div>
+                   <div className="flex flex-col">
+                     <p className="text-sm font-black text-[#1D1B20] tracking-tight">
+                       {entry.status === 'pending' ? 'Vous avez initié le transfert' :
+                        entry.status === 'proof_received' ? 'Paiement en cours' :
+                        entry.status === 'completed' ? 'Paiement effectué' :
+                        entry.status === 'failed' ? 'Transfert échoué' : entry.status.replace('_', ' ')}
+                     </p>
+                     <p className="text-[11px] font-bold text-[#49454F] mt-0.5 opacity-60">
+                        {entry.timestamp.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                     </p>
+                     {entry.notes && (
+                       <p className="text-[11px] font-bold text-[#6750A4] mt-2 border-t border-[#F3EDF7] pt-2 italic">
+                         "{entry.notes}"
+                       </p>
+                     )}
+                   </div>
+                 </div>
+               ))}
+             </div>
+          </div>
+          
+          {/* Receipt Section */}
+          <div className="m3-card-elevated border-2 border-[#6750A4]/10 !bg-[#F3EDF7]/30 !p-8">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-white rounded-2xl shadow-sm text-emerald-500">
+                <FileText size={24} />
+              </div>
+              <div className="flex-1">
+                <h4 className="text-sm font-black text-[#1D1B20] tracking-tight">Reçu de transaction</h4>
+                <p className="text-[11px] font-bold text-[#49454F] mt-1 opacity-60 leading-relaxed">Téléchargez votre reçu officiel pour cette opération.</p>
+                
+                <button 
+                  onClick={() => handleGeneratePDF()}
+                  className="mt-6 w-full py-4 bg-white border border-[#E7E0EB] rounded-[20px] flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#6750A4] hover:bg-[#6750A4] hover:text-white transition-all shadow-md group"
+                >
+                  <Printer size={18} className="group-hover:scale-110 transition-transform" /> Télécharger
+                </button>
+              </div>
             </div>
           </div>
         </div>
