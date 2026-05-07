@@ -333,9 +333,20 @@ const TransactionDetailsPage: React.FC = () => {
                   <p className="text-slate-400 text-sm mt-1">ID: {transaction.userId}</p>
                   {(transaction.clientPhone || clientProfile?.tel) && (
                     <div className="flex items-center justify-between group/field mt-2">
-                      <span className="text-slate-500 text-xs">Tél: {transaction.clientPhone || clientProfile?.tel}</span>
+                      <a href={`tel:${transaction.clientPhone || clientProfile?.tel}`} className="text-slate-500 text-xs hover:text-brand hover:underline transition-all">Tél: {transaction.clientPhone || clientProfile?.tel}</a>
                       <button 
                         onClick={() => { navigator.clipboard.writeText(transaction.clientPhone || clientProfile?.tel || ''); toast.success('Copié'); }}
+                        className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
+                      >
+                        <Copy size={12} />
+                      </button>
+                    </div>
+                  )}
+                  {clientProfile?.email && (
+                    <div className="flex items-center justify-between group/field mt-1">
+                      <a href={`mailto:${clientProfile.email}`} className="text-slate-500 text-xs hover:text-brand hover:underline transition-all">Email: {clientProfile.email}</a>
+                      <button 
+                        onClick={() => { navigator.clipboard.writeText(clientProfile.email || ''); toast.success('Copié'); }}
                         className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
                       >
                         <Copy size={12} />
@@ -360,7 +371,7 @@ const TransactionDetailsPage: React.FC = () => {
                   <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
                     <p className="text-white font-bold text-lg">{transaction.recipientName || 'Destinataire inconnu'}</p>
                     <div className="flex items-center justify-between group/field mt-2">
-                      <span className="text-slate-400 text-sm">Tél: {transaction.recipientPhone}</span>
+                      <a href={`tel:${transaction.recipientPhone}`} className="text-slate-400 text-sm hover:text-brand hover:underline transition-all">Tél: {transaction.recipientPhone}</a>
                       <button 
                         onClick={() => { navigator.clipboard.writeText(transaction.recipientPhone || ''); toast.success('Copié'); }}
                         className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
@@ -438,8 +449,8 @@ const TransactionDetailsPage: React.FC = () => {
                             <span className="text-[10px] text-slate-500 font-mono">ID: {recipient.id.substring(0, 8)}</span>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-sm text-slate-300 font-medium">{recipient.phone || recipient.account}</p>
-                            <span className="text-[10px] text-brand font-black uppercase">{recipient.operator}</span>
+                            <a href={`tel:${recipient.phone || recipient.account}`} className="text-sm text-slate-300 font-medium hover:text-brand hover:underline transition-all">{recipient.phone || recipient.account}</a>
+                            <span className="text-[10px] text-brand font-black uppercase block">{recipient.operator}</span>
                           </td>
                           <td className="px-6 py-4">
                             <p className="text-sm font-black text-white">{Math.floor(netAmount).toLocaleString()} {transaction.destinationCurrency}</p>
