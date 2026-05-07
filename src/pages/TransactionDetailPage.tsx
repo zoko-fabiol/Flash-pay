@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { ArrowLeft, CheckCircle2, Clock3, Download, FileText, Info, Send } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock3, Download, FileText, Info, Send, User } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
+import { useLanguage } from '../context/LanguageContext';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
 
@@ -31,6 +32,7 @@ const statusTone: Record<string, string> = {
 export const TransactionDetailPage: React.FC = () => {
   const { transactionId } = useParams();
   const navigate = useNavigate();
+  const { formatNumber } = useLanguage();
   const [transaction, setTransaction] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -52,46 +54,47 @@ export const TransactionDetailPage: React.FC = () => {
     return index === -1 ? 0 : index;
   }, [currentStatus]);
 
-  const handleReceiptDownload = () => {
+  const handleReceiptDownload = (recipient?: any) => {
     if (!transaction) return;
-    const t = toast.loading('Génération du reçu...');
+    const t_toast = toast.loading('Génération du reçu...');
     
     try {
+      const isBulkRec = !!recipient;
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a6'
+        format: isBulkRec ? 'a5' : 'a6'
       });
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = isBulkRec ? 12 : 10;
       let y = 15;
 
       const mainColor = [115, 78, 212]; // #734ED4
 
       // Header background
       pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.rect(0, 0, pageWidth, 25, 'F');
+      pdf.rect(0, 0, pageWidth, isBulkRec ? 28 : 25, 'F');
 
       // Title
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(16);
+      pdf.setFontSize(isBulkRec ? 22 : 18);
       pdf.setFont('helvetica', 'bold');
       pdf.text('FLASH PAY', pageWidth / 2, 12, { align: 'center' });
-      pdf.setFontSize(10);
+      pdf.setFontSize(isBulkRec ? 11 : 10);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('RECU OFFICIEL', pageWidth / 2, 18, { align: 'center' });
+      pdf.text(isBulkRec ? 'RECU DE TRANSFERT OFFICIEL' : 'RECU OFFICIEL', pageWidth / 2, 18, { align: 'center' });
 
-      y = 35;
+      y = isBulkRec ? 42 : 38;
       pdf.setTextColor(60, 60, 60);
       
       // Transaction Header
-      pdf.setFontSize(8);
+      pdf.setFontSize(isBulkRec ? 9 : 8);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('REFERENCE TRANSACTION', margin, y);
+      pdf.text('REFERENCE', margin, y);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`#${transaction.id}`, margin, y + 5);
+      pdf.text(`#${transaction.id.substring(0, 10).toUpperCase()}${recipient ? '-' + recipient.id.substring(0, 4) : ''}`, margin, y + 6);
       
       const formatDate = (date: Date) => {
         const d = date.getDate().toString().padStart(2, '0');
@@ -103,120 +106,89 @@ export const TransactionDetailPage: React.FC = () => {
       };
 
       pdf.setFont('helvetica', 'bold');
-      pdf.text('DATE ET HEURE', pageWidth - margin, y, { align: 'right' });
+      pdf.text('DATE D\'EMISSION', pageWidth - margin, y, { align: 'right' });
       pdf.setFont('helvetica', 'normal');
-      pdf.text(formatDate(transaction.createdAt.toDate()), pageWidth - margin, y + 5, { align: 'right' });
+      pdf.text(formatDate(transaction.createdAt?.toDate ? transaction.createdAt.toDate() : new Date()), pageWidth - margin, y + 6, { align: 'right' });
 
       y += 18;
 
-      // Client Section
-      pdf.setDrawColor(230, 230, 230);
+      // Parties Section
+      pdf.setDrawColor(240, 240, 240);
       pdf.line(margin, y, pageWidth - margin, y);
       y += 8;
       
-      pdf.setFontSize(9);
+      pdf.setFontSize(isBulkRec ? 10 : 9);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('CLIENT', margin, y);
+      pdf.text('EXPEDITEUR', margin, y);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(transaction.clientName || 'Client Flash Pay', margin, y + 5);
-      pdf.setFontSize(7);
-      pdf.text(`ID: ${transaction.userId}`, margin, y + 9);
+      pdf.text(transaction.clientName || 'Client Flash Pay', margin, y + 6);
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('BENEFICIAIRE', pageWidth - margin, y, { align: 'right' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(recipient ? recipient.name : (transaction.recipientName || 'N/A'), pageWidth - margin, y + 6, { align: 'right' });
+      pdf.text(recipient ? (recipient.phone || '') : (transaction.recipientPhone || ''), pageWidth - margin, y + 10, { align: 'right' });
 
-      y += 18;
+      y += isBulkRec ? 25 : 22;
 
-      // Transfer Details Section
-      pdf.line(margin, y, pageWidth - margin, y);
+      // Financials
+      pdf.setFillColor(250, 250, 252);
+      pdf.roundedRect(margin, y, pageWidth - (margin * 2), 40, 4, 4, 'F');
       y += 8;
       
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('DETAILS DU TRANSFERT', margin, y);
-      
-      pdf.setFontSize(8);
-      y += 6;
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Type:', margin, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text((transaction.type || 'Transfert').toUpperCase(), margin + 25, y);
-      
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Destination:', margin, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${transaction.toCountry || transaction.destinationCountry || 'N/A'} (${transaction.operator || transaction.recipientOperator || 'N/A'})`, margin + 25, y);
-      
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Beneficiaire:', margin, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(transaction.recipientName || 'N/A', margin + 25, y);
-      
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Telephone:', margin, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(transaction.recipientPhone || transaction.recipientAccount || 'N/A', margin + 25, y);
+      const sendAmt = recipient ? recipient.amount : transaction.amount;
+      const rate = transaction.exchangeRate || 1;
+      const recvAmt = Math.floor(sendAmt * rate);
 
+      // Helper to format number with space
+      const formatNum = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+      pdf.setFontSize(isBulkRec ? 9 : 8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('Montant envoye:', margin + 6, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(40, 40, 40);
+      pdf.text(`${formatNum(sendAmt)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 6, y, { align: 'right' });
+      
+      y += 8;
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('Taux de change:', margin + 6, y);
+      pdf.text(`1 RUB = ${rate.toFixed(2)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 6, y, { align: 'right' });
+      
       y += 12;
-
-      const formatNum = (num: number) => {
-        if (num === undefined || num === null) return '0';
-        return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-      };
-
-      // Calculation Section
-      pdf.setFillColor(245, 245, 245);
-      pdf.rect(margin, y, pageWidth - (margin * 2), 35, 'F');
-      y += 6;
-      
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Montant envoye:', margin + 4, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${formatNum(transaction.amount)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 4, y, { align: 'right' });
-      
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Frais de transfert:', margin + 4, y);
-      pdf.text(`${formatNum(transaction.fee || 0)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 4, y, { align: 'right' });
-      
-      y += 5;
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Taux de change:', margin + 4, y);
-      pdf.text(`1 ${transaction.currency || 'RUB'} = ${transaction.exchangeRate?.toFixed(2) || '1.00'} ${transaction.destinationCurrency || transaction.currency || 'XAF'}`, pageWidth - margin - 4, y, { align: 'right' });
-      
-      y += 8;
-      pdf.setFontSize(10);
+      pdf.setFontSize(isBulkRec ? 12 : 11);
       pdf.setTextColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.text('NET A RECEVOIR:', margin + 4, y);
+      pdf.text('NET A RECEVOIR:', margin + 6, y);
+      pdf.setFontSize(isBulkRec ? 15 : 13);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`${formatNum(transaction.receivedAmount || transaction.amount)} ${transaction.destinationCurrency || transaction.currency || 'XAF'}`, pageWidth - margin - 4, y, { align: 'right' });
+      pdf.text(`${formatNum(recvAmt)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 6, y, { align: 'right' });
 
-      // Status
-      y += 12;
-      pdf.setTextColor(60, 60, 60);
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('STATUT DE LA TRANSACTION', pageWidth / 2, y, { align: 'center' });
-      
-      y += 5;
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      const statusColor = transaction.status === 'completed' ? [0, 150, 0] : transaction.status === 'rejected' ? [200, 0, 0] : [255, 150, 0];
-      pdf.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
-      pdf.text((statusLabels[transaction.status] || transaction.status).toUpperCase(), pageWidth / 2, y, { align: 'center' });
+      y += 22;
+
+      // Status Badge (Only for Bulk recipients in user view)
+      if (isBulkRec) {
+        const isComp = recipient.status === 'completed';
+        pdf.setFillColor(isComp ? 232 : 255, isComp ? 252 : 241, isComp ? 241 : 242);
+        pdf.roundedRect(pageWidth / 2 - 20, y, 40, 10, 5, 5, 'F');
+        pdf.setTextColor(isComp ? 16 : 225, isComp ? 124 : 29, isComp ? 65 : 72);
+        pdf.setFontSize(9);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(isComp ? 'VALIDE' : 'EN ATTENTE', pageWidth / 2, y + 6.5, { align: 'center' });
+      }
 
       // Footer
-      pdf.setTextColor(150, 150, 150);
+      pdf.setTextColor(180, 180, 180);
       pdf.setFontSize(7);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Merci d\'avoir utilise Flash Pay.', pageWidth / 2, pageHeight - 8, { align: 'center' });
+      pdf.text('Merci d\'avoir utilisé Flash Pay.', pageWidth / 2, pageHeight - 8, { align: 'center' });
       
-      pdf.save(`FlashPay_Recu_${transaction.id}.pdf`);
-      toast.success('Reçu téléchargé !', { id: t });
+      pdf.save(`FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}.pdf`);
+      toast.success('Reçu téléchargé !', { id: t_toast });
     } catch (error) {
       console.error(error);
-      toast.error('Erreur lors du téléchargement', { id: t });
+      toast.error('Erreur lors du téléchargement', { id: t_toast });
     }
   };
 
@@ -243,93 +215,150 @@ export const TransactionDetailPage: React.FC = () => {
     );
   }
 
+  const completedRecipients = transaction.isBulk ? (transaction.bulkRecipients?.filter((r: any) => r.status === 'completed')?.length || 0) : 0;
+  const totalRecipients = transaction.isBulk ? (transaction.bulkRecipients?.length || 0) : 0;
+  const bulkProgress = totalRecipients > 0 ? (completedRecipients / totalRecipients) * 100 : 0;
+
   return (
     <Layout>
       <div className="mx-auto max-w-3xl space-y-6">
-        <button onClick={() => navigate('/transactions')} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600">
-          <ArrowLeft size={18} /> Retour à l’historique
+        <button onClick={() => navigate('/transactions')} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 group">
+          <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Retour à l’historique
         </button>
 
-        <div className="overflow-hidden rounded-[28px] border border-[#eadfff] bg-white shadow-[0_18px_60px_rgba(98,54,204,0.10)]">
-          <div className="bg-gradient-to-br from-[#6f3bd3] via-[#6236CC] to-[#4d259f] px-6 py-10 text-white sm:px-8">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/20 shadow-[0_12px_30px_rgba(0,0,0,0.12)]">
+        <div className="overflow-hidden rounded-[32px] border border-[#eadfff] bg-white shadow-[0_20px_60px_rgba(98,54,204,0.08)]">
+          {/* Header Section */}
+          <div className="bg-gradient-to-br from-[#6f3bd3] via-[#6236CC] to-[#4d259f] px-6 py-12 text-white sm:px-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md shadow-xl border border-white/20">
               <Send size={28} />
             </div>
-            <p className="mt-4 text-center text-sm font-semibold uppercase tracking-[0.28em] text-white/75">{statusLabels[currentStatus] || 'Transaction'}</p>
-            <h1 className="mt-3 text-center text-3xl font-black sm:text-4xl">{transaction.amount?.toLocaleString('fr-FR')} {transaction.currency}</h1>
-            <p className="mt-2 text-center text-white/80">{transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}</p>
+            <p className="mt-6 text-center text-xs font-black uppercase tracking-[0.3em] text-white/60">{transaction.isBulk ? 'Transfert Groupé' : (statusLabels[currentStatus] || 'Transaction')}</p>
+            <h1 className="mt-3 text-center text-4xl font-black sm:text-5xl">{transaction.amount?.toLocaleString('fr-FR')} {transaction.currency}</h1>
+            <p className="mt-2 text-center text-white/60 font-bold">{transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}</p>
           </div>
 
-          <div className="space-y-6 p-5 sm:p-8">
-            <div className="rounded-[24px] border border-[#eadfff] bg-[#faf7ff] p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm text-slate-500">Montant envoyé</p>
-                  <p className="text-2xl font-black text-slate-900">{transaction.amount?.toLocaleString('fr-FR')} {transaction.currency}</p>
+          <div className="space-y-8 p-6 sm:p-10">
+            
+            {/* BULK PROGRESS BANNER */}
+            {transaction.isBulk && (
+              <div className="rounded-[28px] border-2 border-brand/10 bg-brand/5 p-6 space-y-4">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <h3 className="text-brand font-black text-lg">Progression de l'envoi</h3>
+                    <p className="text-slate-500 text-sm font-medium">{completedRecipients} sur {totalRecipients} bénéficiaires payés</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-brand">{Math.round(bulkProgress)}%</span>
+                  </div>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusTone[currentStatus] || statusTone.pending}`}>
-                  {statusLabels[currentStatus] || currentStatus}
-                </span>
-              </div>
-              <div className="mt-4 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-                <div className="rounded-2xl bg-white p-4 shadow-[0_8px_18px_rgba(98,54,204,0.05)]">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Destinataire</p>
-                  <p className="mt-1 font-semibold text-slate-900">{transaction.recipientName || 'N/A'}</p>
-                </div>
-                <div className="rounded-2xl bg-white p-4 shadow-[0_8px_18px_rgba(98,54,204,0.05)]">
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Opérateur</p>
-                  <p className="mt-1 font-semibold text-slate-900">{transaction.recipientOperator || transaction.operator || 'Orange Money'}</p>
+                <div className="w-full h-3 bg-white rounded-full overflow-hidden border border-brand/5">
+                  <div 
+                    className="h-full bg-brand transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(98,54,204,0.3)]"
+                    style={{ width: `${bulkProgress}%` }}
+                  />
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="rounded-[24px] border border-[#eadfff] bg-white p-5 shadow-[0_10px_26px_rgba(98,54,204,0.06)]">
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#6236CC]">
-                <Clock3 size={16} /> Mise à jour du statut
-              </div>
-
-              <div className="mt-6 space-y-5">
-                {statusOrder.map((status, index) => {
-                  const active = index <= stepIndex;
-                  const current = index === stepIndex;
-
-                  return (
-                    <div key={status} className="flex gap-4">
-                      <div className="relative flex flex-col items-center">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${active ? 'border-[#6236CC] bg-[#6236CC] text-white' : 'border-slate-200 bg-white text-slate-300'}`}>
-                          {active ? <CheckCircle2 size={18} /> : <Clock3 size={18} />}
-                        </div>
-                        {index < statusOrder.length - 1 && <div className={`mt-2 h-full w-px flex-1 ${active ? 'bg-[#6236CC]' : 'bg-slate-200'}`} />}
+            {/* RECIPIENT(S) LIST */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <User size={16} /> {transaction.isBulk ? 'Liste des bénéficiaires' : 'Détails du bénéficiaire'}
+              </h3>
+              
+              {!transaction.isBulk ? (
+                <div className="rounded-[24px] border border-[#eadfff] bg-[#faf7ff] p-5 flex items-center justify-between">
+                  <div>
+                    <p className="text-lg font-black text-slate-900">{transaction.recipientName || 'N/A'}</p>
+                    <p className="text-sm text-slate-500 font-medium">{transaction.recipientPhone || 'N/A'} • {transaction.recipientOperator || 'Orange Money'}</p>
+                  </div>
+                  <span className={`rounded-xl px-4 py-1.5 text-[10px] font-black uppercase tracking-wider ${statusTone[currentStatus] || statusTone.pending}`}>
+                    {statusLabels[currentStatus] || currentStatus}
+                  </span>
+                </div>
+              ) : (
+                <div className="grid gap-3">
+                  {transaction.bulkRecipients?.map((rec: any) => (
+                    <div key={rec.id} className="rounded-[24px] border border-slate-100 bg-white p-5 flex items-center justify-between hover:border-brand/20 transition-colors group shadow-sm">
+                      <div>
+                        <p className="font-black text-slate-900">{rec.name}</p>
+                        <p className="text-xs text-slate-500 font-medium">{rec.phone} • {rec.operator}</p>
                       </div>
-                      <div className="flex-1 pb-6">
-                        <p className={`font-semibold ${active ? 'text-slate-900' : 'text-slate-400'}`}>{statusLabels[status]}</p>
-                        <p className="text-sm text-slate-500">{status === 'pending' && 'Votre transfert a été créé.'}</p>
-                        <p className="text-sm text-slate-500">{status === 'proof_received' && 'Le paiement est en cours de vérification.'}</p>
-                        <p className="text-sm text-slate-500">{status === 'confirmed' && 'Le paiement a été confirmé par l’équipe.'}</p>
-                        <p className="text-sm text-slate-500">{status === 'completed' && 'Le bénéficiaire a reçu les fonds.'}</p>
-                        {current && (
-                          <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#efe6ff] px-3 py-1 text-xs font-semibold text-[#6236CC]">
-                            <Info size={14} /> En attente de la prochaine mise à jour
-                          </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right mr-2">
+                          <p className="text-sm font-black text-slate-900">{Math.floor(rec.amount * (transaction.exchangeRate || 1)).toLocaleString()} {transaction.destinationCurrency}</p>
+                          <span className={`text-[9px] font-black uppercase ${rec.status === 'completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                            {rec.status === 'completed' ? 'Reçu' : 'En attente'}
+                          </span>
+                        </div>
+                        {rec.status === 'completed' && (
+                          <button 
+                            onClick={() => handleReceiptDownload(rec)}
+                            className="p-3 bg-brand/10 text-brand rounded-2xl hover:bg-brand hover:text-white transition-all shadow-sm"
+                            title="Télécharger le reçu A5"
+                          >
+                            <Download size={18} />
+                          </button>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {currentStatus === 'completed' && (
-              <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-5 shadow-[0_10px_24px_rgba(16,185,129,0.08)]">
-                <div className="flex items-start gap-3">
-                  <FileText className="mt-1 text-emerald-600" size={20} />
+            {/* GLOBAL STATUS TIMELINE (Only for Single or as General State for Bulk) */}
+            {!transaction.isBulk && (
+              <div className="rounded-[32px] border border-[#eadfff] bg-white p-6 sm:p-8 shadow-[0_10px_40px_rgba(98,54,204,0.06)]">
+                <div className="flex items-center gap-2 text-sm font-black text-brand mb-8">
+                  <Clock3 size={18} /> Chronologie du transfert
+                </div>
+
+                <div className="space-y-6 relative">
+                  <div className="absolute left-5 top-2 bottom-2 w-px bg-slate-100" />
+                  {statusOrder.map((status, index) => {
+                    const active = index <= stepIndex;
+                    const current = index === stepIndex;
+
+                    return (
+                      <div key={status} className="flex gap-6 relative z-10">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-2xl border-2 transition-all duration-500 ${active ? 'border-brand bg-brand text-white shadow-lg shadow-brand/20 scale-110' : 'border-slate-100 bg-white text-slate-300'}`}>
+                          {active ? <CheckCircle2 size={18} /> : <Clock3 size={18} />}
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <p className={`font-black text-lg ${active ? 'text-slate-900' : 'text-slate-400'}`}>{statusLabels[status]}</p>
+                          <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                            {status === 'pending' && 'La demande a été transmise à notre service.'}
+                            {status === 'proof_received' && 'Nous avons bien reçu votre justificatif de paiement.'}
+                            {status === 'confirmed' && 'Votre paiement est validé, les fonds sont en route.'}
+                            {status === 'completed' && 'Félicitations ! Le transfert est terminé.'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* GLOBAL RECEIPT (For Single or Entire Bulk if needed) */}
+            {currentStatus === 'completed' && !transaction.isBulk && (
+              <div className="rounded-[32px] border border-emerald-100 bg-emerald-50/30 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600">
+                    <FileText size={24} />
+                  </div>
                   <div>
-                    <p className="font-semibold text-emerald-900">Reçu final disponible</p>
-                    <p className="mt-1 text-sm text-emerald-700">Téléchargez le reçu de la transaction une fois le transfert effectué.</p>
+                    <h4 className="font-black text-slate-900">Reçu de transaction</h4>
+                    <p className="text-sm text-slate-600 font-medium">Téléchargez votre reçu officiel pour cette opération.</p>
                   </div>
                 </div>
-                <button onClick={handleReceiptDownload} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#6236CC] px-5 py-3 font-semibold text-white sm:w-auto">
-                  <Download size={16} /> Télécharger le reçu de la transaction
+                <button 
+                  onClick={() => handleReceiptDownload()}
+                  className="w-full sm:w-auto px-8 py-4 bg-brand text-white font-black rounded-full shadow-xl shadow-brand/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-3"
+                >
+                  <Download size={20} /> Télécharger
                 </button>
               </div>
             )}

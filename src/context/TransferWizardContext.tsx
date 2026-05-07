@@ -4,9 +4,20 @@ import type { ReactNode } from 'react';
 export type TransferType = 'africa-russia' | 'russia-africa' | 'russia-russia' | null;
 export type RecipientType = 'bank' | 'operator' | null;
 
+export interface BulkRecipient {
+  id: string;
+  name: string;
+  amount: number;
+  phone?: string;
+  account?: string;
+  operator?: string;
+}
+
 interface TransferData {
   // Common
   transferType: TransferType;
+  isBulk?: boolean;
+  bulkRecipients?: BulkRecipient[];
   recipientName: string;
   amount: number;
   currency: string;

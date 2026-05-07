@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Flash Pay</string>
+    <string name="title_activity_main">Flash Pay</string>
+    <string name="package_name">com.flashpay.app</string>
+    <string name="custom_url_scheme">com.flashpay.app</string>
+</resources>

@@ -344,34 +344,38 @@ export const adminService = {
     });
   },
 
-  updateDailyLimit: async (dailyLimitRUB: number, referralBonusRUB: number = 500) => {
+  updateDailyLimit: async (
+    dailyLimitRUB: number,
+    referralBonusRUB: number = 500,
+    standardLimitRUB: number = 20000,
+    expertLimitRUB: number = 150000,
+    notificationEmails: string[] = []
+  ) => {
     const q = query(collection(db, 'settings'));
     const snapshot = await getDocs(q);
     
+    const payload = {
+      dailyLimitRUB,
+      standardLimitRUB,
+      expertLimitRUB,
+      referralBonusRUB,
+      notificationEmails,
+      updatedAt: Timestamp.now(),
+      updatedBy: auth.currentUser?.uid,
+    };
+
     if (snapshot.empty) {
-      // Create new settings document
-      await addDoc(collection(db, 'settings'), {
-        dailyLimitRUB,
-        referralBonusRUB,
-        updatedAt: Timestamp.now(),
-        updatedBy: auth.currentUser?.uid,
-      });
+      await addDoc(collection(db, 'settings'), payload);
     } else {
-      // Update existing settings document
       const settingsRef = doc(db, 'settings', snapshot.docs[0].id);
-      await updateDoc(settingsRef, {
-        dailyLimitRUB,
-        referralBonusRUB,
-        updatedAt: Timestamp.now(),
-        updatedBy: auth.currentUser?.uid,
-      });
+      await updateDoc(settingsRef, payload);
     }
 
     // Log action
     await addDoc(collection(db, 'admin_logs'), {
       adminId: auth.currentUser?.uid,
       action: 'UPDATE_SETTINGS',
-      details: { dailyLimitRUB, referralBonusRUB },
+      details: { dailyLimitRUB, standardLimitRUB, expertLimitRUB, referralBonusRUB, notificationEmails },
       timestamp: Timestamp.now()
     });
   },

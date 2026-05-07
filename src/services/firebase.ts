@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
+  updatePassword,
   type Auth,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -36,6 +37,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from 'firebase/storage';
+import { emailService } from './emailService';
 
 // Firebase Configuration - Replace with your config
 const firebaseConfig = {
@@ -112,8 +114,28 @@ export const authService = {
       await userService.applyReferralCode(user.uid, userData.ref);
     }
 
-    // Send verification email
-    await sendEmailVerification(user);
+    // --- Custom Email Verification via Google Apps Script ---
+    try {
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Store code in Firestore (Valid for 15 minutes)
+      await setDoc(doc(db, 'verification_codes', user.uid), {
+        code: verificationCode,
+        email,
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 15 * 60 * 1000)),
+        createdAt: Timestamp.now()
+      });
+
+      // Send via GAS
+      const htmlBody = emailService.getVerificationTemplate(verificationCode);
+      await emailService.sendEmail(email, 'Code de vérification Flash Pay', htmlBody);
+      
+      console.log('Verification email sent via GAS');
+    } catch (error) {
+      console.error('Failed to send verification email via GAS:', error);
+      // Fallback: standard firebase (will likely fail on Spark plan if customized)
+      // await sendEmailVerification(user);
+    }
 
     return user;
   },
@@ -134,6 +156,11 @@ export const authService = {
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void) {
     return onAuthStateChanged(auth, callback);
   },
+
+  async updatePassword(newPassword: string) {
+    if (!auth.currentUser) throw new Error('Utilisateur non connecté');
+    await updatePassword(auth.currentUser, newPassword);
+  },
 };
 
 // User Service
@@ -141,6 +168,14 @@ export const userService = {
   async getUserData(userId: string) {
     const userDoc = await getDoc(doc(db, 'users', userId));
     return userDoc.exists() ? userDoc.data() : null;
+  },
+
+  async savePushToken(userId: string, token: string) {
+    await updateDoc(doc(db, 'users', userId), {
+      fcmToken: token,
+      pushEnabled: true,
+      updatedAt: new Date(),
+    });
   },
 
   async getUserById(userId: string) {
@@ -153,6 +188,14 @@ export const userService = {
     await updateDoc(doc(db, 'users', userId), {
       ...updates,
       updatedAt: new Date(),
+    });
+  },
+
+  async requestAccountDeletion(userId: string) {
+    await updateDoc(doc(db, 'users', userId), {
+      deletionRequested: true,
+      deletionRequestedAt: new Date(),
+      status: 'inactive',
     });
   },
 
@@ -197,10 +240,12 @@ export const userService = {
       }
     }
 
-    const normalize = (value: string) => value.trim().toLowerCase();
+    const normalize = (value: string) => value.trim().toLowerCase().replace(/[^\w]/g, '');
     const departureCountry = normalize(formData.countryOfDeparture);
     const nationality = normalize(formData.nationality);
-    const isRussianCorridor = departureCountry === 'russie' || departureCountry === 'russia' || nationality === 'russe' || nationality === 'russian';
+    const russianCountryNames = ['russie', 'russia', 'ru', 'russland', 'russland'];
+    const russianNationalities = ['russe', 'russian', 'russe'];
+    const isRussianCorridor = russianCountryNames.some(n => departureCountry.includes(n)) || russianNationalities.some(n => nationality.includes(n));
 
     if (!files.idProof) errors.push('La pièce d’identité est obligatoire.');
     if (!files.selfie) errors.push('Le selfie de vérification est obligatoire.');
@@ -586,6 +631,13 @@ export const userService = {
       throw new Error('Vous ne pouvez pas utiliser votre propre code');
     }
 
+    // Fetch dynamic bonus amount from settings
+    const settingsSnap = await getDocs(query(collection(db, 'settings'), limit(1)));
+    let bonusAmount = 500; // Fallback
+    if (!settingsSnap.empty) {
+      bonusAmount = settingsSnap.docs[0].data().referralBonusRUB || 500;
+    }
+
     const referralRecordRef = doc(collection(db, 'referrals'));
     const referralRecord = {
       id: referralRecordRef.id,
@@ -593,7 +645,7 @@ export const userService = {
       referredUserId: newUserId,
       referralCode: normalizedCode,
       status: 'pending',
-      bonusAmount: 500,
+      bonusAmount: bonusAmount,
       createdAt: Timestamp.now(),
       rewardedAt: null,
       rewardReason: null,

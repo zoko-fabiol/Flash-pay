@@ -10,6 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/camera": "^8.2.0",
+    "@capacitor/clipboard": "^8.0.1",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/push-notifications": "^8.0.3",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/status-bar": "^8.0.2",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/speakeasy": "^2.0.10",
     "autoprefixer": "^10.5.0",
@@ -30,6 +37,7 @@
   },
   "devDependencies": {
     "@capacitor/android": "^8.3.1",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.3.1",
     "@capacitor/core": "^8.3.1",
     "@eslint/js": "^10.0.1",

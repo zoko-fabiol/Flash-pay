@@ -19,15 +19,13 @@ import TwoFactorSettingsPage from './pages/security/TwoFactorSettingsPage';
 import WebhooksPage from './pages/webhooks/WebhooksPage';
 import UsersListPage from './pages/users/UsersListPage';
 
+import { Loading } from './components/ui/Loading';
+
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-dark flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-brand border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <Loading fullScreen />;
   }
 
   if (!user || !isAdmin) {

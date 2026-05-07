@@ -2,6 +2,8 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Menu, Zap } from 'lucide-react';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { useLanguage } from '../context/LanguageContext';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -9,6 +11,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -31,11 +34,14 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         <span className="text-sm font-bold text-slate-500 hidden sm:block">
           {user?.nom || 'Invité'}
         </span>
+        <div className="hidden sm:block">
+          <LanguageSwitcher />
+        </div>
         <button
           onClick={handleLogout}
           className="text-xs font-bold px-4 py-2 rounded-full border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 transition hidden sm:block"
         >
-          Déconnexion
+          {t('logout')}
         </button>
         <button
           onClick={onMenuClick}

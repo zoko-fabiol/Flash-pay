@@ -81,7 +81,11 @@ const ExchangeRatesPage: React.FC = () => {
 
   // Settings state
   const [editingLimit, setEditingLimit] = useState<string>('150000');
+  const [editingStandardLimit, setEditingStandardLimit] = useState<string>('20000');
+  const [editingExpertLimit, setEditingExpertLimit] = useState<string>('150000');
   const [editingReferralBonus, setEditingReferralBonus] = useState<string>('500');
+  const [editingEmails, setEditingEmails] = useState<string[]>([]);
+  const [newEmail, setNewEmail] = useState('');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   useEffect(() => {
     const q = query(collection(db, 'exchange_rates'));
@@ -104,9 +108,15 @@ const ExchangeRatesPage: React.FC = () => {
       if (!snapshot.empty) {
         const settingsDoc = snapshot.docs[0].data();
         const limit = settingsDoc.dailyLimitRUB || 150000;
+        const stdLimit = settingsDoc.standardLimitRUB || 20000;
+        const expLimit = settingsDoc.expertLimitRUB || 150000;
         const bonus = settingsDoc.referralBonusRUB || 500;
+        const emails = settingsDoc.notificationEmails || [];
         setEditingLimit(limit.toString());
+        setEditingStandardLimit(stdLimit.toString());
+        setEditingExpertLimit(expLimit.toString());
         setEditingReferralBonus(bonus.toString());
+        setEditingEmails(emails);
       }
     });
 
@@ -142,28 +152,43 @@ const ExchangeRatesPage: React.FC = () => {
 
   const handleSaveSettings = async () => {
     const newLimit = parseInt(editingLimit);
+    const newStdLimit = parseInt(editingStandardLimit);
+    const newExpLimit = parseInt(editingExpertLimit);
     const newBonus = parseInt(editingReferralBonus);
     
-    if (isNaN(newLimit) || newLimit <= 0) {
-      toast.error('Limite invalide');
-      return;
-    }
-
-    if (isNaN(newBonus) || newBonus < 0) {
-      toast.error('Bonus parrainage invalide');
-      return;
-    }
+    if (isNaN(newLimit) || newLimit <= 0) { toast.error('Limite max invalide'); return; }
+    if (isNaN(newStdLimit) || newStdLimit <= 0) { toast.error('Limite Standard invalide'); return; }
+    if (isNaN(newExpLimit) || newExpLimit <= 0) { toast.error('Limite Expert invalide'); return; }
+    if (isNaN(newBonus) || newBonus < 0) { toast.error('Bonus parrainage invalide'); return; }
+    if (newStdLimit >= newExpLimit) { toast.error('La limite Expert doit être > Standard'); return; }
 
     setIsSavingSettings(true);
     try {
-      await adminService.updateDailyLimit(newLimit, newBonus);
-      toast.success('Paramètres mis à jour');
+      await adminService.updateDailyLimit(newLimit, newBonus, newStdLimit, newExpLimit, editingEmails);
+      toast.success('Paramètres mis à jour ✓');
     } catch (err) {
       console.error(err);
       toast.error('Erreur lors de la mise à jour');
     } finally {
       setIsSavingSettings(false);
     }
+  };
+
+  const addEmail = () => {
+    if (!newEmail.includes('@')) {
+      toast.error('Email invalide');
+      return;
+    }
+    if (editingEmails.includes(newEmail)) {
+      toast.error('Email déjà présent');
+      return;
+    }
+    setEditingEmails([...editingEmails, newEmail]);
+    setNewEmail('');
+  };
+
+  const removeEmail = (email: string) => {
+    setEditingEmails(editingEmails.filter(e => e !== email));
   };
 
   const handleAddCustomRate = async () => {
@@ -213,11 +238,42 @@ const ExchangeRatesPage: React.FC = () => {
             <p className="text-slate-400 text-xs mb-6">Contrôle des plafonds de transaction et des récompenses partenaires.</p>
             
             <div className="space-y-4">
+               {/* Standard KYC Limit */}
                <div className="space-y-2">
-                 <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Limite Max Journalière (RUB)</label>
+                 <label className="text-[10px] font-black text-sky-400 uppercase tracking-widest">Limite Standard KYC (RUB)</label>
                  <div className="relative">
-                   <input 
-                    type="number" 
+                   <input
+                    type="number"
+                    value={editingStandardLimit}
+                    onChange={(e) => setEditingStandardLimit(e.target.value)}
+                    className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-sky-500/50 outline-none"
+                   />
+                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-bold">RUB</span>
+                 </div>
+                 <p className="text-[10px] text-slate-600">Plafond pour les utilisateurs sans KYC validé</p>
+               </div>
+
+               {/* Expert KYC Limit */}
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Limite Expert KYC (RUB)</label>
+                 <div className="relative">
+                   <input
+                    type="number"
+                    value={editingExpertLimit}
+                    onChange={(e) => setEditingExpertLimit(e.target.value)}
+                    className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-emerald-500/50 outline-none"
+                   />
+                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-bold">RUB</span>
+                 </div>
+                 <p className="text-[10px] text-slate-600">Plafond pour les utilisateurs KYC ✓ Expert</p>
+               </div>
+
+               {/* Max global (legacy) */}
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Limite Max Absolue (RUB)</label>
+                 <div className="relative">
+                   <input
+                    type="number"
                     value={editingLimit}
                     onChange={(e) => setEditingLimit(e.target.value)}
                     className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-rose-500/50 outline-none"
@@ -226,20 +282,55 @@ const ExchangeRatesPage: React.FC = () => {
                  </div>
                </div>
 
+               {/* Referral bonus */}
                <div className="space-y-2">
-                 <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Bonus Parrainage (RUB)</label>
+                 <label className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Bonus Parrainage (RUB)</label>
                  <div className="relative">
-                   <input 
-                    type="number" 
+                   <input
+                    type="number"
                     value={editingReferralBonus}
                     onChange={(e) => setEditingReferralBonus(e.target.value)}
-                    className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-emerald-500/50 outline-none"
+                    className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-amber-500/50 outline-none"
                    />
                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-bold">RUB</span>
                  </div>
                </div>
-               
 
+               {/* Admin Notification Emails */}
+               <div className="space-y-3 pt-2 border-t border-slate-700/50 mt-4">
+                 <label className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Alertes Emails Admin</label>
+                 
+                 <div className="flex gap-2">
+                   <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="admin@flashpay.com"
+                    className="flex-1 bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:ring-1 focus:ring-indigo-500/50 outline-none"
+                   />
+                   <button 
+                    onClick={addEmail}
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all"
+                   >
+                     Ajouter
+                   </button>
+                 </div>
+
+                 <div className="flex flex-wrap gap-2">
+                   {editingEmails.length === 0 ? (
+                     <p className="text-[10px] text-slate-500 italic">Aucun email configuré pour les alertes.</p>
+                   ) : (
+                     editingEmails.map(email => (
+                       <div key={email} className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg">
+                         <span className="text-[10px] text-slate-300 font-medium">{email}</span>
+                         <button onClick={() => removeEmail(email)} className="text-slate-500 hover:text-rose-500">
+                           <X size={12} />
+                         </button>
+                       </div>
+                     ))
+                   )}
+                 </div>
+               </div>
             </div>
           </div>
           <button 

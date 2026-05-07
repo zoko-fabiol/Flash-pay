@@ -1,7 +1,9 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Send, History, Lock, Share2, User, Settings, LogOut, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -11,15 +13,18 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const location = useLocation();
   const { logout } = useAuth();
+  const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const menuItems = [
-    { path: '/', label: 'Tableau de bord', icon: LayoutDashboard },
-    { path: '/transfer', label: 'Nouveau Transfert', icon: Send },
-    { path: '/transactions', label: 'Historique', icon: History },
-    { path: '/kyc', label: 'Mon Profil (KYC)', icon: Lock },
-    { path: '/referral', label: 'Parrainage', icon: Share2 },
-    { path: '/profile', label: 'Mon Compte', icon: User },
-    { path: '/preferences', label: 'Préférences', icon: Settings },
+    { path: '/', label: t('menu_dashboard'), icon: LayoutDashboard },
+    { path: '/transfer', label: t('menu_transfer'), icon: Send },
+    { path: '/transactions', label: t('menu_history'), icon: History },
+    { path: '/kyc', label: t('menu_profile_kyc'), icon: Lock },
+    { path: '/referral', label: t('menu_referral'), icon: Share2 },
+    { path: '/profile', label: t('menu_profile'), icon: User },
+    { path: '/preferences', label: t('menu_preferences'), icon: Settings },
+
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -74,13 +79,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white">
+          <div className="mb-4 flex justify-center sm:hidden">
+            <LanguageSwitcher />
+          </div>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-semibold"
           >
             <LogOut size={20} />
-            <span>Déconnexion</span>
+            <span>{t('logout')}</span>
           </button>
         </div>
       </aside>

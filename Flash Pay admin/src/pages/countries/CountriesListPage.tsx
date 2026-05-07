@@ -291,7 +291,7 @@ const CountriesListPage: React.FC = () => {
               <div className="flex items-center gap-2 text-brand text-sm font-mono font-bold">
                 <Phone size={14} /> {bank.number}
               </div>
-              {bank.details && <p className="text-slate-500 text-[10px] mt-1 italic">{bank.details}</p>}
+              {bank.holder && <p className="text-slate-500 text-[10px] mt-1 italic">{bank.holder}</p>}
             </div>
 
             <div className="pt-2">
@@ -339,7 +339,7 @@ const CountriesListPage: React.FC = () => {
                     name: formData.get('name'),
                     number: formData.get('number'),
                     type: formData.get('type'),
-                    details: formData.get('details'),
+                    holder: formData.get('holder'),
                     logo: bankLogo || editingItem?.logo || '',
                     active: editingItem ? editingItem.active : true
                   });
@@ -505,8 +505,8 @@ const CountriesListPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase">Détails Additionnels (Propriétaire, etc.)</label>
-                      <textarea name="details" defaultValue={editingItem?.details} className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand h-24" />
+                      <label className="text-xs font-bold text-slate-500 uppercase">TITULAIRE DU COMPTE</label>
+                      <input name="holder" defaultValue={editingItem?.holder} placeholder="Ex: Claus Wan" className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-brand" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-500 uppercase">Logo de la Banque</label>

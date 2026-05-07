@@ -3,8 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { userService, db } from '../services/firebase';
 import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
-import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Camera } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
+import { pickImageNative, isNativeApp } from '../utils/capacitorUtils';
 
 const getKycStatus = (user: any) => {
   const blockedUntil = user?.kyc?.nextEligibilityDate?.toMillis?.();
@@ -22,6 +24,7 @@ const getKycStatus = (user: any) => {
 
 export const KYCPage: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -43,9 +46,13 @@ export const KYCPage: React.FC = () => {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [addressProofFile, setAddressProofFile] = useState<File | null>(null);
   const [localProofFile, setLocalProofFile] = useState<File | null>(null);
+  const [departureRegion, setDepartureRegion] = useState<'russia' | 'africa'>('russia');
 
   const [dailyLimit, setDailyLimit] = useState(150000);
+  const [standardLimit, setStandardLimit] = useState(20000);
+  const [expertLimit, setExpertLimit] = useState(150000);
   const [rates, setRates] = useState<any[]>([]);
+  const [countries, setCountries] = useState<any[]>([]);
 
   useEffect(() => {
     const qSettings = query(collection(db, 'settings'));
@@ -53,6 +60,8 @@ export const KYCPage: React.FC = () => {
       if (!snapshot.empty) {
         const settingsDoc = snapshot.docs[0].data();
         if (settingsDoc.dailyLimitRUB) setDailyLimit(settingsDoc.dailyLimitRUB);
+        if (settingsDoc.standardLimitRUB) setStandardLimit(settingsDoc.standardLimitRUB);
+        if (settingsDoc.expertLimitRUB) setExpertLimit(settingsDoc.expertLimitRUB);
       }
     });
 
@@ -61,13 +70,30 @@ export const KYCPage: React.FC = () => {
       setRates(snapshot.docs.map(doc => doc.data()));
     });
 
+    // Charger les pays depuis Firestore
+    const unsubCountries = onSnapshot(collection(db, 'countries'), (snapshot) => {
+      const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      // Trier alphabétiquement par nom
+      data.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+      setCountries(data);
+      // Définir le premier pays comme valeur par défaut seulement si le form n'a pas déjà une valeur
+      if (data.length > 0 && !formData.countryOfDeparture) {
+        setFormData(prev => ({ ...prev, countryOfDeparture: (data[0] as any).name }));
+      }
+    });
+
     return () => {
       unsubSettings();
       unsubRates();
+      unsubCountries();
     };
   }, []);
 
-  const needsLocalDocument = formData.countryOfDeparture.trim().toLowerCase() !== 'russie' && formData.countryOfDeparture.trim().toLowerCase() !== 'russia';
+  // Détecter si c'est le corridor russe (code RU ou nom Russie)
+  const selectedCountry = countries.find((c: any) => c.name === formData.countryOfDeparture);
+  const needsLocalDocument = selectedCountry
+    ? (selectedCountry.code || '').toUpperCase() !== 'RU'
+    : (formData.countryOfDeparture.trim().toLowerCase() !== 'russie' && formData.countryOfDeparture.trim().toLowerCase() !== 'russia');
   const kycStatus = getKycStatus(user);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -81,7 +107,7 @@ export const KYCPage: React.FC = () => {
       setFile(file);
       setError('');
     } else if (file) {
-      setError('Veuillez téléverser une image JPG ou PNG uniquement.');
+      setError(t('error_image_only'));
     }
   };
 
@@ -92,7 +118,7 @@ export const KYCPage: React.FC = () => {
     setLoading(true);
 
     if (!user) {
-      setError('Vous devez être connecté');
+      setError(t('error_login_required'));
       setLoading(false);
       return;
     }
@@ -124,7 +150,7 @@ export const KYCPage: React.FC = () => {
         },
       });
 
-      setSuccess('Vos informations KYC ont été soumises. Nous vérifierons votre dossier dans les 24h.');
+      setSuccess(t('kyc_submitted'));
       
       // Reset form
       setFormData({
@@ -145,7 +171,7 @@ export const KYCPage: React.FC = () => {
       setLocalProofFile(null);
 
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la soumission KYC');
+      setError(err.message || t('update_error'));
     } finally {
       setLoading(false);
     }
@@ -180,40 +206,47 @@ export const KYCPage: React.FC = () => {
         statusColors[badgeKey as keyof typeof statusColors] || statusColors.Standard
       }`}>
         {statusIcons[badgeKey as keyof typeof statusIcons]}
-        {badgeKey === 'Blocked' ? 'Blocked' : badgeKey}
+        {t(`kyc_${badgeKey.toLowerCase()}`)}
       </div>
     );
   };
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-5 pb-10 px-4">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Vérification KYC</h1>
-          <p className="text-slate-600">Complétez votre profil pour augmenter vos limites de transfert</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">{t('kyc_title')}</h1>
+          <p className="text-slate-500 font-medium">{t('kyc_desc')}</p>
         </div>
 
         {/* Current Status */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <h3 className="font-bold text-lg mb-4">Statut Actuel</h3>
+        <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm">
+          <h3 className="font-black text-slate-900 mb-4">{t('kyc_status')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-slate-700">Niveau de vérification</span>
+              <span className="text-slate-700">{t('verification_level')}</span>
               {getStatusBadge()}
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-slate-700">Limite de transfert quotidien</span>
+              <span className="text-slate-700">{t('daily_transfer_limit')}</span>
               <div className="text-right">
-                <p className="font-bold text-slate-900">
-                  {kycStatus === 'blocked' ? 'Vérification bloquée temporairement' :
-                   kycStatus === 'pending' ? 'Vérification en cours...' :
-                   `${dailyLimit.toLocaleString()} RUB`}
-                </p>
-                {kycStatus !== 'blocked' && kycStatus !== 'pending' && (
-                  <p className="text-xs text-slate-500 font-medium">
-                    ≈ {( dailyLimit * (rates.find(r => r.from === 'RUB' && r.to === 'XAF')?.rate || 7.22) ).toLocaleString()} XAF
-                  </p>
-                )}
+                {(() => {
+                  const isExpert = kycStatus === 'approved';
+                  const activeLimit = isExpert ? expertLimit : standardLimit;
+                  if (kycStatus === 'blocked') return <p className="font-bold text-rose-600">{t('kyc_blocked')}</p>;
+                  if (kycStatus === 'pending') return <p className="font-bold text-amber-600">{t('kyc_pending')}</p>;
+                  return (
+                    <>
+                      <p className={`font-black text-lg ${isExpert ? 'text-emerald-700' : 'text-slate-900'}`}>
+                        {activeLimit.toLocaleString('fr-FR')} RUB
+                        {isExpert && <span className="ml-1.5 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold">Expert</span>}
+                      </p>
+                      <p className="text-xs text-slate-500 font-medium">
+                        ≈ {(activeLimit * (rates.find(r => r.from === 'RUB' && r.to === 'XAF')?.rate || 7.22)).toLocaleString('fr-FR')} XAF
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -224,12 +257,12 @@ export const KYCPage: React.FC = () => {
 
         {/* KYC Form */}
         {(kycStatus === 'not_started' || kycStatus === 'rejected') && (
-          <div className="bg-white rounded-xl p-6 border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <h3 className="font-bold text-lg mb-6">Informations Personnelles</h3>
+          <div className="bg-white rounded-[24px] p-6 border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h3 className="font-bold text-lg mb-6">{t('personal_details')}</h3>
             {kycStatus === 'rejected' && (
-              <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
-                <p className="font-bold">Votre précédente demande a été rejetée.</p>
-                <p className="text-sm">Veuillez vérifier vos informations et soumettre de nouveaux documents clairs.</p>
+              <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
+                <p className="font-bold">{t('kyc_rejected')}</p>
+                <p className="text-sm">{t('kyc_desc')}</p>
               </div>
             )}
           
@@ -238,79 +271,155 @@ export const KYCPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Prénom
+                  {t('first_name')}
                 </label>
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleInputChange}
-                  placeholder="Jean"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder={t('first_name')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Nom
+                  {t('last_name')}
                 </label>
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleInputChange}
-                  placeholder="Dupont"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder={t('last_name')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Pays de départ
+              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-3">
+                {t('departure_country')}
               </label>
-              <select
-                name="countryOfDeparture"
-                value={formData.countryOfDeparture}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-                required
-              >
-                <option value="Russie">Russie</option>
-                <option value="Cameroun">Cameroun</option>
-                <option value="Côte d'Ivoire">Côte d'Ivoire</option>
-                <option value="Sénégal">Sénégal</option>
-                <option value="Autre">Autre</option>
-              </select>
+
+              {/* Step 1: Region selector — premium card style */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                {/* Russia */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDepartureRegion('russia');
+                    setFormData(prev => ({ ...prev, countryOfDeparture: 'Russie' }));
+                  }}
+                  className={`relative flex flex-col items-center justify-center gap-2 py-5 px-4 rounded-2xl border-2 transition-all duration-200 ${
+                    departureRegion === 'russia'
+                      ? 'border-[#6236CC] bg-gradient-to-b from-[#f7f3ff] to-white shadow-[0_4px_16px_rgba(98,54,204,0.15)]'
+                      : 'border-slate-200 bg-white hover:border-[#6236CC]/40 hover:shadow-sm'
+                  }`}
+                >
+                  {/* Active indicator dot */}
+                  {departureRegion === 'russia' && (
+                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#6236CC]" />
+                  )}
+                  {/* Russia icon */}
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-md overflow-hidden">
+                    <rect width="32" height="10.67" fill="#FFFFFF"/>
+                    <rect y="10.67" width="32" height="10.67" fill="#0039A6"/>
+                    <rect y="21.33" width="32" height="10.67" fill="#D52B1E"/>
+                  </svg>
+                  <span className={`text-sm font-black tracking-tight ${departureRegion === 'russia' ? 'text-[#6236CC]' : 'text-slate-600'}`}>
+                    {t('russia')}
+                  </span>
+                </button>
+
+                {/* Africa */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDepartureRegion('africa');
+                    if (countries.length > 0) {
+                      setFormData(prev => ({ ...prev, countryOfDeparture: countries[0].name }));
+                    }
+                  }}
+                  className={`relative flex flex-col items-center justify-center gap-2 py-5 px-4 rounded-2xl border-2 transition-all duration-200 ${
+                    departureRegion === 'africa'
+                      ? 'border-[#6236CC] bg-gradient-to-b from-[#f7f3ff] to-white shadow-[0_4px_16px_rgba(98,54,204,0.15)]'
+                      : 'border-slate-200 bg-white hover:border-[#6236CC]/40 hover:shadow-sm'
+                  }`}
+                >
+                  {departureRegion === 'africa' && (
+                    <span className="absolute top-3 right-3 w-2 h-2 rounded-full bg-[#6236CC]" />
+                  )}
+                  {/* Africa map icon */}
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="16" fill="#F0F4FF"/>
+                    <path d="M16 6C12.5 6 9 8.5 9 13c0 2.5 1 4.5 1 6.5 0 1.5.5 3 2 4.5.5.5 1.5 1.5 2 2 .5.5 1 1 2 1s1.5-.5 2-1c.5-.5 1.5-1.5 2-2 1.5-1.5 2-3 2-4.5 0-2 1-4 1-6.5C23 8.5 19.5 6 16 6z" fill="#6236CC" opacity="0.7"/>
+                    <path d="M18 6.2c1 .5 2 1.2 2.5 2.3.5 1 .5 2-.5 2.5s-2 0-2.5-1-.5-2.5.5-3.8z" fill="#4A1FA0" opacity="0.5"/>
+                  </svg>
+                  <span className={`text-sm font-black tracking-tight ${departureRegion === 'africa' ? 'text-[#6236CC]' : 'text-slate-600'}`}>
+                    {t('africa') || 'Afrique'}
+                  </span>
+                </button>
+              </div>
+
+              {/* Step 2: African countries dropdown */}
+              {departureRegion === 'africa' && (
+                <div className="relative">
+                  <select
+                    name="countryOfDeparture"
+                    value={formData.countryOfDeparture}
+                    onChange={handleInputChange}
+                    className="w-full appearance-none px-4 py-3.5 pr-10 border-2 border-[#6236CC]/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6236CC]/20 focus:border-[#6236CC] font-bold text-slate-900 bg-white transition cursor-pointer"
+                    required
+                  >
+                    {countries.length === 0 ? (
+                      <option value="">{t('loading')}</option>
+                    ) : (
+                      countries.map((country: any) => (
+                        <option key={country.id} value={country.name}>
+                          {country.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  {/* Custom chevron */}
+                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M4 6L8 10L12 6" stroke="#6236CC" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* DOB and Nationality */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Date de Naissance
+                  {t('dob')}
                 </label>
                 <input
                   type="date"
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Nationalité
+                  {t('nationality')}
                 </label>
                 <input
                   type="text"
                   name="nationality"
                   value={formData.nationality}
                   onChange={handleInputChange}
-                  placeholder="Française"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder={t('nationality_placeholder')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
@@ -319,15 +428,15 @@ export const KYCPage: React.FC = () => {
             {/* Address */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Adresse
+                {t('address')}
               </label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleInputChange}
-                placeholder="123 Rue de la Paix"
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder={t('address')}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                 required
               />
             </div>
@@ -336,29 +445,29 @@ export const KYCPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Ville
+                  {t('address_city')}
                 </label>
                 <input
                   type="text"
                   name="city"
                   value={formData.city}
                   onChange={handleInputChange}
-                  placeholder="Paris"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder={t('address_city')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Code Postal
+                  {t('postal_code')}
                 </label>
                 <input
                   type="text"
                   name="postalCode"
                   value={formData.postalCode}
                   onChange={handleInputChange}
-                  placeholder="75001"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  placeholder={t('postal_code')}
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
@@ -368,22 +477,22 @@ export const KYCPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Type de Pièce d'Identité
+                  {t('id_type')}
                 </label>
                 <select
                   name="idType"
                   value={formData.idType}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                 >
-                  <option value="Passport">Passeport</option>
-                  <option value="NationalId">Carte Nationale</option>
-                  <option value="DrivingLicense">Permis de Conduire</option>
+                  <option value="Passport">{t('passport')}</option>
+                  <option value="NationalId">{t('national_id')}</option>
+                  <option value="DrivingLicense">{t('driving_license')}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Numéro de Pièce
+                  {t('id_number')}
                 </label>
                 <input
                   type="text"
@@ -391,7 +500,7 @@ export const KYCPage: React.FC = () => {
                   value={formData.idNumber}
                   onChange={handleInputChange}
                   placeholder="AB123456"
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50"
                   required
                 />
               </div>
@@ -399,29 +508,42 @@ export const KYCPage: React.FC = () => {
 
             {/* Document Upload */}
             <div>
-              <h4 className="font-semibold text-slate-900 mb-4">Documents requis pour le corridor Russie</h4>
+              <h4 className="font-semibold text-slate-900 mb-4">{t('required_documents_corridor', { country: formData.countryOfDeparture })}</h4>
               <div className="space-y-4">
                 <FileUpload
-                  label="Passeport / Pièce d'Identité"
+                  label={t('id_card_photo')}
                   file={documentFile}
                   onChange={(e) => handleFileChange(e, setDocumentFile)}
+                  onFileChange={(f) => setDocumentFile(f)}
                 />
                 <FileUpload
-                  label="Selfie"
+                  label={t('selfie_photo')}
                   file={selfieFile}
                   onChange={(e) => handleFileChange(e, setSelfieFile)}
+                  onFileChange={(f) => setSelfieFile(f)}
                 />
                 <FileUpload
-                  label="Preuve d'adresse"
+                  label={t('address_proof')}
                   file={addressProofFile}
                   onChange={(e) => handleFileChange(e, setAddressProofFile)}
+                  onFileChange={(f) => setAddressProofFile(f)}
                 />
                 {needsLocalDocument && (
-                  <FileUpload
-                    label="Document local du pays de départ"
-                    file={localProofFile}
-                    onChange={(e) => handleFileChange(e, setLocalProofFile)}
-                  />
+                  <>
+                    <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <span className="text-amber-500 text-lg shrink-0">⚠️</span>
+                      <div>
+                        <p className="font-bold text-amber-800 text-sm">{t('local_document_required')}</p>
+                        <p className="text-xs text-amber-700 mt-0.5">{t('local_document_desc')}</p>
+                      </div>
+                    </div>
+                    <FileUpload
+                      label={t('local_document')}
+                      file={localProofFile}
+                      onChange={(e) => handleFileChange(e, setLocalProofFile)}
+                      onFileChange={(f) => setLocalProofFile(f)}
+                    />
+                  </>
                 )}
               </div>
             </div>
@@ -429,9 +551,9 @@ export const KYCPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary hover:bg-primary-hover disabled:bg-slate-400 text-white font-bold py-3 rounded-lg transition-colors"
+              className="w-full bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] disabled:opacity-50 text-white font-black py-4 rounded-2xl shadow-[0_8px_24px_rgba(98,54,204,0.25)] hover:shadow-[0_12px_32px_rgba(98,54,204,0.35)] transition active:scale-95 flex items-center justify-center gap-2"
             >
-              {loading ? 'Soumission...' : 'Soumettre pour Vérification'}
+              {loading ? t('saving') : t('submit_kyc')}
             </button>
           </form>
           </div>
@@ -445,30 +567,115 @@ interface FileUploadProps {
   label: string;
   file: File | null;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFileChange?: (file: File) => void; // for native camera
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange, onFileChange }) => {
+  const { t } = useLanguage();
   const inputId = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const [loading, setLoading] = useState(false);
+
+  const handleNativePick = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const picked = await pickImageNative('PROMPT');
+      if (picked && onFileChange) onFileChange(picked);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const native = isNativeApp();
 
   return (
     <div>
-      <label className="block text-sm font-semibold text-slate-700 mb-2">{label}</label>
-      <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-        <input
-          type="file"
-          onChange={onChange}
-          accept="image/*"
-          className="hidden"
-          id={inputId}
-        />
-        <label htmlFor={inputId} className="cursor-pointer block">
-          <Upload className="mx-auto mb-2 text-slate-500" size={24} />
-          <p className="text-sm font-semibold text-slate-700">
-            {file ? file.name : 'Cliquez pour uploader'}
-          </p>
-          <p className="text-xs text-slate-500 mt-1">PNG ou JPG uniquement (Max 5MB)</p>
-        </label>
+      <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">{label}</label>
+      <div
+        className={`relative border-2 border-dashed rounded-2xl transition-all overflow-hidden ${
+          file
+            ? 'border-emerald-300 bg-emerald-50'
+            : 'border-slate-200 bg-white hover:border-[#6236CC]/50 hover:bg-[#f7f3ff]/30'
+        }`}
+      >
+        {/* Hidden input for web fallback */}
+        {!native && (
+          <input
+            type="file"
+            onChange={onChange}
+            accept="image/*"
+            className="hidden"
+            id={inputId}
+          />
+        )}
+
+        {/* Clickable area */}
+        {native ? (
+          <button
+            type="button"
+            onClick={handleNativePick}
+            disabled={loading}
+            className="cursor-pointer flex items-center gap-3 px-4 py-4 w-full text-left"
+          >
+            <FileUploadContent file={file} loading={loading} t={t} native />
+          </button>
+        ) : (
+          <label htmlFor={inputId} className="cursor-pointer flex items-center gap-3 px-4 py-4 w-full">
+            <FileUploadContent file={file} loading={loading} t={t} native={false} />
+          </label>
+        )}
       </div>
     </div>
   );
 };
+
+// Inner content to avoid duplication
+const FileUploadContent: React.FC<{
+  file: File | null;
+  loading: boolean;
+  t: (key: string) => string;
+  native: boolean;
+}> = ({ file, loading, t, native }) => (
+  <>
+    {/* Icon */}
+    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+      file ? 'bg-emerald-100' : 'bg-slate-100'
+    }`}>
+      {loading ? (
+        <div className="w-4 h-4 border-2 border-[#6236CC] border-t-transparent rounded-full animate-spin" />
+      ) : file ? (
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M3.75 9.75L7.5 13.5L14.25 5.25" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ) : native ? (
+        <Camera size={18} className="text-slate-400" />
+      ) : (
+        <Upload size={18} className="text-slate-400" />
+      )}
+    </div>
+
+    {/* Text */}
+    <div className="flex-1 min-w-0">
+      {file ? (
+        <>
+          <p className="text-sm font-bold text-emerald-700 truncate w-full">{file.name}</p>
+          <p className="text-xs text-emerald-500 mt-0.5">{(file.size / 1024).toFixed(0)} KB</p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-bold text-slate-600">
+            {native ? t('take_photo') || 'Prendre une photo' : t('upload_click')}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('png_jpg_only')}</p>
+        </>
+      )}
+    </div>
+
+    {/* Status badge */}
+    {file && (
+      <span className="shrink-0 text-[10px] font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded-lg uppercase tracking-wider">
+        ✓
+      </span>
+    )}
+  </>
+);

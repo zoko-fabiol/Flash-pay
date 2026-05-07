@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { ArrowLeft, Save, Loader } from 'lucide-react';
+import { Bell, Mail, Save, Loader, CheckCircle2 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { useLanguage } from '../context/LanguageContext';
 
 interface UserPreferences {
   language: string;
@@ -15,9 +16,10 @@ interface UserPreferences {
 
 export const PreferencesPage: React.FC = () => {
   const { user } = useAuth();
+  const { t, language: currentLang, setLanguage } = useLanguage();
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<UserPreferences>({
-    language: 'fr',
+    language: currentLang || 'fr',
     pushNotifications: true,
     promotionalEmails: false,
   });
@@ -25,7 +27,6 @@ export const PreferencesPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Load preferences from Firestore
   useEffect(() => {
     const loadPreferences = async () => {
       if (!user?.id) return;
@@ -49,16 +50,8 @@ export const PreferencesPage: React.FC = () => {
     setSaving(true);
     try {
       const userRef = doc(db, 'users', user.id);
-      await setDoc(
-        userRef,
-        {
-          preferences: {
-            ...preferences,
-            updatedAt: new Date(),
-          },
-        },
-        { merge: true }
-      );
+      await setDoc(userRef, { preferences: { ...preferences, updatedAt: new Date() } }, { merge: true });
+      setLanguage(preferences.language as any);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -68,11 +61,23 @@ export const PreferencesPage: React.FC = () => {
     }
   };
 
+  const Toggle = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
+    <button
+      onClick={onChange}
+      className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${value ? 'bg-[#6236CC]' : 'bg-slate-200'}`}
+    >
+      <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${value ? 'translate-x-6' : 'translate-x-0'}`} />
+    </button>
+  );
+
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader className="animate-spin text-brand" size={32} />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader className="animate-spin text-[#6236CC]" size={32} />
+            <span className="font-bold text-slate-500">{t('loading')}</span>
+          </div>
         </div>
       </Layout>
     );
@@ -80,142 +85,78 @@ export const PreferencesPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto py-8 px-4">
+      <div className="max-w-2xl mx-auto space-y-5 pb-10 px-4">
+
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-100 rounded-full transition"
-          >
-            <ArrowLeft size={24} className="text-slate-900" />
-          </button>
-          <h1 className="text-3xl font-black text-slate-900">Préférences</h1>
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('preferences')}</h1>
+          <p className="text-slate-500 mt-1 font-medium">{t('preferences_desc')}</p>
         </div>
 
-        {/* Success Message */}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-2xl border border-green-200 flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="font-semibold">Préférences enregistrées avec succès</span>
+          <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-200 flex items-center gap-3">
+            <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
+            <span className="font-bold">{t('preferences_saved')}</span>
           </div>
         )}
 
-        {/* Preferences Card */}
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-          {/* Language Preference */}
-          <div className="p-6 border-b border-slate-100">
-            <label className="block mb-2">
-              <span className="text-sm text-slate-500 font-semibold">
-                LANGUE DE L'INTERFACE
-              </span>
-            </label>
-            <p className="text-sm text-slate-600 mb-4">
-              Choisissez votre langue préférée
-            </p>
-            <select
-              value={preferences.language}
-              onChange={(e) =>
-                setPreferences({ ...preferences, language: e.target.value })
-              }
-              className="w-full md:w-48 p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand focus:outline-none font-medium"
-            >
-              <option value="fr">Français</option>
-              <option value="en">English</option>
-              <option value="ru">Русский</option>
-            </select>
+        {/* Notifications Card */}
+        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-5 pb-3 border-b border-slate-100">
+            <h2 className="font-black text-slate-900">{t('push_notifications')}</h2>
           </div>
 
-          {/* Push Notifications */}
-          <div className="p-6 border-b border-slate-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-slate-900 mb-1">
-                  Notifications Push & Pop-ups
-                </p>
-                <p className="text-sm text-slate-600">
-                  Recevoir des alertes sur votre appareil
-                </p>
+          <div className="divide-y divide-slate-50">
+            {/* Push notifications */}
+            <div className="flex items-center justify-between px-6 py-5">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#f7f3ff] flex items-center justify-center shrink-0">
+                  <Bell size={18} className="text-[#6236CC]" />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 text-sm">{t('push_notifications')}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{t('push_notif_desc')}</p>
+                </div>
               </div>
-              <button
-                onClick={() =>
-                  setPreferences({
-                    ...preferences,
-                    pushNotifications: !preferences.pushNotifications,
-                  })
-                }
-                className={`w-14 h-8 rounded-full transition-all flex items-center ${
-                  preferences.pushNotifications
-                    ? 'bg-green-500'
-                    : 'bg-slate-300'
-                }`}
-              >
-                <div
-                  className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
-                    preferences.pushNotifications ? 'ml-7' : 'ml-1'
-                  }`}
-                ></div>
-              </button>
+              <Toggle
+                value={preferences.pushNotifications}
+                onChange={() => setPreferences({ ...preferences, pushNotifications: !preferences.pushNotifications })}
+              />
             </div>
-          </div>
 
-          {/* Promotional Emails */}
-          <div className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-slate-900 mb-1">
-                  Emails promotionnels
-                </p>
-                <p className="text-sm text-slate-600">
-                  Recevoir nos offres par mail
-                </p>
+            {/* Promotional emails */}
+            <div className="flex items-center justify-between px-6 py-5">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-[#f7f3ff] flex items-center justify-center shrink-0">
+                  <Mail size={18} className="text-[#6236CC]" />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 text-sm">{t('promo_emails')}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{t('promo_emails_desc')}</p>
+                </div>
               </div>
-              <button
-                onClick={() =>
-                  setPreferences({
-                    ...preferences,
-                    promotionalEmails: !preferences.promotionalEmails,
-                  })
-                }
-                className={`w-14 h-8 rounded-full transition-all flex items-center ${
-                  preferences.promotionalEmails
-                    ? 'bg-green-500'
-                    : 'bg-slate-300'
-                }`}
-              >
-                <div
-                  className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${
-                    preferences.promotionalEmails ? 'ml-7' : 'ml-1'
-                  }`}
-                ></div>
-              </button>
+              <Toggle
+                value={preferences.promotionalEmails}
+                onChange={() => setPreferences({ ...preferences, promotionalEmails: !preferences.promotionalEmails })}
+              />
             </div>
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="flex gap-4 mt-8">
+        {/* Save */}
+        <div className="flex gap-4">
           <button
             onClick={handleSavePreferences}
             disabled={saving}
-            className="flex-1 py-4 px-6 bg-brand text-white font-bold rounded-2xl hover:bg-brand/90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-[2] flex items-center justify-center gap-2 py-4 bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] text-white font-black rounded-2xl shadow-[0_8px_24px_rgba(98,54,204,0.25)] hover:shadow-[0_12px_32px_rgba(98,54,204,0.35)] transition disabled:opacity-50 active:scale-95"
           >
-            {saving ? (
-              <>
-                <Loader size={20} className="animate-spin" />
-                Enregistrement...
-              </>
-            ) : (
-              <>
-                <Save size={20} />
-                Enregistrer
-              </>
-            )}
+            {saving ? <><Loader size={18} className="animate-spin" /> {t('saving')}</> : <><Save size={18} /> {t('save')}</>}
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="flex-1 py-4 px-6 border-2 border-slate-200 text-slate-900 font-bold rounded-2xl hover:bg-slate-50 transition"
+            className="flex-1 py-4 border-2 border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 transition active:scale-95"
           >
-            Annuler
+            {t('cancel')}
           </button>
         </div>
       </div>

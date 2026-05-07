@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { Home, History, Send, Share2, User } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -12,13 +13,14 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const location = useLocation();
+  const { t } = useLanguage();
 
   const mobileTabs = [
-    { path: '/', label: 'Accueil', icon: Home },
-    { path: '/transactions', label: 'Historique', icon: History },
-    { path: '/transfer', label: 'Transfert', icon: Send, featured: true },
-    { path: '/referral', label: 'Parrainage', icon: Share2 },
-    { path: '/profile', label: 'Profil', icon: User },
+    { path: '/', label: t('menu_dashboard'), icon: Home },
+    { path: '/transactions', label: t('menu_history'), icon: History },
+    { path: '/transfer', label: t('menu_transfer'), icon: Send, featured: true },
+    { path: '/referral', label: t('menu_referral'), icon: Share2 },
+    { path: '/profile', label: t('menu_profile'), icon: User },
   ];
 
   const isActive = (path: string) => {

@@ -4,10 +4,12 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { db } from '../services/firebase';
+import { useLanguage } from '../context/LanguageContext';
 import { Loading } from '../components/UI';
 
 export const TransactionsPage: React.FC = () => {
   const { user } = useAuth();
+  const { t, formatNumber } = useLanguage();
   const navigate = useNavigate();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
@@ -48,17 +50,7 @@ export const TransactionsPage: React.FC = () => {
   });
 
   const getStatusLabel = (status: string) => {
-    const labels: Record<string, string> = {
-      pending: 'En attente',
-      proof_received: 'Paiement en cours',
-      confirmed: 'Confirmé',
-      completed: 'Complété',
-      failed: 'Échoué',
-      flagged_problem: 'Problème',
-      cancelled: 'Annulé',
-    };
-
-    return labels[status] || status;
+    return t(`status_${status.toLowerCase()}`);
   };
 
   const getStatusClass = (status: string) => {
@@ -99,28 +91,27 @@ export const TransactionsPage: React.FC = () => {
     const code = tx.destinationCountry || tx.originCountry;
     
     if (code) {
-      if (code === 'RU') return 'Russie';
+      if (code === 'RU') return t('russia');
       const country = countries.find(c => c.code === code);
-      if (country) return country.name;
+      if (country) return country.name; // Countries from DB are in French for now, but I could add keys
     }
     
     // Legacy inference by phone number
     const phone = tx.recipientPhone || tx.recipientAccount || tx.beneficiaryAccount || '';
-    if (phone.startsWith('+7') || phone.startsWith('7')) return 'Russie';
+    if (phone.startsWith('+7') || phone.startsWith('7')) return t('russia');
     
-    // If it's 9 digits starting with 6, it's very likely Cameroon (standard for this app)
-    if (phone.length === 9 && phone.startsWith('6')) return 'Cameroun';
-    if (phone.startsWith('237') || phone.startsWith('+237')) return 'Cameroun';
+    if (phone.length === 9 && phone.startsWith('6')) return t('cameroon');
+    if (phone.startsWith('237') || phone.startsWith('+237')) return t('cameroon');
 
-    return code || 'Pays inconnu';
+    return code || t('unknown_country');
   };
 
   return (
     <Layout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div>
-          <h1 className="text-3xl font-bold mb-2">Historique des Transactions</h1>
-          <p className="text-slate-600">Consultez tous vos transferts</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{t('history_title')}</h1>
+          <p className="text-slate-600">{t('history_desc')}</p>
         </div>
 
         {/* Filters */}
@@ -135,7 +126,7 @@ export const TransactionsPage: React.FC = () => {
                   : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
               }`}
             >
-              {status === 'all' ? 'Tous' : status === 'completed' ? 'Complétés' : status === 'pending' ? 'En attente' : 'Échoués'}
+              {t(`filter_${status}`)}
             </button>
           ))}
         </div>
@@ -146,8 +137,8 @@ export const TransactionsPage: React.FC = () => {
         ) : filteredTransactions.length === 0 ? (
           <div className="bg-white rounded-[28px] p-12 text-center border border-[#eadfff] shadow-[0_14px_40px_rgba(15,23,42,0.06)]">
             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">📭</div>
-            <p className="text-slate-900 font-bold text-lg mb-1">Aucune transaction</p>
-            <p className="text-slate-500">Vous n'avez pas de transaction correspondant à ce filtre.</p>
+            <p className="text-slate-900 font-bold text-lg mb-1">{t('no_transactions')}</p>
+            <p className="text-slate-500">{t('no_transactions_filter')}</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -168,26 +159,31 @@ export const TransactionsPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <div className="font-bold text-slate-900 text-lg">{tx.recipientName || 'Destinataire inconnu'}</div>
+                    <div className="font-bold text-slate-900 text-lg">{tx.recipientName || t('unknown_recipient')}</div>
                     <div className="text-sm text-slate-500 font-medium">
-                      {tx.recipientPhone || tx.recipientAccount || tx.beneficiaryAccount || 'Aucun numéro'} • {getCountryName(tx)}
+                      {tx.recipientPhone || tx.recipientAccount || tx.beneficiaryAccount || t('unknown_number')} • {getCountryName(tx)}
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex flex-row sm:flex-col justify-between items-center sm:items-end gap-2 border-t border-slate-100 sm:border-0 pt-4 sm:pt-0 mt-2 sm:mt-0">
                   <div className="text-left sm:text-right">
-                    <div className="font-black text-xl text-slate-900">{tx.amount} {tx.currency}</div>
-                    {tx.fee > 0 && <div className="text-xs font-bold text-rose-500">Frais: {tx.fee} XAF</div>}
+                    <div className="font-black text-xl text-slate-900">{formatNumber(tx.amount, tx.currency)}</div>
+                    {tx.fee > 0 && <div className="text-xs font-bold text-rose-500">{t('fees')}: {formatNumber(tx.fee, 'XAF')}</div>}
                   </div>
-                  <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-                    <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">
-                      {tx.createdAt?.toDate ? tx.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('fr-FR')}
-                    </span>
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-black tracking-widest ${getStatusClass(tx.status)}`}>
-                      {getStatusLabel(tx.status)}
-                    </span>
-                  </div>
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                      {tx.isBulk && (
+                        <span className="px-2 py-0.5 bg-brand/10 text-brand text-[9px] font-black rounded uppercase tracking-tighter">
+                          {tx.bulkRecipients?.length || 0} Destinataires
+                        </span>
+                      )}
+                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider">
+                        {tx.createdAt?.toDate ? tx.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('fr-FR')}
+                      </span>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] uppercase font-black tracking-widest ${getStatusClass(tx.status)}`}>
+                        {getStatusLabel(tx.status)}
+                      </span>
+                    </div>
                 </div>
               </button>
             )})}

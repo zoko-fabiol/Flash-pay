@@ -22,6 +22,7 @@ export interface User {
   nom: string;
   email: string;
   tel: string;
+  emailVerified?: boolean;
   statut_kyc: 'Standard' | 'Pending' | 'Expert' | 'Rejected';
   kyc?: KYCState;
   solde_bonus: number;
@@ -126,6 +127,7 @@ export interface Settings {
   rate_eur_xaf: number;
   rate_rub_xaf: number;
   feePercentage: number;
+  referralBonus?: number;
 }
 
 export interface Operator {

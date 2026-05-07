@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { userService } from '../services/firebase';
+import { userService, authService } from '../services/firebase';
 import { Layout } from '../components/Layout';
-import { User as UserIcon, Mail, Phone, Calendar, ChevronRight } from 'lucide-react';
+import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 
 
 export const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
+  const { t, formatDate } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [apiError, setApiError] = useState('');
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [formData, setFormData] = useState({
     nom: user?.nom || '',
@@ -27,17 +32,39 @@ export const ProfilePage: React.FC = () => {
 
   const handleSave = async () => {
     if (!user) return;
-
-    setError('');
+    setApiError('');
     setSuccess('');
     setLoading(true);
-
     try {
       await userService.updateUserProfile(user.id, formData);
-      setSuccess('Profil mis à jour avec succès!');
+      setSuccess(t('profile_updated'));
       setEditing(false);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise à jour');
+      setApiError(err.message || t('update_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      setApiError(t('passwords_dont_match'));
+      return;
+    }
+    if (newPassword.length < 6) {
+      setApiError(t('password_too_short'));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.updatePassword(newPassword);
+      setSuccess(t('password_updated_success'));
+      setShowPasswordForm(false);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setApiError(err.message || t('update_error'));
     } finally {
       setLoading(false);
     }
@@ -52,172 +79,261 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
+  // Normalize KYC status — handles 'Standard', 'Expert', 'approved', 'pending', etc.
+  const getRawKycStatus = (): string => {
+    const status = user?.kyc?.status || user?.statut_kyc || 'not_started';
+    return String(status).toLowerCase();
+  };
+
+  const getKycLabel = (): string => {
+    const raw = getRawKycStatus();
+    const key = `kyc_${raw}`;
+    const translated = t(key);
+    return translated === key ? raw.charAt(0).toUpperCase() + raw.slice(1) : translated;
+  };
+
+  const getKycColor = () => {
+    const raw = getRawKycStatus();
+    if (raw === 'approved' || raw === 'expert') return { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', badge: 'bg-emerald-100 text-emerald-700' };
+    if (raw === 'pending')  return { bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-500',   badge: 'bg-amber-100 text-amber-700' };
+    if (raw === 'rejected') return { bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-500',     badge: 'bg-red-100 text-red-700' };
+    if (raw === 'blocked')  return { bg: 'bg-orange-50',  text: 'text-orange-700',  dot: 'bg-orange-500',  badge: 'bg-orange-100 text-orange-700' };
+    if (raw === 'standard') return { bg: 'bg-blue-50',    text: 'text-blue-700',    dot: 'bg-blue-500',    badge: 'bg-blue-100 text-blue-700' };
+    return                         { bg: 'bg-slate-50',   text: 'text-slate-600',   dot: 'bg-slate-400',   badge: 'bg-slate-100 text-slate-600' };
+  };
+
+  const kycColor = getKycColor();
+  const initials = (user?.nom || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Mon Compte</h1>
-          <p className="text-slate-600">Gérez vos informations personnelles</p>
-        </div>
+      <div className="max-w-2xl mx-auto space-y-5 pb-10 px-4">
 
-        {error && <Error message={error} onDismiss={() => setError('')} />}
+        {apiError && <Error message={apiError} onDismiss={() => setApiError('')} />}
         {success && <Success message={success} />}
 
-        {/* Profile Info */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <div className="flex items-start justify-between mb-6">
+        {/* ── Hero Card ── */}
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] p-6 text-white shadow-[0_16px_40px_rgba(98,54,204,0.28)]">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
+
+          <div className="relative flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-deep rounded-full flex items-center justify-center">
-                <UserIcon className="text-white" size={32} />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 text-2xl font-black backdrop-blur-sm shrink-0">
+                {initials}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">{user?.nom}</h2>
-                <p className="text-slate-600">{user?.email}</p>
+                <h1 className="text-xl font-black tracking-tight">{user?.nom || '—'}</h1>
+                <p className="mt-0.5 text-sm text-white/70 truncate max-w-[180px]">{user?.email}</p>
+                <div className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${kycColor.badge}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${kycColor.dot}`} />
+                  KYC {getKycLabel()}
+                </div>
               </div>
             </div>
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors font-semibold"
+                className="flex items-center gap-1.5 rounded-2xl bg-white/15 px-3 py-2 text-xs font-bold text-white backdrop-blur-sm hover:bg-white/25 transition shrink-0"
               >
-                Modifier
+                <Pencil size={13} /> {t('edit')}
               </button>
             )}
           </div>
 
-          {/* Account Details */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-              <Mail className="text-slate-500" size={20} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-600">Email</p>
-                <p className="text-slate-900 font-semibold">{user?.email}</p>
+          <div className="relative mt-4 flex items-center gap-2 text-xs text-white/60">
+            <Calendar size={13} />
+            <span>{t('created_at')} : {user?.createdAt ? formatDate(user.createdAt) : '—'}</span>
+          </div>
+        </div>
+
+        {/* ── Stats Row ── */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className={`flex flex-col gap-2 rounded-[24px] ${kycColor.bg} border border-slate-200 p-5`}>
+            <div className="flex items-center gap-2">
+              <Shield size={16} className={kycColor.text} />
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('kyc_status')}</span>
+            </div>
+            <p className={`text-lg font-black ${kycColor.text}`}>{getKycLabel()}</p>
+            <button
+              onClick={() => navigate('/kyc')}
+              className={`mt-auto text-[11px] font-bold ${kycColor.text} opacity-70 hover:opacity-100 text-left transition`}
+            >
+              {t('menu_profile_kyc')} →
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-[24px] bg-gradient-to-br from-[#f7f3ff] to-[#ede7ff] border border-[#e0d6ff] p-5">
+            <div className="flex items-center gap-2">
+              <Gift size={16} className="text-[#6236CC]" />
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('available_bonus')}</span>
+            </div>
+            <p className="text-lg font-black text-[#6236CC]">
+              {user?.solde_bonus ?? 0} <span className="text-sm font-bold">RUB</span>
+            </p>
+            <button
+              onClick={() => navigate('/referral')}
+              className="mt-auto text-[11px] font-bold text-[#6236CC] opacity-70 hover:opacity-100 text-left transition"
+            >
+              {t('menu_referral')} →
+            </button>
+          </div>
+        </div>
+
+        {/* ── Personal Info ── */}
+        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-5 pb-3 border-b border-slate-100">
+            <h2 className="font-black text-slate-900">{t('personal_info')}</h2>
+          </div>
+
+          <div className="divide-y divide-slate-50">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                <Mail size={16} className="text-slate-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('email')}</p>
+                <p className="text-sm font-semibold text-slate-900 truncate">{user?.email}</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-              <Phone className="text-slate-500" size={20} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-600">Téléphone</p>
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                <Phone size={16} className="text-slate-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('phone_number')}</p>
                 {editing ? (
                   <input
                     type="tel"
                     name="tel"
                     value={formData.tel}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-1 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 mt-1"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
                   />
                 ) : (
-                  <p className="text-slate-900 font-semibold">{user?.tel}</p>
+                  <p className="text-sm font-semibold text-slate-900">{user?.tel || '—'}</p>
                 )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
-              <Calendar className="text-slate-500" size={20} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-600">Créé le</p>
-                <p className="text-slate-900 font-semibold">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
-                </p>
               </div>
             </div>
           </div>
 
           {editing && (
-            <div className="mt-6 flex gap-3">
+            <div className="flex gap-3 px-6 pb-5 pt-3">
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:bg-slate-400 transition-colors font-semibold"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#6236CC] text-white font-bold text-sm hover:bg-[#4A1FA0] transition disabled:opacity-50"
               >
-                {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+                <Check size={16} /> {loading ? t('saving') : t('save')}
               </button>
               <button
                 onClick={() => setEditing(false)}
-                className="flex-1 px-4 py-3 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-semibold"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition"
               >
-                Annuler
+                <X size={16} /> {t('cancel')}
               </button>
             </div>
           )}
         </div>
 
-        {/* Account Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <p className="text-sm font-semibold text-slate-600 mb-2">Statut KYC</p>
-            <p className={`text-lg font-bold ${
-              (user?.kyc?.status === 'blocked' || (user?.kyc?.nextEligibilityDate?.toMillis?.() || 0) > Date.now()) ? 'text-orange-600' :
-              (user?.kyc?.status === 'approved' || user?.statut_kyc === 'Expert') ? 'text-green-600' :
-              (user?.kyc?.status === 'pending' || user?.statut_kyc === 'Pending') ? 'text-yellow-600' :
-              (user?.kyc?.status === 'rejected' || user?.statut_kyc === 'Rejected') ? 'text-red-600' :
-              'text-slate-600'
-            }`}>
-                {user?.kyc?.status || user?.statut_kyc}
-            </p>
+        {/* ── Security / Password ── */}
+        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-5 pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="font-black text-slate-900">Sécurité</h2>
+            <button 
+              onClick={() => setShowPasswordForm(!showPasswordForm)}
+              className="text-xs font-bold text-[#6236CC] hover:underline"
+            >
+              {showPasswordForm ? t('cancel') : 'Modifier le mot de passe'}
+            </button>
           </div>
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <p className="text-sm font-semibold text-slate-600 mb-2">Bonus Disponible</p>
-            <p className="text-lg font-bold text-primary">{user?.solde_bonus} RUB</p>
-          </div>
+          
+          {showPasswordForm ? (
+            <div className="p-6 space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nouveau mot de passe</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
+                  placeholder="Minimum 6 caractères"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirmer le mot de passe</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
+                  placeholder="Répétez le mot de passe"
+                />
+              </div>
+              <button
+                onClick={handleUpdatePassword}
+                disabled={loading || !newPassword || newPassword !== confirmPassword}
+                className="w-full py-4 rounded-2xl bg-[#6236CC] text-white font-bold text-sm shadow-lg shadow-[#6236CC]/20 hover:bg-[#4A1FA0] transition disabled:opacity-50"
+              >
+                {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <Shield size={16} className="text-emerald-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">Mot de passe</p>
+                <p className="text-xs text-slate-400">Dernière modification : Récemment</p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Security */}
-        {/* Preferences */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <h3 className="font-bold text-lg mb-4">Préférences</h3>
-          <p className="text-slate-600 text-sm mb-4">Personnalisez votre expérience utilisateur avec la langue, les notifications et les emails promotionnels.</p>
-          <button
-            onClick={() => navigate('/preferences')}
-            className="w-full px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-semibold border border-slate-200 flex items-center justify-between"
-          >
-            <span>Gérer les préférences</span>
-            <ChevronRight size={20} />
+        {/* ── Quick Links ── */}
+        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          {[
+            { icon: Settings, label: t('manage_preferences'), to: '/preferences' },
+            { icon: Shield, label: t('menu_profile_kyc'), to: '/kyc' },
+          ].map(({ icon: Icon, label, to }) => (
+            <button
+              key={to}
+              onClick={() => navigate(to)}
+              className="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition border-b border-slate-50 last:border-0"
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#f7f3ff] flex items-center justify-center shrink-0">
+                <Icon size={16} className="text-[#6236CC]" />
+              </div>
+              <span className="flex-1 text-sm font-semibold text-slate-800 text-left">{label}</span>
+              <ChevronRight size={16} className="text-slate-300" />
+            </button>
+          ))}
+        </div>
+
+        {/* ── Assistance ── */}
+        <div className="grid grid-cols-2 gap-4">
+          <button className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left">
+            <HelpCircle size={20} className="text-[#6236CC]" />
+            <p className="font-bold text-slate-900 text-sm">{t('contact_support')}</p>
+            <p className="text-xs text-slate-400">{t('support_desc')}</p>
+          </button>
+          <button className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left">
+            <Star size={20} className="text-[#6236CC]" />
+            <p className="font-bold text-slate-900 text-sm">{t('about')}</p>
+            <p className="text-xs text-slate-400">{t('legal_desc')}</p>
           </button>
         </div>
 
-        {/* Security */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <h3 className="font-bold text-lg mb-4">Sécurité & Confidentialité</h3>
-          <div className="space-y-3">
-            <button className="w-full px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-semibold text-left border border-slate-200">
-              Modifier le mot de passe
-            </button>
-            <button className="w-full px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-semibold text-left border border-slate-200">
-              Authentification à deux facteurs (2FA)
-            </button>
-            <button className="w-full px-4 py-3 bg-slate-50 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors font-semibold text-left border border-slate-200">
-              Gérer la confidentialité
-            </button>
-          </div>
-        </div>
-
-
-
-        {/* Assistance */}
-        <div className="bg-white rounded-xl p-6 border border-slate-200">
-          <h3 className="font-bold text-lg mb-4">Assistance</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <button className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-center border border-slate-200">
-              <p className="font-bold text-slate-900">Contacter le Support</p>
-              <p className="text-xs text-slate-500 mt-1">Chat ou Email</p>
-            </button>
-            <button className="p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors text-center border border-slate-200">
-              <p className="font-bold text-slate-900">À propos</p>
-              <p className="text-xs text-slate-500 mt-1">Conditions & Légal</p>
-            </button>
-          </div>
-        </div>
-
-        {/* Logout */}
-        <div className="bg-red-50 rounded-xl p-6 border border-red-200">
-          <h3 className="font-bold text-lg text-red-900 mb-4">Déconnexion</h3>
+        {/* ── Logout ── */}
+        <div className="pt-4">
           <button
             onClick={handleLogout}
-            className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-[24px] border-2 border-slate-100 bg-white text-slate-600 font-bold hover:bg-slate-50 transition"
           >
-            Se déconnecter
+            <LogOut size={18} />
+            {t('logout')}
           </button>
         </div>
       </div>

@@ -33,6 +33,7 @@ export const DEFAULT_SETTINGS: Settings = {
   rate_eur_xaf: 655.957,
   rate_rub_xaf: 7.5,
   feePercentage: 0.02,
+  referralBonus: 500,
 };
 
 export const CURRENCIES = ['EUR', 'RUB', 'USD'];

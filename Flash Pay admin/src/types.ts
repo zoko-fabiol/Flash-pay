@@ -32,6 +32,17 @@ export interface ProblemFlag {
   resolved: boolean;
 }
 
+export interface BulkRecipient {
+  id: string;
+  name: string;
+  amount: number;
+  phone?: string;
+  account?: string;
+  operator?: string;
+  status?: 'pending' | 'completed' | 'failed';
+  validatedAt?: Timestamp;
+}
+
 export interface Transaction {
   id: string;
   userId: string;
@@ -40,6 +51,8 @@ export interface Transaction {
   clientEmail?: string;
   type: 'russia-africa' | 'africa-russia' | 'russia-russia';
   status: TransactionStatus;
+  isBulk?: boolean;
+  bulkRecipients?: BulkRecipient[];
   amount: number;
   currency: string;
   fromCountry: string;
@@ -159,7 +172,7 @@ export interface RussianBank {
   name: string;
   type: 'phone' | 'card_account';
   number: string;
-  details?: string;
+  holder?: string;
   logo?: string;
   active: boolean;
 }
