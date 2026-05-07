@@ -322,7 +322,7 @@ const TransactionDetailsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className={`grid grid-cols-1 ${transaction.isBulk ? 'md:grid-cols-2' : 'lg:grid-cols-3 md:grid-cols-2'} gap-8`}>
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
                   <User size={16} /> Information Expéditeur
@@ -350,6 +350,27 @@ const TransactionDetailsPage: React.FC = () => {
                   </p>
                 </div>
               </div>
+
+              {!transaction.isBulk && (
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
+                    <Smartphone size={16} /> Information Destinataire
+                  </h3>
+                  <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-700/50">
+                    <p className="text-white font-bold text-lg">{transaction.recipientName || 'Destinataire inconnu'}</p>
+                    <div className="flex items-center justify-between group/field mt-2">
+                      <span className="text-slate-400 text-sm">Tél: {transaction.recipientPhone}</span>
+                      <button 
+                        onClick={() => { navigator.clipboard.writeText(transaction.recipientPhone || ''); toast.success('Copié'); }}
+                        className="p-1 text-slate-600 hover:text-white opacity-0 group-hover/field:opacity-100 transition-all"
+                      >
+                        <Copy size={12} />
+                      </button>
+                    </div>
+                    <p className="text-brand text-xs font-black uppercase mt-1 tracking-widest">{transaction.recipientOperator}</p>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <h3 className="text-sm font-semibold text-slate-400 flex items-center gap-2">
