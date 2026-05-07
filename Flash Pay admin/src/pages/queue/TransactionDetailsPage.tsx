@@ -16,7 +16,8 @@ import {
   CreditCard,
   ShieldCheck,
   Copy,
-  Printer
+  Printer,
+  Smartphone
 } from 'lucide-react';
 
 type ClientProfile = {
