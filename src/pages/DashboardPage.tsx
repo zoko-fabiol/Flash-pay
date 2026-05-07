@@ -4,7 +4,7 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import { Layout } from '../components/Layout';
 import { db } from '../services/firebase';
-import { SeedCountries } from '../components/SeedCountries';
+
 import { ArrowRight, History, Send, Shield, Share2, Sparkles, TrendingUp, Globe, Gift } from 'lucide-react';
 
 const getKycStatus = (user: any) => {
@@ -195,12 +195,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Temporary Seed Button */}
-        <section className="mt-12 p-8 border-2 border-dashed border-slate-200 rounded-[32px] text-center">
-           <h3 className="text-lg font-bold text-slate-900 mb-2">Initialisation de la base de données</h3>
-           <p className="text-sm text-slate-500 mb-6">Cliquez sur le bouton ci-dessous pour configurer la liste des pays (Russie ↔ Afrique).</p>
-           <SeedCountries />
-        </section>
+
       </div>
     </Layout>
   );

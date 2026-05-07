@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTransferWizard } from '../context/TransferWizardContext';
 import { Layout } from '../components/Layout';
-import { ChevronLeft, ChevronRight, Globe, CreditCard, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, CreditCard, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send, X } from 'lucide-react';
 import { collection, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { db, auth, calculateTransactionRecap } from '../services/firebase';
 
@@ -69,9 +69,13 @@ export const TransferWizardPage: React.FC = () => {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [settings, setSettings] = useState({ dailyLimitRUB: 150000, standardLimitRUB: 20000, expertLimitRUB: 150000 });
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [timerSeconds, setTimerSeconds] = useState(20 * 60); // 20 minutes
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [savedContacts, setSavedContacts] = useState<any[]>([]);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const sortedCountries = useMemo(
     () => [...countries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
@@ -88,7 +92,7 @@ export const TransferWizardPage: React.FC = () => {
     const isPaymentStep = 
       (transferData.transferType === 'russia-africa' && currentStep === 5) ||
       (transferData.transferType === 'africa-russia' && currentStep === 6) ||
-      (transferData.transferType === 'russia-russia' && currentStep === 7);
+      (transferData.transferType === 'russia-russia' && currentStep === 6);
 
     if (isPaymentStep) {
       setTimerSeconds(20 * 60);
@@ -123,14 +127,70 @@ export const TransferWizardPage: React.FC = () => {
     const unsubB = onSnapshot(collection(db, 'banks'), (s) => setBanks(s.docs.map(d => ({ id: d.id, ...d.data() }))));
     const unsubR = onSnapshot(collection(db, 'exchange_rates'), (s) => setRates(s.docs.map(d => ({ id: d.id, ...d.data() }))));
     const unsubCom = onSnapshot(collection(db, 'commissions'), (s) => setCommissions(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const unsubS = onSnapshot(collection(db, 'settings'), (s) => {
+      if (!s.empty) {
+        const data = s.docs[0].data();
+        setSettings({
+          dailyLimitRUB: data.dailyLimitRUB || 150000,
+          standardLimitRUB: data.standardLimitRUB || 20000,
+          expertLimitRUB: data.expertLimitRUB || 150000
+        });
+      }
+    });
     setLoading(false);
-    return () => { unsubC(); unsubB(); unsubR(); unsubCom(); };
+    return () => { unsubC(); unsubB(); unsubR(); unsubCom(); unsubS(); };
   }, []);
 
-  const getCommission = (amount: number, type: string) => {
+  useEffect(() => {
+    if (!user) return;
+    const unsubContacts = onSnapshot(collection(db, `users/${user.id}/saved_contacts`), (snapshot) => {
+      setSavedContacts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubContacts();
+  }, [user]);
+
+  const handleSelectContact = (contact: any) => {
+    if (transferData.transferType === 'russia-africa') {
+      updateTransferData({
+        recipientName: contact.name || contact.recipientName,
+        recipientPhone: contact.phone || contact.recipientPhone,
+        recipientOperator: contact.operator || contact.recipientOperator,
+        destinationCountry: contact.countryCode || contact.destinationCountry || 'CM'
+      });
+    } else if (transferData.transferType === 'africa-russia') {
+      updateTransferData({
+        recipientName: contact.name || contact.recipientName,
+        beneficiaryAccount: contact.accountNumber || contact.beneficiaryAccount || contact.phone,
+        selectedOperator: contact.operator || contact.selectedOperator || 'SBP'
+      });
+    }
+    setIsContactModalOpen(false);
+    toast.success('Contact sélectionné');
+  };
+
+  const getCommission = (amount: number, type: string, destinationCountry?: string, operator?: string) => {
     if (!amount) return 0;
-    const applicable = commissions.find(c => c.transferType === type && amount >= c.minAmount && amount <= c.maxAmount);
-    return applicable ? amount * (applicable.percentage / 100) : 0;
+    
+    // Find rules that match type and amount range
+    const rules = commissions.filter(c => 
+      c.transferType === type && 
+      amount >= c.minAmount && 
+      amount <= c.maxAmount
+    );
+
+    if (rules.length === 0) return 0;
+
+    // Specificity matching
+    let applicable = rules.find(c => c.destinationCountry === destinationCountry && c.destinationOperator === operator);
+    if (!applicable) applicable = rules.find(c => c.destinationCountry === destinationCountry && !c.destinationOperator);
+    if (!applicable) applicable = rules.find(c => !c.destinationCountry && !c.destinationOperator);
+
+    if (!applicable) return 0;
+
+    if (applicable.feeType === 'fixed') {
+      return applicable.fixedAmount || 0;
+    }
+    return amount * ((applicable.percentage || 0) / 100);
   };
 
   const isKycExpert = user?.statut_kyc === 'Expert' || user?.kyc?.status === 'approved';
@@ -376,9 +436,48 @@ export const TransferWizardPage: React.FC = () => {
                   <span className="relative bg-[radial-gradient(circle_at_top_left,_#f5efff_0%,_#fbf9ff_42%,_#f7f3ff_100%)] px-4 text-xs text-slate-400 uppercase font-bold tracking-widest">Où ?</span>
                 </div>
 
-                <button className="w-full p-4 rounded-2xl border border-brand text-brand font-bold flex items-center justify-center gap-3 hover:bg-brand/5 transition-colors">
+                <button 
+                  onClick={() => setIsContactModalOpen(true)}
+                  className="w-full p-4 rounded-2xl border border-brand text-brand font-bold flex items-center justify-center gap-3 hover:bg-brand/5 transition-colors"
+                >
                   <BookUser size={20} /> Choisir parmi les contacts enregistrés
                 </button>
+
+                {isContactModalOpen && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                      <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 className="text-xl font-black text-slate-900">Mes contacts</h3>
+                        <button onClick={() => setIsContactModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+                      </div>
+                      <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3">
+                        {savedContacts.length === 0 ? (
+                          <div className="text-center py-12">
+                            <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
+                            <p className="text-slate-500 font-medium">Aucun contact enregistré</p>
+                          </div>
+                        ) : (
+                          savedContacts.map(contact => (
+                            <button 
+                              key={contact.id} 
+                              onClick={() => handleSelectContact(contact)}
+                              className="w-full p-4 rounded-2xl border border-slate-100 hover:border-brand hover:bg-brand/5 flex items-center gap-4 transition-all text-left group"
+                            >
+                              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-brand/10 group-hover:text-brand transition-colors font-bold">
+                                {(contact.name || contact.recipientName || '?').charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-900 truncate">{contact.name || contact.recipientName}</p>
+                                <p className="text-xs text-slate-500 font-medium">{contact.phone || contact.beneficiaryAccount || contact.recipientPhone}</p>
+                              </div>
+                              <ChevronRight size={18} className="text-slate-300 group-hover:text-brand transition-colors" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </StepWrapper>
             </div>
           </Layout>
@@ -390,11 +489,17 @@ export const TransferWizardPage: React.FC = () => {
           r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
         );
         const rate = foundRate?.rate || foundRate?.rateFixed || 7.22;
-        const commissionFee = getCommission(transferData.amount || 0, 'russia-africa');
+        const commissionFee = getCommission(
+          transferData.amount || 0, 
+          'russia-africa', 
+          transferData.destinationCountry, 
+          transferData.recipientOperator
+        );
         const convertedAmount = (transferData.amount || 0) * rate;
-        const requiresKYC = (transferData.amount || 0) >= 20000 && !isKycExpert;
+        const currentLimit = settings.dailyLimitRUB || 150000;
+        const requiresKYC = (transferData.amount || 0) > currentLimit;
         const isAmountValid = (transferData.amount || 0) > 0 && !requiresKYC;
-        const bonusPoints = Math.floor(convertedAmount / 6.55); // Adjusting to match ~1000 points for 1000 roubles in screenshot
+        const bonusPoints = Math.floor(convertedAmount / 6.55);
 
         return (
           <Layout>
@@ -441,9 +546,20 @@ export const TransferWizardPage: React.FC = () => {
                     <hr className="border-slate-50" />
                     
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Vous payez</span>
+                      <span className="text-slate-500 font-medium">Montant envoyé</span>
                       <span className="font-bold text-slate-900">{transferData.amount?.toLocaleString()} roubles</span>
                     </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500 font-medium">Frais de transfert</span>
+                      <span className="font-bold text-slate-900">+{commissionFee.toLocaleString()} RUB</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-900 font-bold uppercase text-xs">Total à Payer</span>
+                      <span className="text-xl font-black text-slate-900">{( (transferData.amount || 0) + commissionFee ).toLocaleString()} RUB</span>
+                    </div>
+
+                    <hr className="border-slate-50" />
+
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Le destinataire reçoit</span>
                       <span className="font-black text-brand-dark">{convertedAmount.toLocaleString()} {transferData.currency === 'XAF' ? 'francs CFA' : transferData.currency}</span>
@@ -451,10 +567,6 @@ export const TransferWizardPage: React.FC = () => {
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Taux de change</span>
                       <span className="font-bold text-slate-900">1 rouble = {rate} {transferData.currency === 'XAF' ? 'francs CFA' : transferData.currency}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Frais de transfert</span>
-                      <span className="font-bold text-slate-900">{commissionFee} rouble</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-brand font-bold uppercase tracking-wider text-xs">Bonus</span>
@@ -655,7 +767,7 @@ export const TransferWizardPage: React.FC = () => {
 
               <div className="bg-white rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 text-center">
                 <h2 className="text-3xl font-black text-slate-900 mb-2">Paiement initié</h2>
-                <p className="text-slate-500 mb-8 font-medium">Votre paiement de {transferData.amount?.toLocaleString()} roubles a été initié.</p>
+                <p className="text-slate-500 mb-8 font-medium">Votre paiement de {((transferData.amount || 0) + (getCommission(transferData.amount || 0, transferData.transferType || 'russia-russia', transferData.destinationCountry, transferData.recipientOperator))).toLocaleString()} roubles a été initié.</p>
 
                 <div className="bg-[#f7f3ff] rounded-2xl p-5 mb-8 flex items-start gap-4 text-left">
                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-brand shrink-0 shadow-sm">
@@ -755,9 +867,48 @@ export const TransferWizardPage: React.FC = () => {
                   <span className="relative bg-[radial-gradient(circle_at_top_left,_#f5efff_0%,_#fbf9ff_42%,_#f7f3ff_100%)] px-4 text-xs text-slate-400 uppercase font-bold tracking-widest">Ou ?</span>
                 </div>
 
-                <button className="w-full p-4 rounded-2xl border border-brand text-brand font-bold flex items-center justify-center gap-3 hover:bg-brand/5 transition-colors">
+                <button 
+                  onClick={() => setIsContactModalOpen(true)}
+                  className="w-full p-4 rounded-2xl border border-brand text-brand font-bold flex items-center justify-center gap-3 hover:bg-brand/5 transition-colors"
+                >
                   <BookUser size={20} /> Choisir parmi les contacts enregistrés
                 </button>
+
+                {isContactModalOpen && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                      <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                        <h3 className="text-xl font-black text-slate-900">Mes contacts</h3>
+                        <button onClick={() => setIsContactModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+                      </div>
+                      <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3">
+                        {savedContacts.length === 0 ? (
+                          <div className="text-center py-12">
+                            <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
+                            <p className="text-slate-500 font-medium">Aucun contact enregistré</p>
+                          </div>
+                        ) : (
+                          savedContacts.map(contact => (
+                            <button 
+                              key={contact.id} 
+                              onClick={() => handleSelectContact(contact)}
+                              className="w-full p-4 rounded-2xl border border-slate-100 hover:border-brand hover:bg-brand/5 flex items-center gap-4 transition-all text-left group"
+                            >
+                              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-brand/10 group-hover:text-brand transition-colors font-bold">
+                                {(contact.name || contact.recipientName || '?').charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-900 truncate">{contact.name || contact.recipientName}</p>
+                                <p className="text-xs text-slate-500 font-medium">{contact.phone || contact.beneficiaryAccount || contact.recipientPhone}</p>
+                              </div>
+                              <ChevronRight size={18} className="text-slate-300 group-hover:text-brand transition-colors" />
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </StepWrapper>
             </div>
           </Layout>
@@ -773,10 +924,20 @@ export const TransferWizardPage: React.FC = () => {
         
         // Calculate inverse rate for XAF -> RUB
         const rateAfRu = parseFloat((1 / rubToXafRate).toFixed(2));
-        const commissionFeeAfRu = getCommission(transferData.amount || 0, 'africa-russia');
+        const commissionFeeAfRu = getCommission(
+          transferData.amount || 0, 
+          'africa-russia', 
+          transferData.originCountry, 
+          transferData.selectedOperator
+        );
         const totalAfRuToPay = (transferData.amount || 0) + commissionFeeAfRu;
         const convertedAmountAfRu = (transferData.amount || 0) * rateAfRu;
-        const requiresKYCAfRu = (transferData.amount || 0) >= 20000 && !isKycExpert;
+        
+        // Check limit against RUB equivalent
+        const amountInRUB = convertedAmountAfRu;
+        const currentLimitAfRu = settings.dailyLimitRUB || 150000;
+        const requiresKYCAfRu = amountInRUB > currentLimitAfRu;
+        
         const isAmountValidAfRu = (transferData.amount || 0) > 0 && !requiresKYCAfRu;
         const bonusPointsAfRu = Math.floor((transferData.amount || 0) / 6.55);
 
@@ -802,9 +963,9 @@ export const TransferWizardPage: React.FC = () => {
                        <input
                         type="number"
                         value={transferData.amount || ''}
-                        onChange={e => updateTransferData({ amount: parseFloat(e.target.value) })}
+                        onChange={e => updateTransferData({ amount: parseFloat(e.target.value) || 0 })}
                         placeholder="0"
-                        className="text-4xl font-black text-slate-900 text-center w-full focus:outline-none bg-transparent"
+                        className="text-4xl font-black text-slate-900 text-center w-full py-6 px-4 rounded-[32px] border-2 border-slate-400 focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none bg-white transition-all shadow-sm"
                       />
                     </div>
                     <p className="text-3xl font-black text-slate-900 mb-2">{transferData.currency === 'XAF' ? 'francs CFA' : transferData.currency}</p>
@@ -864,6 +1025,7 @@ export const TransferWizardPage: React.FC = () => {
                     />
                   </div>
 
+
                   {/* Delivery Note */}
                   <div className="flex items-center justify-center gap-2 py-3 bg-[#f7f3ff] rounded-2xl text-brand">
                     <Zap size={18} fill="currentColor" />
@@ -873,7 +1035,7 @@ export const TransferWizardPage: React.FC = () => {
                   {requiresKYCAfRu && (
                      <div className="p-4 bg-red-50 text-red-700 rounded-2xl flex gap-3 text-sm font-semibold border border-red-200">
                        <Info size={20} className="shrink-0" />
-                       Vérification KYC Expert requise pour ce montant.
+                       Limite de transfert quotidienne dépassée ({currentLimitAfRu.toLocaleString()} RUB équivalent). {isKycExpert ? "Plafond maximum atteint." : "Passez au statut Expert pour augmenter votre limite."}
                      </div>
                   )}
                 </div>
@@ -1070,7 +1232,7 @@ export const TransferWizardPage: React.FC = () => {
           <Layout>
             <div className="max-w-xl mx-auto py-12">
               <StepWrapper title="Bénéficiaire" description="Nom complet de la personne" onBack={previousStep} onNext={nextStep} isValid={transferData.recipientName?.length > 3}>
-                <input type="text" value={transferData.recipientName} onChange={e => updateTransferData({ recipientName: e.target.value })} placeholder="Ex: Ivan Ivanov" className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-medium" />
+                <input type="text" value={transferData.recipientName || ''} onChange={e => updateTransferData({ recipientName: e.target.value })} placeholder="Ex: Ivan Ivanov" className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-medium" autoComplete="off" />
               </StepWrapper>
             </div>
           </Layout>
@@ -1078,52 +1240,50 @@ export const TransferWizardPage: React.FC = () => {
       case 4: // Compte / Tel
         const cleanRuRuAccount = (transferData.recipientAccount || '').replace(/\D/g, '');
         const isRuRuAccountValid = cleanRuRuAccount.length >= 10;
-        return (
-          <Layout>
-            <div className="max-w-xl mx-auto py-12">
-              <StepWrapper title={transferData.recipientType === 'bank' ? "Numéro de Compte" : "Numéro SBP"} description="Où les fonds seront crédités" onBack={previousStep} onNext={nextStep} isValid={isRuRuAccountValid}>
-                <input type="text" value={transferData.recipientAccount} onChange={e => updateTransferData({ recipientAccount: e.target.value })} placeholder={transferData.recipientType === 'bank' ? "2200 XXXX XXXX XXXX" : "+7 900 XXX XX XX"} className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-bold" />
-              </StepWrapper>
-            </div>
-          </Layout>
-        );
-      case 5: // Montant
-        const commissionFeeRuRu = getCommission(transferData.amount || 0, 'russia-russia');
-        const requiresKYCRuRu = (transferData.amount || 0) >= 20000 && !isKycExpert;
-        const isAmountValidRuRu = (transferData.amount || 0) > 0 && !requiresKYCRuRu;
+        const isStep4Valid = isRuRuAccountValid;
 
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12">
-              <StepWrapper title="Montant" description="Somme à envoyer en RUB" onBack={previousStep} onNext={nextStep} isValid={isAmountValidRuRu}>
-                <div className="space-y-4">
-                  <input type="number" value={transferData.amount || ''} onChange={e => updateTransferData({ amount: parseFloat(e.target.value) })} placeholder="RUB" className="w-full p-6 rounded-3xl bg-slate-900 text-white text-3xl font-black focus:ring-2 focus:ring-brand focus:outline-none" />
-                  {commissionFeeRuRu > 0 && (
-                     <div className="flex justify-between items-center px-4">
-                       <span className="text-slate-500 text-sm">Frais de transfert</span>
-                       <span className="text-slate-900 font-bold">{commissionFeeRuRu.toLocaleString()} RUB</span>
-                     </div>
-                  )}
-                  {requiresKYCRuRu && (
-                     <div className="p-4 bg-red-50 text-red-700 rounded-2xl flex gap-3 text-sm font-semibold border border-red-200">
-                       <Info size={20} className="shrink-0" />
-                       Pour les transferts de 20 000 RUB ou plus, une vérification d'identité (Niveau Expert) est requise. Veuillez compléter votre profil.
-                     </div>
-                  )}
+              <StepWrapper 
+                title={transferData.recipientType === 'bank' ? "Numéro de Compte" : "Numéro SBP"} 
+                description="Où les fonds seront crédités" 
+                onBack={previousStep} 
+                onNext={nextStep} 
+                isValid={isStep4Valid}
+              >
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">Compte / Téléphone</label>
+                    <input 
+                      type="text" 
+                      value={transferData.recipientAccount || ''} 
+                      onChange={e => {
+                        const numericValue = e.target.value.replace(/[^\d\s+]/g, '');
+                        updateTransferData({ recipientAccount: numericValue });
+                      }} 
+                      placeholder={transferData.recipientType === 'bank' ? "2200 XXXX XXXX XXXX" : "+7 900 XXX XX XX"} 
+                      className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-bold" 
+                      autoComplete="off" 
+                    />
+                  </div>
                 </div>
               </StepWrapper>
             </div>
           </Layout>
         );
-      case 6: // Récapitulatif
+      case 5: // Récapitulatif
         const commissionRuRuRecap = getCommission(transferData.amount || 0, 'russia-russia');
         const totalRuRu = (transferData.amount || 0) + commissionRuRuRecap;
         const bonusPointsRuRu = Math.floor((transferData.amount || 0) / 6.55);
+        
+        const currentLimitRuRu = settings.dailyLimitRUB || 150000;
+        const requiresKYCRuRu = (transferData.amount || 0) > currentLimitRuRu;
 
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
-              <StepWrapper title="Vérifier les détails" onBack={previousStep} onNext={nextStep} isValid={(transferData.amount || 0) > 0}>
+              <StepWrapper title="Vérifier les détails" onBack={previousStep} onNext={nextStep} isValid={(transferData.amount || 0) > 0 && !requiresKYCRuRu}>
                 <div className="bg-white rounded-[32px] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-8">
                   
                   {/* Flags & Summary */}
@@ -1138,7 +1298,15 @@ export const TransferWizardPage: React.FC = () => {
                       </div>
                     </div>
                     <p className="text-slate-500 font-medium">Vous envoyez</p>
-                    <p className="text-4xl font-black text-slate-900 mt-2">{(transferData.amount || 0).toLocaleString()}</p>
+                    <div className="relative mt-2 mb-2">
+                       <input
+                        type="number"
+                        value={transferData.amount || ''}
+                        onChange={e => updateTransferData({ amount: parseFloat(e.target.value) || 0 })}
+                        placeholder="0"
+                        className="text-4xl font-black text-slate-900 text-center w-full py-6 px-4 rounded-[32px] border-2 border-slate-400 focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none bg-white transition-all shadow-sm"
+                      />
+                    </div>
                     <p className="text-3xl font-black text-slate-900 mb-2">roubles</p>
                     <p className="text-slate-500 font-bold">à {transferData.recipientName}</p>
                   </div>
@@ -1191,6 +1359,13 @@ export const TransferWizardPage: React.FC = () => {
                     />
                   </div>
 
+                  {requiresKYCRuRu && (
+                     <div className="p-4 bg-red-50 text-red-700 rounded-2xl flex gap-3 text-sm font-semibold border border-red-200">
+                       <Info size={20} className="shrink-0" />
+                       Limite de transfert quotidienne dépassée ({currentLimitRuRu.toLocaleString()} RUB). {isKycExpert ? "Plafond maximum atteint." : "Passez au statut Expert pour augmenter votre limite."}
+                     </div>
+                  )}
+
                   {/* Delivery Note */}
                   <div className="flex items-center justify-center gap-2 py-3 bg-[#f7f3ff] rounded-2xl text-brand">
                     <Zap size={18} fill="currentColor" />
@@ -1201,7 +1376,7 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 7: // Dépôt + Preuve (Combined)
+      case 6: // Dépôt + Preuve (Combined)
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
@@ -1326,7 +1501,7 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 8: // Success
+      case 7: // Success
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-20 text-center">

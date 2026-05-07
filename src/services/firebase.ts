@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -11,6 +11,9 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   collection,
   doc,
   setDoc,
@@ -25,7 +28,6 @@ import {
   type Firestore,
   Timestamp,
   increment,
-  enableMultiTabIndexedDbPersistence,
 } from 'firebase/firestore';
 import {
   getStorage,
@@ -45,19 +47,21 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789:web:abcdef123456",
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
-export const db: Firestore = getFirestore(app);
-export const storage = getStorage(app);
 
-void enableMultiTabIndexedDbPersistence(db).catch((error: any) => {
-  if (error?.code === 'failed-precondition' || error?.code === 'unimplemented') {
-    console.info('Firestore local cache is unavailable in this browser context.');
-    return;
+// Use the new Firestore cache API with HMR safety
+export const db: Firestore = (() => {
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+  } catch (e) {
+    return getFirestore(app);
   }
+})();
 
-  console.warn('Unable to enable Firestore local cache persistence.', error);
-});
+export const storage = getStorage(app);
 
 // Auth Service
 export const authService = {
@@ -830,6 +834,7 @@ export interface TransactionCalculation {
   commissionPercentage: number;
   commissionAmount: number;
   amountAfterCommission: number;
+  totalToPay: number;
   receivedAmount: number;
   isValid: boolean;
   errors: string[];
@@ -889,12 +894,14 @@ async function getExchangeRateSnapshot(fromCurrency: string, toCurrency: string)
   }
 }
 
-// Get applicable commission for transfer type and amount
+// Get applicable commission for transfer type and amount with destination specificity
 async function getCommissionForAmount(
   transferType: 'russia-russia' | 'russia-africa' | 'africa-russia',
   amount: number,
-  currency: string
-): Promise<{ percentage: number; id: string }> {
+  currency: string,
+  destinationCountry?: string,
+  destinationOperator?: string
+): Promise<{ percentage: number; fixedAmount: number; feeType: 'percentage' | 'fixed'; id: string }> {
   try {
     const q = query(
       collection(db, 'commissions'),
@@ -903,22 +910,35 @@ async function getCommissionForAmount(
     );
     const snapshot = await getDocs(q);
 
-    // Find commission rule that matches the amount range
-    for (const doc of snapshot.docs) {
-      const commission = doc.data();
-      if (amount >= commission.minAmount && amount <= commission.maxAmount) {
-        return { 
-          percentage: commission.percentage,
-          id: doc.id 
-        };
-      }
+    // Find all rules that match the amount range
+    const rules = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any))
+      .filter(c => amount >= c.minAmount && amount <= c.maxAmount);
+
+    if (rules.length === 0) {
+      return { percentage: 0, fixedAmount: 0, feeType: 'percentage', id: 'default' };
     }
 
-    // If no exact match found, return default (0%)
-    return { percentage: 0, id: 'default' };
+    // Sort by specificity: 
+    // 1. Country + Operator
+    // 2. Country only
+    // 3. Generic (neither)
+    let applicable = rules.find(c => c.destinationCountry === destinationCountry && c.destinationOperator === destinationOperator);
+    if (!applicable) applicable = rules.find(c => c.destinationCountry === destinationCountry && !c.destinationOperator);
+    if (!applicable) applicable = rules.find(c => !c.destinationCountry && !c.destinationOperator);
+
+    if (!applicable) {
+      return { percentage: 0, fixedAmount: 0, feeType: 'percentage', id: 'default' };
+    }
+
+    return { 
+      percentage: applicable.percentage || 0,
+      fixedAmount: applicable.fixedAmount || 0,
+      feeType: applicable.feeType || 'percentage',
+      id: applicable.id 
+    };
   } catch (error) {
     console.error('Failed to get commission:', error);
-    return { percentage: 0, id: 'default' };
+    return { percentage: 0, fixedAmount: 0, feeType: 'percentage', id: 'default' };
   }
 }
 
@@ -933,27 +953,35 @@ export async function calculateTransactionRecap(transactionInput: TransactionInp
       await getExchangeRateSnapshot(transactionInput.inputCurrency, transactionInput.outputCurrency);
 
     // Get commission for amount
-    const { percentage: commissionPercentage } = 
+    const { percentage: commissionPercentage, fixedAmount, feeType } = 
       await getCommissionForAmount(
         transactionInput.transferType,
         transactionInput.amount,
-        transactionInput.inputCurrency
+        transactionInput.inputCurrency,
+        transactionInput.destinationCountry,
+        transactionInput.recipientOperator
       );
 
     // Calculate commission amount
-    const commissionAmount = (transactionInput.amount * commissionPercentage) / 100;
-    const amountAfterCommission = transactionInput.amount - commissionAmount;
+    const commissionAmount = feeType === 'fixed' 
+      ? fixedAmount 
+      : (transactionInput.amount * commissionPercentage) / 100;
+      
+    // The amount the recipient gets is now the BASE amount (before conversion)
+    // The fees are ADDED on top for the sender to pay
+    const amountAfterCommission = transactionInput.amount;
+    const totalToPay = transactionInput.amount + commissionAmount;
 
     // Calculate received amount after conversion
-    const receivedAmount = amountAfterCommission * exchangeRate;
+    const receivedAmount = transactionInput.amount * exchangeRate;
 
     // Validate calculation
     if (exchangeRate <= 0) {
       errors.push('Invalid exchange rate');
       isValid = false;
     }
-    if (amountAfterCommission <= 0) {
-      errors.push('Amount after commission must be positive');
+    if (transactionInput.amount <= 0) {
+      errors.push('Base amount must be positive');
       isValid = false;
     }
     if (receivedAmount <= 0) {
@@ -967,6 +995,7 @@ export async function calculateTransactionRecap(transactionInput: TransactionInp
       commissionPercentage,
       commissionAmount,
       amountAfterCommission,
+      totalToPay,
       receivedAmount,
       isValid,
       errors,
@@ -979,6 +1008,7 @@ export async function calculateTransactionRecap(transactionInput: TransactionInp
       commissionPercentage: 0,
       commissionAmount: 0,
       amountAfterCommission: 0,
+      totalToPay: 0,
       receivedAmount: 0,
       isValid: false,
       errors,

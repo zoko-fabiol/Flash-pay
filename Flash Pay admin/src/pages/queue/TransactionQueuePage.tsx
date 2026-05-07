@@ -167,7 +167,13 @@ const TransactionQueuePage: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-slate-200 text-sm font-semibold">{tx.clientName || 'Client inconnu'}</span>
-                        <span className="text-slate-500 text-[10px]">{tx.clientPhone || tx.clientEmail || `${tx.userId.substring(0, 12)}...`}</span>
+                        {tx.clientPhone ? (
+                          <a href={`tel:${tx.clientPhone}`} className="text-slate-500 text-[10px] hover:text-brand transition-colors">{tx.clientPhone}</a>
+                        ) : tx.clientEmail ? (
+                          <a href={`mailto:${tx.clientEmail}`} className="text-slate-500 text-[10px] hover:text-brand transition-colors">{tx.clientEmail}</a>
+                        ) : (
+                          <span className="text-slate-500 text-[10px]">{tx.userId.substring(0, 12)}...</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4">

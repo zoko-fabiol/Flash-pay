@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { userService } from '../services/firebase';
+import { userService, db } from '../services/firebase';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
 import { Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import { Error, Success } from '../components/UI';
@@ -42,6 +43,29 @@ export const KYCPage: React.FC = () => {
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [addressProofFile, setAddressProofFile] = useState<File | null>(null);
   const [localProofFile, setLocalProofFile] = useState<File | null>(null);
+
+  const [dailyLimit, setDailyLimit] = useState(150000);
+  const [rates, setRates] = useState<any[]>([]);
+
+  useEffect(() => {
+    const qSettings = query(collection(db, 'settings'));
+    const unsubSettings = onSnapshot(qSettings, (snapshot) => {
+      if (!snapshot.empty) {
+        const settingsDoc = snapshot.docs[0].data();
+        if (settingsDoc.dailyLimitRUB) setDailyLimit(settingsDoc.dailyLimitRUB);
+      }
+    });
+
+    const qRates = query(collection(db, 'exchange_rates'));
+    const unsubRates = onSnapshot(qRates, (snapshot) => {
+      setRates(snapshot.docs.map(doc => doc.data()));
+    });
+
+    return () => {
+      unsubSettings();
+      unsubRates();
+    };
+  }, []);
 
   const needsLocalDocument = formData.countryOfDeparture.trim().toLowerCase() !== 'russie' && formData.countryOfDeparture.trim().toLowerCase() !== 'russia';
   const kycStatus = getKycStatus(user);
@@ -179,12 +203,18 @@ export const KYCPage: React.FC = () => {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-slate-700">Limite de transfert quotidien</span>
-              <span className="font-bold">
-                {kycStatus === 'blocked' ? 'Vérification bloquée temporairement' :
-                 kycStatus === 'approved' ? '50,000 XAF' :
-                 kycStatus === 'pending' ? 'Vérification en cours...' :
-                 '10,000 XAF'}
-              </span>
+              <div className="text-right">
+                <p className="font-bold text-slate-900">
+                  {kycStatus === 'blocked' ? 'Vérification bloquée temporairement' :
+                   kycStatus === 'pending' ? 'Vérification en cours...' :
+                   `${dailyLimit.toLocaleString()} RUB`}
+                </p>
+                {kycStatus !== 'blocked' && kycStatus !== 'pending' && (
+                  <p className="text-xs text-slate-500 font-medium">
+                    ≈ {( dailyLimit * (rates.find(r => r.from === 'RUB' && r.to === 'XAF')?.rate || 7.22) ).toLocaleString()} XAF
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

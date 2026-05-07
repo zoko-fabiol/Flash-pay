@@ -109,8 +109,18 @@ const UsersListPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2 mb-1"><Mail size={12} className="text-slate-500"/> {user.email}</div>
-                      <div className="flex items-center gap-2"><Phone size={12} className="text-slate-500"/> {user.tel || 'N/A'}</div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Mail size={12} className="text-slate-500"/> 
+                        <a href={`mailto:${user.email}`} className="hover:text-brand transition-colors">{user.email}</a>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone size={12} className="text-slate-500"/> 
+                        {user.tel ? (
+                          <a href={`tel:${user.tel}`} className="hover:text-brand transition-colors">{user.tel}</a>
+                        ) : (
+                          'N/A'
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -203,14 +213,18 @@ const UsersListPage: React.FC = () => {
                       <Mail className="text-slate-500" size={18} />
                       <div>
                         <p className="text-xs text-slate-500">Email</p>
-                        <p className="text-white">{selectedUser.email}</p>
+                        <a href={`mailto:${selectedUser.email}`} className="text-white hover:text-brand transition-colors">{selectedUser.email}</a>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <Phone className="text-slate-500" size={18} />
                       <div>
                         <p className="text-xs text-slate-500">Téléphone</p>
-                        <p className="text-white">{selectedUser.tel || 'Non renseigné'}</p>
+                        {selectedUser.tel ? (
+                          <a href={`tel:${selectedUser.tel}`} className="text-white hover:text-brand transition-colors">{selectedUser.tel}</a>
+                        ) : (
+                          <p className="text-slate-500 italic">Non renseigné</p>
+                        )}
                       </div>
                     </div>
                   </div>

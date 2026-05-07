@@ -142,8 +142,15 @@ const CountriesListPage: React.FC = () => {
           <div key={country.id} className="bg-card-dark border border-border-dark p-6 rounded-3xl group hover:border-brand/30 transition-all shadow-lg">
             <div className="flex justify-between items-start mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center text-2xl border border-slate-700">
-                  <Globe className="text-brand w-8 h-8 flex-shrink-0" />
+                <div className="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center overflow-hidden border-2 border-slate-700/50 shadow-inner">
+                  <img 
+                    src={`https://flagcdn.com/${country.code.toLowerCase()}.svg`} 
+                    alt={country.name}
+                    className="w-full h-full object-cover scale-110"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://flagcdn.com/un.svg';
+                    }}
+                  />
                 </div>
                 <div>
                   <h3 className="text-white font-bold">{country.name}</h3>

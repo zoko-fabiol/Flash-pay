@@ -82,7 +82,11 @@ export interface ExchangeRate {
 export interface Commission {
   id: string;
   transferType: 'russia-russia' | 'russia-africa' | 'africa-russia';
-  percentage: number;
+  destinationCountry?: string; // e.g. 'CM'
+  destinationOperator?: string; // e.g. 'Orange Money'
+  feeType: 'percentage' | 'fixed';
+  percentage?: number;
+  fixedAmount?: number;
   minAmount: number;
   maxAmount: number;
   currency: string;

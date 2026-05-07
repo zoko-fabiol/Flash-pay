@@ -344,7 +344,7 @@ export const adminService = {
     });
   },
 
-  updateDailyLimit: async (dailyLimitRUB: number) => {
+  updateDailyLimit: async (dailyLimitRUB: number, referralBonusRUB: number = 500) => {
     const q = query(collection(db, 'settings'));
     const snapshot = await getDocs(q);
     
@@ -352,6 +352,7 @@ export const adminService = {
       // Create new settings document
       await addDoc(collection(db, 'settings'), {
         dailyLimitRUB,
+        referralBonusRUB,
         updatedAt: Timestamp.now(),
         updatedBy: auth.currentUser?.uid,
       });
@@ -360,6 +361,7 @@ export const adminService = {
       const settingsRef = doc(db, 'settings', snapshot.docs[0].id);
       await updateDoc(settingsRef, {
         dailyLimitRUB,
+        referralBonusRUB,
         updatedAt: Timestamp.now(),
         updatedBy: auth.currentUser?.uid,
       });
@@ -368,8 +370,8 @@ export const adminService = {
     // Log action
     await addDoc(collection(db, 'admin_logs'), {
       adminId: auth.currentUser?.uid,
-      action: 'UPDATE_DAILY_LIMIT',
-      details: { dailyLimitRUB },
+      action: 'UPDATE_SETTINGS',
+      details: { dailyLimitRUB, referralBonusRUB },
       timestamp: Timestamp.now()
     });
   },

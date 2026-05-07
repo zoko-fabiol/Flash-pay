@@ -5,6 +5,8 @@ import { ArrowLeft, CheckCircle2, Clock3, Download, FileText, Info, Send } from 
 import { db } from '../services/firebase';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
+import jsPDF from 'jspdf';
+import toast from 'react-hot-toast';
 
 const statusOrder = ['pending', 'proof_received', 'confirmed', 'completed'] as const;
 
@@ -52,24 +54,170 @@ export const TransactionDetailPage: React.FC = () => {
 
   const handleReceiptDownload = () => {
     if (!transaction) return;
+    const t = toast.loading('Génération du reçu...');
+    
+    try {
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a6'
+      });
 
-    const content = [
-      'Flash Pay - Reçu de transaction',
-      `Transaction: ${transaction.id}`,
-      `Statut: ${statusLabels[currentStatus] || currentStatus}`,
-      `Montant: ${transaction.amount} ${transaction.currency}`,
-      `Destinataire: ${transaction.recipientName || 'N/A'}`,
-      `Téléphone: ${transaction.recipientPhone || transaction.recipientAccount || 'N/A'}`,
-      `Créé le: ${transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleString('fr-FR') : ''}`,
-    ].join('\n');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      let y = 15;
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `flash-pay-recu-${transaction.id}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
+      const mainColor = [115, 78, 212]; // #734ED4
+
+      // Header background
+      pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
+      pdf.rect(0, 0, pageWidth, 25, 'F');
+
+      // Title
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('FLASH PAY', pageWidth / 2, 12, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('RECU OFFICIEL', pageWidth / 2, 18, { align: 'center' });
+
+      y = 35;
+      pdf.setTextColor(60, 60, 60);
+      
+      // Transaction Header
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('REFERENCE TRANSACTION', margin, y);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`#${transaction.id}`, margin, y + 5);
+      
+      const formatDate = (date: Date) => {
+        const d = date.getDate().toString().padStart(2, '0');
+        const m = (date.getMonth() + 1).toString().padStart(2, '0');
+        const ye = date.getFullYear();
+        const h = date.getHours().toString().padStart(2, '0');
+        const mi = date.getMinutes().toString().padStart(2, '0');
+        return `${d}/${m}/${ye} ${h}:${mi}`;
+      };
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('DATE ET HEURE', pageWidth - margin, y, { align: 'right' });
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(formatDate(transaction.createdAt.toDate()), pageWidth - margin, y + 5, { align: 'right' });
+
+      y += 18;
+
+      // Client Section
+      pdf.setDrawColor(230, 230, 230);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 8;
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('CLIENT', margin, y);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(transaction.clientName || 'Client Flash Pay', margin, y + 5);
+      pdf.setFontSize(7);
+      pdf.text(`ID: ${transaction.userId}`, margin, y + 9);
+
+      y += 18;
+
+      // Transfer Details Section
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 8;
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('DETAILS DU TRANSFERT', margin, y);
+      
+      pdf.setFontSize(8);
+      y += 6;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Type:', margin, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text((transaction.type || 'Transfert').toUpperCase(), margin + 25, y);
+      
+      y += 5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Destination:', margin, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${transaction.toCountry || transaction.destinationCountry || 'N/A'} (${transaction.operator || transaction.recipientOperator || 'N/A'})`, margin + 25, y);
+      
+      y += 5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Beneficiaire:', margin, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(transaction.recipientName || 'N/A', margin + 25, y);
+      
+      y += 5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Telephone:', margin, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(transaction.recipientPhone || transaction.recipientAccount || 'N/A', margin + 25, y);
+
+      y += 12;
+
+      const formatNum = (num: number) => {
+        if (num === undefined || num === null) return '0';
+        return Math.floor(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+      };
+
+      // Calculation Section
+      pdf.setFillColor(245, 245, 245);
+      pdf.rect(margin, y, pageWidth - (margin * 2), 35, 'F');
+      y += 6;
+      
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Montant envoye:', margin + 4, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${formatNum(transaction.amount)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 4, y, { align: 'right' });
+      
+      y += 5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Frais de transfert:', margin + 4, y);
+      pdf.text(`${formatNum(transaction.fee || 0)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 4, y, { align: 'right' });
+      
+      y += 5;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Taux de change:', margin + 4, y);
+      pdf.text(`1 ${transaction.currency || 'RUB'} = ${transaction.exchangeRate?.toFixed(2) || '1.00'} ${transaction.destinationCurrency || transaction.currency || 'XAF'}`, pageWidth - margin - 4, y, { align: 'right' });
+      
+      y += 8;
+      pdf.setFontSize(10);
+      pdf.setTextColor(mainColor[0], mainColor[1], mainColor[2]);
+      pdf.text('NET A RECEVOIR:', margin + 4, y);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`${formatNum(transaction.receivedAmount || transaction.amount)} ${transaction.destinationCurrency || transaction.currency || 'XAF'}`, pageWidth - margin - 4, y, { align: 'right' });
+
+      // Status
+      y += 12;
+      pdf.setTextColor(60, 60, 60);
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('STATUT DE LA TRANSACTION', pageWidth / 2, y, { align: 'center' });
+      
+      y += 5;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      const statusColor = transaction.status === 'completed' ? [0, 150, 0] : transaction.status === 'rejected' ? [200, 0, 0] : [255, 150, 0];
+      pdf.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+      pdf.text((statusLabels[transaction.status] || transaction.status).toUpperCase(), pageWidth / 2, y, { align: 'center' });
+
+      // Footer
+      pdf.setTextColor(150, 150, 150);
+      pdf.setFontSize(7);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Merci d\'avoir utilise Flash Pay.', pageWidth / 2, pageHeight - 8, { align: 'center' });
+      
+      pdf.save(`FlashPay_Recu_${transaction.id}.pdf`);
+      toast.success('Reçu téléchargé !', { id: t });
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors du téléchargement', { id: t });
+    }
   };
 
   if (loading) {

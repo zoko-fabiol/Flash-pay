@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { userService } from '../services/firebase';
+import { userService, db } from '../services/firebase';
+import { collection, onSnapshot, query, limit } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
 import { Copy, Share2 } from 'lucide-react';
 
@@ -13,6 +14,7 @@ export const ReferralPage: React.FC = () => {
   const [rewardedCount, setRewardedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [referralBonusRUB, setReferralBonusRUB] = useState(500);
 
   useEffect(() => {
     const fetchReferralData = async () => {
@@ -31,6 +33,19 @@ export const ReferralPage: React.FC = () => {
     };
 
     fetchReferralData();
+
+    // Listen for global settings (referral bonus)
+    const qSettings = query(collection(db, 'settings'), limit(1));
+    const unsubscribeSettings = onSnapshot(qSettings, (snapshot) => {
+      if (!snapshot.empty) {
+        const settings = snapshot.docs[0].data();
+        if (settings.referralBonusRUB) {
+          setReferralBonusRUB(settings.referralBonusRUB);
+        }
+      }
+    });
+
+    return () => unsubscribeSettings();
   }, [user]);
 
   const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
@@ -80,7 +95,7 @@ export const ReferralPage: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl p-6 border border-slate-200 md:col-span-3">
             <h3 className="text-sm font-semibold text-slate-600 mb-2">Commission par Inscription</h3>
-            <p className="text-3xl font-bold text-blue-600">500 RUB</p>
+            <p className="text-3xl font-bold text-blue-600">{referralBonusRUB} RUB</p>
           </div>
         </div>
 
@@ -147,7 +162,7 @@ export const ReferralPage: React.FC = () => {
               <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary">3</div>
               <div>
                 <p className="font-semibold text-slate-900">Gagnez des bonus</p>
-                <p className="text-sm text-slate-600">Recevez 500 XAF par inscription réussie</p>
+                <p className="text-sm text-slate-600">Recevez {referralBonusRUB} RUB par inscription réussie</p>
               </div>
             </div>
           </div>
@@ -161,7 +176,7 @@ export const ReferralPage: React.FC = () => {
               {referredUsers.map((userId, idx) => (
                 <div key={userId} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <span className="text-slate-700">Utilisateur {idx + 1}</span>
-                  <span className="text-sm font-semibold text-green-600">+500 XAF</span>
+                  <span className="text-sm font-semibold text-green-600">+{referralBonusRUB} RUB</span>
                 </div>
               ))}
             </div>

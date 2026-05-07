@@ -5,7 +5,7 @@ import { userService } from '../services/firebase';
 import { Layout } from '../components/Layout';
 import { User as UserIcon, Mail, Phone, Calendar, ChevronRight } from 'lucide-react';
 import { Error, Success } from '../components/UI';
-import { SeedCountries } from '../components/SeedCountries';
+
 
 export const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -193,12 +193,7 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Developer Tools */}
-        <div className="bg-indigo-50 rounded-xl p-6 border border-indigo-200">
-          <h3 className="font-bold text-lg text-indigo-900 mb-4">Paramètres Développeur</h3>
-          <p className="text-sm text-indigo-700 mb-4">Utilisez cet outil pour synchroniser la liste des pays et les restrictions d'opérateurs (MTN, Wave, etc.) avec la base de données.</p>
-          <SeedCountries />
-        </div>
+
 
         {/* Assistance */}
         <div className="bg-white rounded-xl p-6 border border-slate-200">

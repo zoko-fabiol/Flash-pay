@@ -1,6 +1,6 @@
-import { initializeApp } from 'firebase/app';
+import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -12,16 +12,18 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
 
-void enableMultiTabIndexedDbPersistence(db).catch((error: any) => {
-  if (error?.code === 'failed-precondition' || error?.code === 'unimplemented') {
-    console.info('Firestore local cache is unavailable in this browser context.');
-    return;
+// Use the new Firestore cache API with HMR safety
+export const db = (() => {
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+  } catch (e) {
+    return getFirestore(app);
   }
+})();
 
-  console.warn('Unable to enable Firestore local cache persistence.', error);
-});
+export const storage = getStorage(app);

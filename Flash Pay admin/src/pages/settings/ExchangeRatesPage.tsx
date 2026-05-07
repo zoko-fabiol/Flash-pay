@@ -79,11 +79,10 @@ const ExchangeRatesPage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newCustomRate, setNewCustomRate] = useState({ from: '', to: '', rate: '' });
 
-  // Daily limit state
-  const [dailyLimit, setDailyLimit] = useState<number>(150000);
+  // Settings state
   const [editingLimit, setEditingLimit] = useState<string>('150000');
-  const [isSavingLimit, setIsSavingLimit] = useState(false);
-
+  const [editingReferralBonus, setEditingReferralBonus] = useState<string>('500');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
   useEffect(() => {
     const q = query(collection(db, 'exchange_rates'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -105,8 +104,9 @@ const ExchangeRatesPage: React.FC = () => {
       if (!snapshot.empty) {
         const settingsDoc = snapshot.docs[0].data();
         const limit = settingsDoc.dailyLimitRUB || 150000;
-        setDailyLimit(limit);
+        const bonus = settingsDoc.referralBonusRUB || 500;
         setEditingLimit(limit.toString());
+        setEditingReferralBonus(bonus.toString());
       }
     });
 
@@ -116,6 +116,8 @@ const ExchangeRatesPage: React.FC = () => {
       unsubSettings();
     };
   }, []);
+  
+
 
   const handleEdit = (rate: ExchangeRate) => {
     setEditingRate(rate);
@@ -138,22 +140,29 @@ const ExchangeRatesPage: React.FC = () => {
     }
   };
 
-  const handleSaveDailyLimit = async () => {
+  const handleSaveSettings = async () => {
     const newLimit = parseInt(editingLimit);
+    const newBonus = parseInt(editingReferralBonus);
+    
     if (isNaN(newLimit) || newLimit <= 0) {
       toast.error('Limite invalide');
       return;
     }
-    setIsSavingLimit(true);
+
+    if (isNaN(newBonus) || newBonus < 0) {
+      toast.error('Bonus parrainage invalide');
+      return;
+    }
+
+    setIsSavingSettings(true);
     try {
-      await adminService.updateDailyLimit(newLimit);
-      setDailyLimit(newLimit);
-      toast.success('Limite journalière mise à jour');
+      await adminService.updateDailyLimit(newLimit, newBonus);
+      toast.success('Paramètres mis à jour');
     } catch (err) {
       console.error(err);
       toast.error('Erreur lors de la mise à jour');
     } finally {
-      setIsSavingLimit(false);
+      setIsSavingSettings(false);
     }
   };
 
@@ -192,16 +201,16 @@ const ExchangeRatesPage: React.FC = () => {
           <RateCard key={rate.id} rate={rate} onEdit={handleEdit} />
         ))}
         
-        {/* Daily Limits Config Card */}
+        {/* Security & Referral Settings Card */}
         <div className="bg-gradient-to-br from-rose-500/10 to-transparent border border-rose-500/20 p-6 rounded-3xl shadow-xl flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-rose-500/20 text-rose-500 rounded-xl">
                 <Shield size={20} />
               </div>
-              <h3 className="text-white font-bold">Limites de Sécurité</h3>
+              <h3 className="text-white font-bold">Sécurité & Parrainage</h3>
             </div>
-            <p className="text-slate-400 text-xs mb-6">Contrôle du plafond de transaction quotidien pour les comptes standards.</p>
+            <p className="text-slate-400 text-xs mb-6">Contrôle des plafonds de transaction et des récompenses partenaires.</p>
             
             <div className="space-y-4">
                <div className="space-y-2">
@@ -216,14 +225,29 @@ const ExchangeRatesPage: React.FC = () => {
                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-bold">RUB</span>
                  </div>
                </div>
+
+               <div className="space-y-2">
+                 <label className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Bonus Parrainage (RUB)</label>
+                 <div className="relative">
+                   <input 
+                    type="number" 
+                    value={editingReferralBonus}
+                    onChange={(e) => setEditingReferralBonus(e.target.value)}
+                    className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-white font-mono font-bold focus:ring-1 focus:ring-emerald-500/50 outline-none"
+                   />
+                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-600 text-xs font-bold">RUB</span>
+                 </div>
+               </div>
+               
+
             </div>
           </div>
           <button 
-            onClick={handleSaveDailyLimit}
-            disabled={isSavingLimit}
-            className="mt-6 w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 disabled:opacity-50 disabled:cursor-not-allowed text-rose-500 font-bold rounded-xl border border-rose-500/30 transition-all text-xs flex items-center justify-center gap-2"
+            onClick={handleSaveSettings}
+            disabled={isSavingSettings}
+            className="mt-6 w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl border border-slate-700 transition-all text-xs flex items-center justify-center gap-2"
           >
-            {isSavingLimit ? (
+            {isSavingSettings ? (
               <>
                 <RefreshCcw size={14} className="animate-spin" />
                 Mise à jour...
@@ -231,7 +255,7 @@ const ExchangeRatesPage: React.FC = () => {
             ) : (
               <>
                 <Save size={14} />
-                Mettre à jour la limite
+                Mettre à jour les paramètres
               </>
             )}
           </button>
