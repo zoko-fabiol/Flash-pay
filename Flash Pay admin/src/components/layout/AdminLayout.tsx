@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  History,
-  Users,
-  ShieldCheck,
-  Settings,
-  LogOut,
-  Globe,
-  Bell,
-  Menu,
-  X,
-  CreditCard,
-  AlertTriangle,
-  Search,
-  TrendingUp,
-} from 'lucide-react';
+  DashboardProIcon,
+  HistoryProIcon,
+  UsersProIcon,
+  KycProIcon,
+  SettingsProIcon,
+  LogoutProIcon,
+  NetworkProIcon,
+  BellProIcon,
+  MenuProIcon,
+  CloseProIcon,
+  CreditCardProIcon,
+  ProblemsProIcon,
+  SearchProIcon,
+  TrendingProIcon,
+  MessagesProIcon,
+  ShieldProIcon,
+} from '../../components/ui/ProIcons';
 import { useAuth } from '../../context/AuthContext';
 import { canAccessAdminSection, mergeAdminPermissions } from '../../lib/adminAccess';
 import type { AdminSectionKey } from '../../types';
@@ -28,15 +30,16 @@ const AdminLayout: React.FC = () => {
   const permissions = mergeAdminPermissions(profile?.adminPermissions);
 
   const menuItems: Array<{ path: string; icon: React.ComponentType<any>; label: string; desc: string; section: AdminSectionKey }> = [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard', desc: 'Vue d\'ensemble', section: 'dashboard' as AdminSectionKey },
-    { path: '/admin/queue', icon: History, label: 'Transactions', desc: 'Flux financier', section: 'queue' as AdminSectionKey },
-    { path: '/admin/users', icon: Users, label: 'Clients', desc: 'Base de données', section: 'users' as AdminSectionKey },
-    { path: '/admin/kyc', icon: ShieldCheck, label: 'Validation KYC', desc: 'Vérification', section: 'kyc' as AdminSectionKey },
-    { path: '/admin/countries', icon: Globe, label: 'Gestion Réseau', desc: 'Pays & Opérateurs', section: 'countries' as AdminSectionKey },
-    { path: '/admin/settings/commissions', icon: Settings, label: 'Frais & Comms', desc: 'Tarification', section: 'settings' as AdminSectionKey },
-    { path: '/admin/settings/exchange-rates', icon: TrendingUp, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
-    { path: '/admin/settings/access-control', icon: ShieldCheck, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
-    { path: '/admin/problems', icon: AlertTriangle, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
+    { path: '/admin/dashboard', icon: DashboardProIcon, label: 'Dashboard', desc: 'Vue d\'ensemble', section: 'dashboard' as AdminSectionKey },
+    { path: '/admin/queue', icon: HistoryProIcon, label: 'Transactions', desc: 'Flux financier', section: 'queue' as AdminSectionKey },
+    { path: '/admin/users', icon: UsersProIcon, label: 'Clients', desc: 'Base de données', section: 'users' as AdminSectionKey },
+    { path: '/admin/kyc', icon: KycProIcon, label: 'Validation KYC', desc: 'Vérification', section: 'kyc' as AdminSectionKey },
+    { path: '/admin/countries', icon: NetworkProIcon, label: 'Gestion Réseau', desc: 'Pays & Opérateurs', section: 'countries' as AdminSectionKey },
+    { path: '/admin/messages', icon: MessagesProIcon, label: 'Messages', desc: 'Diffusion', section: 'notifications' as AdminSectionKey },
+    { path: '/admin/settings/commissions', icon: SettingsProIcon, label: 'Frais & Comms', desc: 'Tarification', section: 'settings' as AdminSectionKey },
+    { path: '/admin/settings/exchange-rates', icon: TrendingProIcon, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
+    { path: '/admin/settings/access-control', icon: KycProIcon, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
+    { path: '/admin/problems', icon: ProblemsProIcon, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
   ].filter((item) => (profile?.adminRole === 'super') || canAccessAdminSection(profile, item.section));
 
   const handleLogout = async () => {
@@ -53,7 +56,7 @@ const AdminLayout: React.FC = () => {
       <div className="lg:hidden bg-white border-b border-[#E7E0EB] p-4 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#6750A4] rounded-[12px] flex items-center justify-center shadow-lg shadow-[#6750A4]/20">
-            <CreditCard className="text-white" size={20} />
+            <CreditCardProIcon className="text-white" size={20} />
           </div>
           <span className="text-xl font-black text-[#1D1B20] tracking-tighter">
             FLASH PAY <span className="text-[#6750A4]">AD</span>
@@ -63,7 +66,7 @@ const AdminLayout: React.FC = () => {
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="p-3 bg-[#F3EDF7] text-[#1D1B20] rounded-full active:scale-90 transition-all"
         >
-          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          {isSidebarOpen ? <CloseProIcon size={20} /> : <MenuProIcon size={20} />}
         </button>
       </div>
 
@@ -81,7 +84,7 @@ const AdminLayout: React.FC = () => {
         <div className="h-full flex flex-col p-6 overflow-y-auto">
           <div className="hidden lg:flex items-center gap-4 mb-10 px-2">
             <div className="w-12 h-12 bg-[#6750A4] rounded-[16px] flex items-center justify-center shadow-xl shadow-[#6750A4]/20">
-              <CreditCard className="text-white" size={24} />
+              <CreditCardProIcon className="text-white" size={24} />
             </div>
             <div>
               <h1 className="text-2xl font-black text-[#1D1B20] tracking-tight leading-none">FLASH PAY</h1>
@@ -132,7 +135,7 @@ const AdminLayout: React.FC = () => {
               onClick={handleLogout}
               className="w-full flex items-center gap-4 px-6 py-4 text-[#B3261E] font-black uppercase text-[10px] tracking-widest hover:bg-[#F9DEDC]/50 rounded-[20px] transition-all"
             >
-              <LogOut size={18} /> Déconnexion
+              <LogoutProIcon size={18} /> Déconnexion
             </button>
           </div>
         </div>
@@ -141,13 +144,13 @@ const AdminLayout: React.FC = () => {
       <main className="flex-1 h-screen overflow-y-auto">
         <header className="hidden lg:flex h-20 items-center justify-between px-10 bg-white/50 backdrop-blur-md sticky top-0 z-50 border-b border-[#E7E0EB]">
           <div className="m3-search w-96">
-            <Search size={18} className="text-[#49454F]" />
+            <SearchProIcon size={18} className="text-[#49454F]" />
             <input type="text" placeholder="Rechercher une transaction, un client..." className="bg-transparent border-none outline-none text-sm font-medium w-full" />
           </div>
 
           <div className="flex items-center gap-4">
             <button className="p-3 bg-white text-[#49454F] rounded-full hover:bg-[#F3EDF7] transition-all relative shadow-sm border border-[#E7E0EB]">
-              <Bell size={20} />
+              <BellProIcon size={20} />
               <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#B3261E] rounded-full border-2 border-white"></span>
             </button>
             <div className="h-8 w-px bg-[#E7E0EB]"></div>
@@ -159,7 +162,7 @@ const AdminLayout: React.FC = () => {
                 </p>
               </div>
               <div className="w-10 h-10 bg-[#EADDFF] rounded-[12px] flex items-center justify-center text-[#21005D]">
-                <ShieldCheck size={20} />
+                <ShieldProIcon size={20} />
               </div>
             </div>
           </div>

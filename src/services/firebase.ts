@@ -7,6 +7,8 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
   type Auth,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -161,6 +163,36 @@ export const authService = {
   async updatePassword(newPassword: string) {
     if (!auth.currentUser) throw new Error('Utilisateur non connecté');
     await updatePassword(auth.currentUser, newPassword);
+  },
+
+  async updatePasswordWithReauth(currentPassword: string, newPassword: string) {
+    if (!auth.currentUser) throw new Error('Utilisateur non connecté');
+    if (!auth.currentUser.email) throw new Error('Email non disponible');
+
+    try {
+      // Ré-authentifier l'utilisateur avec son mot de passe actuel
+      const credential = EmailAuthProvider.credential(
+        auth.currentUser.email,
+        currentPassword
+      );
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      
+      // Maintenant on peut changer le mot de passe
+      await updatePassword(auth.currentUser, newPassword);
+    } catch (error: any) {
+      // Gérer les erreurs spécifiques
+      if (error.code === 'auth/wrong-password') {
+        throw new Error('Le mot de passe actuel est incorrect');
+      } else if (error.code === 'auth/invalid-credential') {
+        throw new Error('Identifiants invalides. Veuillez réessayer.');
+      } else if (error.code === 'auth/user-mismatch') {
+        throw new Error('Les identifiants ne correspondent pas à l\'utilisateur connecté');
+      } else if (error.message?.includes('too many')) {
+        throw new Error('Trop de tentatives. Veuillez réessayer plus tard.');
+      } else {
+        throw error;
+      }
+    }
   },
 };
 

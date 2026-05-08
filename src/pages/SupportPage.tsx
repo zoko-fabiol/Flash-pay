@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supportService } from '../services/firebase';
 import { Layout } from '../components/Layout';
-import { HelpCircle, Send, AlertCircle, MessageSquare, History } from 'lucide-react';
+import { HelpCircle, Send, AlertCircle, MessageSquare, History, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { useNavigate } from 'react-router-dom';
@@ -47,77 +47,87 @@ export const SupportPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="space-y-2 px-2">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter sm:text-5xl">{t('contact_support')}</h1>
-          <p className="text-slate-500 font-bold uppercase text-[11px] tracking-[0.2em] opacity-70">{t('support_desc')}</p>
+      <div className="max-w-xl mx-auto space-y-6 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-1 px-2 text-center sm:text-left">
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{t('contact_support')}</h1>
+          <p className="text-slate-400 font-bold uppercase text-[9px] tracking-widest">{t('support_desc')}</p>
         </div>
 
         {error && <Error message={error} onDismiss={() => setError('')} />}
         {success && <Success message={success} />}
 
-        <div className="bg-white rounded-[40px] p-6 sm:p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5">
-          <div className="flex items-center gap-4 mb-10">
-            <div className="w-12 h-12 bg-[#F3EDF7] rounded-2xl flex items-center justify-center text-[#6236CC] shadow-sm">
-              <MessageSquare size={24} />
+        <div className="premium-card p-5 sm:p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary shadow-sm border border-primary/10">
+              <MessageSquare size={20} />
             </div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Soumettre un incident</h3>
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Soumettre un incident</h3>
+              <p className="text-slate-400 text-xs font-medium">Réponse rapide garantie</p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-2">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Type de problème</label>
-              <select 
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900 appearance-none"
-              >
-                <option value="Transfert">Problème de transfert</option>
-                <option value="KYC">Problème de vérification KYC</option>
-                <option value="Bonus">Problème de bonus</option>
-                <option value="Compte">Accès au compte</option>
-                <option value="Autre">Autre</option>
-              </select>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Type de problème</label>
+              <div className="relative group">
+                <select 
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                  className="input-field appearance-none cursor-pointer pr-10 py-3 text-sm"
+                >
+                  <option value="Transfert">Transfert</option>
+                  <option value="KYC">KYC / Vérification</option>
+                  <option value="Bonus">Bonus / Parrainage</option>
+                  <option value="Compte">Compte / Accès</option>
+                  <option value="Autre">Autre</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-300 group-hover:text-primary transition-colors">
+                  <ChevronRight size={16} className="rotate-90" />
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">ID de la transaction (facultatif)</label>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">ID Transaction (facultatif)</label>
               <input 
                 type="text"
                 value={transactionId}
                 onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="Ex: #ABC123XYZ"
-                className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900"
+                placeholder="#ABC123XYZ"
+                className="input-field py-3 text-sm"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Description détaillée</label>
+            <div className="space-y-1.5">
+              <label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-1">Description</label>
               <textarea 
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={6}
-                placeholder="Décrivez votre problème en détail pour que nous puissions vous aider rapidement..."
-                className="w-full px-6 py-5 bg-[#F8F9FC] border border-slate-100 rounded-[32px] focus:outline-none focus:border-[#6236CC] font-medium text-slate-900 resize-none"
+                rows={4}
+                placeholder="Décrivez votre problème..."
+                className="input-field resize-none py-3 text-sm leading-relaxed font-medium"
               />
             </div>
 
-            <div className="p-4 bg-amber-50 rounded-2xl flex gap-3 text-amber-700">
-              <AlertCircle size={20} className="shrink-0" />
-              <p className="text-xs font-bold leading-relaxed">
-                Notre équipe examine chaque incident manuellement. Vous recevrez une notification dès qu'une solution sera apportée.
+            <div className="p-4 bg-amber-50/50 rounded-xl flex gap-3 text-amber-700 border border-amber-100/50">
+              <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                <AlertCircle size={18} />
+              </div>
+              <p className="text-[10px] font-bold leading-relaxed py-0.5">
+                Examen manuel de chaque incident. Notification dès résolution.
               </p>
             </div>
 
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-[#6236CC] text-white font-black py-6 rounded-[32px] shadow-2xl hover:translate-y-[-4px] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest mt-12"
+              className="btn-primary w-full py-4 text-xs uppercase tracking-widest font-bold"
             >
-              {loading ? 'Envoi en cours...' : (
+              {loading ? 'Envoi...' : (
                 <>
-                  <Send size={18} />
-                  Envoyer mon message
+                  <Send size={16} />
+                  Envoyer le message
                 </>
               )}
             </button>
@@ -125,15 +135,17 @@ export const SupportPage: React.FC = () => {
         </div>
 
         {/* Info Card */}
-        <div className="bg-slate-900 rounded-[40px] p-8 text-white relative overflow-hidden group">
-          <div className="absolute -right-20 -top-20 w-48 h-48 bg-[#6236CC]/20 rounded-full blur-3xl transition-all group-hover:bg-[#6236CC]/30"></div>
-          <div className="relative z-10 space-y-4">
+        <div className="bg-slate-900 rounded-2xl p-5 text-white relative overflow-hidden group shadow-xl">
+          <div className="absolute -right-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-[40px] transition-all group-hover:bg-primary/30"></div>
+          <div className="relative z-10 space-y-3">
             <div className="flex items-center gap-3">
-              <History size={20} className="text-[#6236CC]" />
-              <h4 className="font-black tracking-tight text-lg">Temps de réponse</h4>
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center text-primary border border-primary/20">
+                <History size={16} />
+              </div>
+              <h4 className="font-bold text-lg">Temps de réponse</h4>
             </div>
-            <p className="text-slate-400 text-sm font-medium leading-relaxed">
-              Nous traitons généralement les demandes sous 2 à 4 heures pendant les jours ouvrables. Merci de votre patience.
+            <p className="text-slate-400 text-xs font-medium leading-relaxed max-w-md">
+              Délai moyen de <span className="text-white">2 à 4 heures</span> (jours ouvrables).
             </p>
           </div>
         </div>

@@ -196,39 +196,33 @@ export const KYCPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="max-w-3xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="space-y-2 px-2">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter sm:text-5xl">{t('kyc_title')}</h1>
-          <p className="text-slate-500 font-bold uppercase text-[11px] tracking-[0.2em] opacity-70">{t('kyc_desc')}</p>
+          <h1 className="text-5xl font-bold text-slate-900 tracking-tight">{t('kyc_title')}</h1>
+          <p className="text-slate-500 font-medium text-sm tracking-wide">{t('kyc_desc')}</p>
         </div>
 
         {/* Current Status */}
-        <div className="bg-white rounded-[40px] p-6 sm:p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5 relative overflow-hidden group">
-          <div className="absolute -right-20 -top-20 w-48 h-48 bg-[#6236CC]/5 rounded-full blur-3xl group-hover:bg-[#6236CC]/10 transition-colors"></div>
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 relative z-10">{t('kyc_status')}</h3>
+        <div className="premium-card p-8 group relative overflow-hidden">
+          <div className="absolute -right-20 -top-20 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8 relative z-10">{t('kyc_status')}</h3>
           <div className="space-y-8 relative z-10">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-50">
-              <div className="space-y-1">
-                <span className="text-slate-900 font-black text-lg tracking-tight">{t('verification_level')}</span>
-              </div>
+              <span className="text-slate-900 font-bold text-lg tracking-tight">{t('verification_level')}</span>
               {getStatusBadge()}
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="space-y-1">
-                <span className="text-slate-900 font-black text-lg tracking-tight">{t('daily_transfer_limit')}</span>
-              </div>
+              <span className="text-slate-900 font-bold text-lg tracking-tight">{t('daily_transfer_limit')}</span>
               <div className="text-left sm:text-right">
                 {(() => {
                   const isExpert = kycStatus === 'approved';
                   const activeLimit = isExpert ? expertLimit : standardLimit;
-                  if (kycStatus === 'blocked') return <p className="font-black text-rose-500">{t('kyc_blocked')}</p>;
-                  if (kycStatus === 'pending') return <p className="font-black text-amber-500">{t('kyc_pending')}</p>;
+                  if (kycStatus === 'blocked') return <p className="font-bold text-rose-500">{t('kyc_blocked')}</p>;
+                  if (kycStatus === 'pending') return <p className="font-bold text-amber-500">{t('kyc_pending')}</p>;
                   return (
-                    <div className="space-y-1">
-                      <p className={`text-2xl sm:text-3xl font-black tracking-tighter ${isExpert ? 'text-[#6236CC]' : 'text-slate-900'}`}>
-                        {activeLimit.toLocaleString('fr-FR')} <span className="text-sm font-bold opacity-40">RUB</span>
-                      </p>
-                    </div>
+                    <p className={`text-3xl font-bold tracking-tight ${isExpert ? 'text-primary' : 'text-slate-900'}`}>
+                      {activeLimit.toLocaleString('fr-FR')} <span className="text-sm font-medium opacity-40 uppercase">RUB</span>
+                    </p>
                   );
                 })()}
               </div>
@@ -240,73 +234,73 @@ export const KYCPage: React.FC = () => {
         {success && <Success message={success} />}
 
         {(kycStatus === 'not_started' || kycStatus === 'rejected') && (
-          <div className="bg-white rounded-[40px] p-6 sm:p-10 border border-[#eadfff] shadow-2xl shadow-slate-900/5">
+          <div className="premium-card p-8 lg:p-12">
             <div className="flex items-center gap-4 mb-10">
-              <div className="w-12 h-12 bg-[#F3EDF7] rounded-2xl flex items-center justify-center text-[#6236CC] shadow-sm">
+              <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center text-primary shadow-sm border border-primary/10">
                 <Shield size={24} />
               </div>
-              <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('personal_details')}</h3>
+              <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{t('personal_details')}</h3>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-10">
+            <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('first_name')}</label>
-                  <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('first_name')}</label>
+                  <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="input-field" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('last_name')}</label>
-                  <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('last_name')}</label>
+                  <input type="text" name="lastName" value={formData.lastName} onChange={handleInputChange} className="input-field" />
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('birth_date')}</label>
-                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('birth_date')}</label>
+                  <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} className="input-field" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('nationality')}</label>
-                  <input type="text" name="nationality" value={formData.nationality} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('nationality')}</label>
+                  <input type="text" name="nationality" value={formData.nationality} onChange={handleInputChange} className="input-field" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('address')}</label>
-                <input type="text" name="address" value={formData.address} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('address')}</label>
+                <input type="text" name="address" value={formData.address} onChange={handleInputChange} className="input-field" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('city')}</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('city')}</label>
+                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="input-field" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('postal_code')}</label>
-                  <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('postal_code')}</label>
+                  <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} className="input-field" />
                 </div>
               </div>
 
               <div className="pt-8 border-t border-slate-50">
                 <div className="flex items-center gap-4 mb-8">
-                  <div className="w-10 h-10 bg-[#F3EDF7] rounded-xl flex items-center justify-center text-[#6236CC]">
+                  <div className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-primary">
                     <Globe size={20} />
                   </div>
-                  <h4 className="text-lg font-black text-slate-900">{t('identity_document')}</h4>
+                  <h4 className="text-lg font-bold text-slate-900">{t('identity_document')}</h4>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('document_type')}</label>
-                    <select name="idType" value={formData.idType} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('document_type')}</label>
+                    <select name="idType" value={formData.idType} onChange={handleInputChange} className="input-field">
                       <option value="Passport">Passport</option>
                       <option value="ID Card">Carte d'Identité</option>
                       <option value="Driver License">Permis de conduire</option>
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('id_number')}</label>
-                    <input type="text" name="idNumber" value={formData.idNumber} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{t('id_number')}</label>
+                    <input type="text" name="idNumber" value={formData.idNumber} onChange={handleInputChange} className="input-field" />
                   </div>
                 </div>
 
@@ -316,7 +310,7 @@ export const KYCPage: React.FC = () => {
                 </div>
               </div>
 
-              <button type="submit" disabled={loading} className="w-full bg-[#6236CC] text-white font-black py-6 rounded-[32px] shadow-2xl hover:translate-y-[-4px] transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest mt-12">
+              <button type="submit" disabled={loading} className="btn-primary w-full py-5 text-lg mt-12">
                 {loading ? t('saving') : t('submit_kyc')}
               </button>
             </form>
@@ -346,25 +340,27 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange }) => {
 
   return (
     <div className="space-y-4">
-      <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{label}</p>
-      <label htmlFor={inputId} className={`relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${file ? 'border-emerald-500 bg-emerald-50/30' : 'border-[#eadfff] bg-[#F8F9FC] hover:border-[#6236CC]/50 hover:bg-[#F3EDF7]/20'}`}>
+      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">{label}</p>
+      <label htmlFor={inputId} className={`relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-3xl cursor-pointer transition-all ${file ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-100 bg-slate-50 hover:border-primary/50 hover:bg-primary/5'}`}>
         {file ? (
           <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-3">
             {isPdfFile(file) ? (
-              <div className="w-full h-full rounded-[24px] overflow-hidden bg-white border border-slate-200">
+              <div className="w-full h-full rounded-2xl overflow-hidden bg-white border border-slate-100">
                 <iframe src={previewUrl} title={label} className="w-full h-40" />
               </div>
             ) : (
               <img src={previewUrl} alt={label} className="max-h-32 rounded-2xl object-contain shadow-sm" />
             )}
             <CheckCircle className="text-emerald-500" size={28} />
-            <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">{t('file_selected')}</p>
-            <p className="text-[10px] text-emerald-600 opacity-60 truncate max-w-[150px]">{file.name}</p>
+            <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest">{t('file_selected')}</p>
+            <p className="text-[10px] text-emerald-600/60 truncate max-w-[150px] font-medium">{file.name}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center p-4">
-            <Upload className="text-slate-300 mb-3" size={32} />
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('choose_file')}</p>
+            <div className="w-12 h-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 text-slate-300 group-hover:text-primary transition-colors">
+              <Upload size={24} />
+            </div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('choose_file')}</p>
           </div>
         )}
         <input id={inputId} type="file" className="hidden" accept="image/*,application/pdf" onChange={onChange} />
@@ -372,4 +368,5 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange }) => {
     </div>
   );
 };
+
 

@@ -6,9 +6,9 @@
  * Must be registered by the app during initialization
  */
 
-// Import Firebase scripts
-importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging.js');
+// Import Firebase scripts (Compat version is required for importScripts)
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 // Initialize Firebase in Service Worker
 const firebaseConfig = {

@@ -27,10 +27,10 @@ import { ChevronDown } from 'lucide-react';
 const REJECTION_REASONS = [
   "Justificatif invalide ou illisible",
   "Le montant ne correspond pas",
-  "Fonds non reÃ§us sur notre compte",
-  "CoordonnÃ©es du bÃ©nÃ©ficiaire incorrectes",
+  "Fonds non reçus sur notre compte",
+  "Coordonnées du bénéficiaire incorrectes",
   "Transaction suspecte",
-  "Autre (prÃ©cisez ci-dessous)"
+  "Autre (précisez ci-dessous)"
 ];
 
 
@@ -58,14 +58,14 @@ const TransactionDetailsPage: React.FC = () => {
   const handleStatusUpdate = async (status: any) => {
     if (!transaction) return;
     setIsActionLoading(true);
-    const t = toast.loading('Mise Ã  jour du statut...');
+    const t = toast.loading('Mise à jour du statut...');
     try {
       await adminService.updateTransactionStatus(transaction.id, status, adminNote);
       setAdminNote('');
-      toast.success(`Transaction marquÃ©e comme ${status}`, { id: t });
+      toast.success(`Transaction marquée comme ${status}`, { id: t });
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de la mise Ã  jour', { id: t });
+      toast.error('Erreur lors de la mise à jour', { id: t });
     } finally {
       setIsActionLoading(false);
     }
@@ -91,10 +91,10 @@ const TransactionDetailsPage: React.FC = () => {
           : 'proof_received'
       });
       
-      toast.success('Statut mis Ã  jour', { id: t });
+      toast.success('Statut mis à jour', { id: t });
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de la mise Ã  jour', { id: t });
+      toast.error('Erreur lors de la mise à jour', { id: t });
     } finally {
       setIsActionLoading(false);
     }
@@ -102,7 +102,7 @@ const TransactionDetailsPage: React.FC = () => {
 
   const handleGeneratePDF = (recipient?: BulkRecipient) => {
     if (!transaction) return;
-    const t_toast = toast.loading('GÃ©nÃ©ration du reÃ§u...');
+    const t_toast = toast.loading('Génération du reçu...');
     
     try {
       const isA5 = !!recipient || transaction.isBulk;
@@ -170,7 +170,10 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       pdf.text(recipient ? recipient.name : (transaction.recipientName || 'N/A'), pageWidth - margin, y + 7, { align: 'right' });
       pdf.setFontSize(9);
-      pdf.text(recipient ? (recipient.phone || '') : (transaction.recipientPhone || ''), pageWidth - margin, y + 12, { align: 'right' });
+      const recipientContact = recipient 
+        ? (recipient.phone || recipient.account || '') 
+        : (transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '');
+      pdf.text(recipientContact, pageWidth - margin, y + 12, { align: 'right' });
 
       y += 28;
       pdf.setFillColor(243, 237, 247); // M3 Surface Variant
@@ -193,13 +196,13 @@ const TransactionDetailsPage: React.FC = () => {
       y += 10;
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 100, 100);
-      pdf.text('Taux appliquÃ©:', margin + 8, y);
+      pdf.text('Taux appliqué:', margin + 8, y);
       pdf.text(`1 RUB = ${rate.toFixed(2)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
       
       y += 14;
       pdf.setFontSize(12);
       pdf.setTextColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.text('MONTANT PERÃ‡U:', margin + 8, y);
+      pdf.text('MONTANT PERÇU:', margin + 8, y);
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
       pdf.text(`${formatNumber(recvAmt)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
@@ -227,13 +230,13 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.setTextColor(180, 180, 180);
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Document gÃ©nÃ©rÃ© par Flash Pay Admin.', pageWidth / 2, pageHeight - 15, { align: 'center' });
+      pdf.text('Document généré par Flash Pay Admin.', pageWidth / 2, pageHeight - 15, { align: 'center' });
       
       pdf.save(`FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}_${transaction.id.substring(0, 8)}.pdf`);
-      toast.success('ReÃ§u gÃ©nÃ©rÃ© !', { id: t_toast });
+      toast.success('Reçu généré !', { id: t_toast });
     } catch (error) {
       console.error(error);
-      toast.error('Erreur de gÃ©nÃ©ration', { id: t_toast });
+      toast.error('Erreur de génération', { id: t_toast });
     }
   };
 
@@ -260,7 +263,7 @@ const TransactionDetailsPage: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-32">
         <div className="w-12 h-12 border-4 border-[#6750A4] border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-6 text-[#49454F] font-black uppercase text-[10px] tracking-widest">Chargement des dÃ©tails...</p>
+        <p className="mt-6 text-[#49454F] font-black uppercase text-[10px] tracking-widest">Chargement des détails...</p>
       </div>
     );
   }
@@ -269,9 +272,9 @@ const TransactionDetailsPage: React.FC = () => {
     return (
       <div className="m3-card p-12 text-center max-w-xl mx-auto">
         <h2 className="text-2xl font-black text-[#1D1B20] mb-4 tracking-tight">Transaction Introuvable</h2>
-        <p className="text-[#49454F] mb-8 font-medium">Cette transaction n'existe pas ou a Ã©tÃ© supprimÃ©e.</p>
+        <p className="text-[#49454F] mb-8 font-medium">Cette transaction n'existe pas ou a été supprimée.</p>
         <button onClick={() => navigate('/admin/queue')} className="m3-btn-filled mx-auto">
-          <ArrowLeft size={20} /> Retour Ã  la liste
+          <ArrowLeft size={20} /> Retour à la liste
         </button>
       </div>
     );
@@ -283,7 +286,7 @@ const TransactionDetailsPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <button onClick={() => navigate('/admin/queue')} className="flex items-center gap-2 text-[#6750A4] font-black uppercase text-[10px] tracking-widest mb-4 hover:translate-x-[-4px] transition-transform">
-            <ArrowLeft size={16} /> Retour Ã  la file d'attente
+            <ArrowLeft size={16} /> Retour à la file d'attente
           </button>
           <div className="flex items-center gap-4">
              <h2 className="text-3xl font-black text-[#1D1B20] tracking-tighter">Transaction <span className="font-mono text-[#6750A4]">#{transaction.id.substring(0, 10)}</span></h2>
@@ -307,7 +310,7 @@ const TransactionDetailsPage: React.FC = () => {
           <div className="w-24 h-24 bg-[#6750A4] text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-[#6750A4]/40 scale-110">
             <Check size={48} strokeWidth={4} />
           </div>
-          <h2 className="text-2xl font-black text-[#6750A4] tracking-tight uppercase mb-2">Transfert effectuÃ©</h2>
+          <h2 className="text-2xl font-black text-[#6750A4] tracking-tight uppercase mb-2">Transfert effectué</h2>
           <p className="text-5xl font-black text-[#1D1B20] tracking-tighter">
             {transaction.amount.toLocaleString()} <span className="text-xl opacity-40 uppercase">roubles</span>
           </p>
@@ -317,8 +320,8 @@ const TransactionDetailsPage: React.FC = () => {
           </p>
           
           <div className="flex items-center gap-4 mt-12">
-            <div className="px-8 py-3 bg-[#F3EDF7] text-[#6750A4] rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Mise Ã  jour</div>
-            <div className="px-8 py-3 bg-white border border-[#E7E0EB] text-[#49454F] rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">DÃ©tails</div>
+            <div className="px-8 py-3 bg-[#F3EDF7] text-[#6750A4] rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Mise à jour</div>
+            <div className="px-8 py-3 bg-white border border-[#E7E0EB] text-[#49454F] rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm">Détails</div>
           </div>
         </div>
       )}
@@ -332,10 +335,10 @@ const TransactionDetailsPage: React.FC = () => {
             <div className="m3-card flex flex-col justify-between">
                <div className="flex justify-between items-start mb-4">
                  <div className="p-3 bg-[#EADDFF] text-[#21005D] rounded-[16px]"><UserIcon size={24} /></div>
-                 <button onClick={() => { navigator.clipboard.writeText(transaction.userId); toast.success('ID CopiÃ©'); }} className="p-2 text-[#49454F] hover:bg-[#F3EDF7] rounded-full transition-all"><Copy size={14} /></button>
+                 <button onClick={() => { navigator.clipboard.writeText(transaction.userId); toast.success('ID Copié'); }} className="p-2 text-[#49454F] hover:bg-[#F3EDF7] rounded-full transition-all"><Copy size={14} /></button>
                </div>
                 <div>
-                  <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">ExpÃ©diteur</p>
+                  <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Expéditeur</p>
                   <h3 className="text-lg font-black text-[#1D1B20] tracking-tight truncate">{transaction.clientName || 'Inconnu'}</h3>
                   <div className="flex flex-col mt-1">
                     {transaction.clientPhone && <a href={`tel:${transaction.clientPhone}`} className="text-[#6750A4] text-[10px] font-bold hover:underline">{transaction.clientPhone}</a>}
@@ -350,7 +353,7 @@ const TransactionDetailsPage: React.FC = () => {
                  <div className="text-[9px] font-black uppercase tracking-widest text-[#6750A4] bg-[#EADDFF] px-2 py-0.5 rounded-md">{transaction.currency}</div>
                </div>
                <div>
-                 <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Montant EnvoyÃ©</p>
+                 <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Montant Envoyé</p>
                  <h3 className="text-2xl font-black text-[#1D1B20] tracking-tighter">{transaction.amount.toLocaleString()} <span className="text-sm opacity-40">{transaction.currency}</span></h3>
                </div>
             </div>
@@ -362,7 +365,7 @@ const TransactionDetailsPage: React.FC = () => {
                  <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-white px-2 py-0.5 rounded-md">{transaction.destinationCurrency}</div>
                </div>
                <div>
-                 <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net Ã  Distribuer</p>
+                 <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net à Distribuer</p>
                  <h3 className="text-2xl font-black text-[#21005D] tracking-tighter">{(transaction.receivedAmount || transaction.amount).toLocaleString()} <span className="text-sm opacity-40">{transaction.destinationCurrency}</span></h3>
                </div>
             </div>
@@ -375,8 +378,8 @@ const TransactionDetailsPage: React.FC = () => {
                  <div className="flex items-center gap-4">
                    <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Smartphone size={24} /></div>
                    <div>
-                     <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Liste des BÃ©nÃ©ficiaires</h3>
-                     <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">{transaction.bulkRecipients?.length || 0} destinataires groupÃ©s</p>
+                     <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Liste des Bénéficiaires</h3>
+                     <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">{transaction.bulkRecipients?.length || 0} destinataires groupés</p>
                    </div>
                  </div>
                </div>
@@ -386,7 +389,7 @@ const TransactionDetailsPage: React.FC = () => {
                    <thead>
                      <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] font-black uppercase tracking-[0.2em]">
                        <th className="px-8 py-5">Destinataire</th>
-                       <th className="px-8 py-5">RÃ©seau</th>
+                       <th className="px-8 py-5">Réseau</th>
                        <th className="px-8 py-5">Montant Net</th>
                        <th className="px-8 py-5">Statut</th>
                        <th className="px-8 py-5 text-right">Actions</th>
@@ -437,11 +440,11 @@ const TransactionDetailsPage: React.FC = () => {
                  <div className="flex items-center gap-4">
                    <div className="w-12 h-12 bg-[#F3EDF7] text-[#6750A4] rounded-[16px] flex items-center justify-center"><Smartphone size={24} /></div>
                    <div>
-                     <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">DÃ©tails du Destinataire</h3>
+                     <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Détails du Destinataire</h3>
                      <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Transfert unique direct</p>
                    </div>
                  </div>
-                 <button onClick={() => handleGeneratePDF()} className="m3-btn-tonal !py-2 !px-4"><Printer size={16} /> ReÃ§u PDF</button>
+                 <button onClick={() => handleGeneratePDF()} className="m3-btn-tonal !py-2 !px-4"><Printer size={16} /> Reçu PDF</button>
                </div>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -451,22 +454,34 @@ const TransactionDetailsPage: React.FC = () => {
                      <p className="text-[#1D1B20] font-black text-lg tracking-tight">{transaction.recipientName || 'N/A'}</p>
                    </div>
                    <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
-                     <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">RÃ©seau / OpÃ©rateur</p>
-                     <p className="text-[#6750A4] font-black text-lg tracking-tight uppercase">{transaction.recipientOperator || 'Inconnu'}</p>
+                     <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Réseau / Opérateur</p>
+                     <p className="text-[#6750A4] font-black text-lg tracking-tight uppercase">
+                       {transaction.recipientOperator || transaction.operator || transaction.selectedOperator || 'Inconnu'}
+                     </p>
                    </div>
                  </div>
                  <div className="space-y-4">
                    <div className="bg-[#F3EDF7] p-5 rounded-[24px] group flex justify-between items-end">
                       <div>
-                        <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">NumÃ©ro de TÃ©lÃ©phone</p>
+                        <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">
+                          {transaction.type === 'russia-africa' ? 'Numéro de Téléphone' : 'Coordonnées (Compte/Carte)'}
+                        </p>
                         <p className="text-[#1D1B20] font-black text-lg tracking-tight">
-                           {transaction.recipientPhone ? <a href={`tel:${transaction.recipientPhone}`} className="text-[#6750A4] hover:underline">{transaction.recipientPhone}</a> : 'N/A'}
+                           {transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount ? (
+                             <span className="text-[#6750A4]">
+                               {transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount}
+                             </span>
+                           ) : 'N/A'}
                         </p>
                       </div>
-                     <button onClick={() => { navigator.clipboard.writeText(transaction.recipientPhone || ''); toast.success('CopiÃ©'); }} className="p-2 bg-white text-[#6750A4] rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"><Copy size={16} /></button>
+                     <button onClick={() => { 
+                       const value = transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '';
+                       navigator.clipboard.writeText(value); 
+                       toast.success('Copié'); 
+                     }} className="p-2 bg-white text-[#6750A4] rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"><Copy size={16} /></button>
                    </div>
                    <div className="bg-[#EADDFF] p-5 rounded-[24px]">
-                     <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net Ã  Percevoir</p>
+                     <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net à Percevoir</p>
                      <p className="text-[#21005D] font-black text-xl tracking-tighter">{(transaction.receivedAmount || transaction.amount).toLocaleString()} {transaction.destinationCurrency}</p>
                    </div>
                  </div>
@@ -479,7 +494,7 @@ const TransactionDetailsPage: React.FC = () => {
              <div className="flex justify-between items-center mb-8">
                <h3 className="text-xl font-black text-[#1D1B20] tracking-tight flex items-center gap-3">
                  <div className="w-10 h-10 bg-[#F3EDF7] text-[#6750A4] rounded-[12px] flex items-center justify-center"><FileText size={20} /></div>
-                 Preuve de RÃ¨glement
+                 Preuve de Règlement
                </h3>
              </div>
              
@@ -521,13 +536,13 @@ const TransactionDetailsPage: React.FC = () => {
              
              <div className="space-y-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 block">Motif de rejet prÃ©dÃ©fini</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 block">Motif de rejet prédéfini</label>
                   <div className="relative">
                     <select 
                       value={selectedReason}
                       onChange={(e) => {
                         setSelectedReason(e.target.value);
-                        if (e.target.value !== "Autre (prÃ©cisez ci-dessous)") {
+                        if (e.target.value !== "Autre (précisez ci-dessous)") {
                           setAdminNote(e.target.value);
                         }
                       }}
@@ -545,9 +560,9 @@ const TransactionDetailsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 block">DÃ©tails ou Note libre (visible client)</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2 block">Détails ou Note libre (visible client)</label>
                   <textarea 
-                   placeholder="Ex: PrÃ©cisez le motif du rejet ou ajoutez un message de validation..."
+                   placeholder="Ex: Précisez le motif du rejet ou ajoutez un message de validation..."
                    value={adminNote}
                    onChange={(e) => setAdminNote(e.target.value)}
                    className="w-full bg-white/10 border border-white/20 rounded-[20px] p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-4 focus:ring-white/10 transition-all h-24"
@@ -588,10 +603,10 @@ const TransactionDetailsPage: React.FC = () => {
                    </div>
                    <div className="flex flex-col">
                      <p className="text-sm font-black text-[#1D1B20] tracking-tight">
-                       {entry.status === 'pending' ? 'Vous avez initiÃ© le transfert' :
+                       {entry.status === 'pending' ? 'Vous avez initié le transfert' :
                         entry.status === 'proof_received' ? 'Paiement en cours' :
-                        entry.status === 'completed' ? 'Paiement effectuÃ©' :
-                        entry.status === 'failed' ? 'Transfert Ã©chouÃ©' : entry.status.replace('_', ' ')}
+                        entry.status === 'completed' ? 'Paiement effectué' :
+                        entry.status === 'failed' ? 'Transfert échoué' : entry.status.replace('_', ' ')}
                      </p>
                      <p className="text-[11px] font-bold text-[#49454F] mt-0.5 opacity-60">
                         {entry.timestamp.toDate().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -616,7 +631,7 @@ const TransactionDetailsPage: React.FC = () => {
               <div className="flex-1">
                 <h4 className="text-sm font-black text-[#1D1B20] tracking-tight">Preuve de paiement</h4>
                 <p className="text-[11px] font-bold text-[#49454F] mt-1 opacity-60 leading-relaxed">
-                  TÃ©lÃ©chargez la capture d'Ã©cran soumise par le client pour cette transaction.
+                  Téléchargez la capture d'écran soumise par le client pour cette transaction.
                 </p>
 
                 {transaction.proofUrl ? (
@@ -638,7 +653,7 @@ const TransactionDetailsPage: React.FC = () => {
                     rel="noopener noreferrer"
                     className="mt-6 w-full py-4 bg-white border border-[#E7E0EB] rounded-[20px] flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#6750A4] hover:bg-[#6750A4] hover:text-white transition-all shadow-md group"
                   >
-                    <Printer size={18} className="group-hover:scale-110 transition-transform" /> TÃ©lÃ©charger la preuve
+                    <Printer size={18} className="group-hover:scale-110 transition-transform" /> Télécharger la preuve
                   </a>
                 ) : (
                   <div className="mt-6 w-full py-4 bg-[#F9F9F9] border border-dashed border-[#E7E0EB] rounded-[20px] flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-[#49454F]/40">

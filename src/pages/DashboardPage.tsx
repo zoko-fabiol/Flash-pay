@@ -12,7 +12,8 @@ import {
   Globe,
   CreditCard,
   Smartphone,
-  History
+  History,
+  Zap
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 

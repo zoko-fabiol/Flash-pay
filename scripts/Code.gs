@@ -4,40 +4,55 @@
  */
 
 function doPost(e) {
-  var result = {
-    "status": "error",
-    "message": "Requête invalide"
-  };
-  
+  var result = { status: "error", message: "Requête invalide" };
   try {
-    // Lecture des données envoyées par l'application
     var data = JSON.parse(e.postData.contents);
-    var recipient = data.recipient;
-    var subject = data.subject;
-    var htmlBody = data.htmlBody;
-    
-    // Vérification des champs obligatoires
-    if (!recipient || !subject || !htmlBody) {
-      throw new Error("Champs obligatoires manquants (recipient, subject, htmlBody)");
+    var recipients = data.recipients || [];
+    var title = data.title || "";
+    var body = data.body || "";
+
+    if (!recipients.length || !title || !body) {
+      throw new Error("Champs obligatoires manquants (recipients[], title, body)");
     }
 
-    // Envoi de l'email via le service Gmail de Google
-    MailApp.sendEmail({
-      to: recipient,
-      subject: subject,
-      htmlBody: htmlBody,
-      name: "Flash Pay" // Nom de l'expéditeur qui apparaîtra dans la boîte aux lettres
-    });
+    var subject = title;
+    // Allow overriding logo URL via payload, otherwise default to hosting public asset
+    var logoUrl = data.logoUrl || 'https://flash-pay-937d7.web.app/logo.png';
+    // Build a simple HTML template with logo + content
+    var htmlBody = '<div style="font-family: Arial, Helvetica, sans-serif; color: #111; line-height:1.4;">' +
+      '<div style="padding:16px; text-align:left;">' +
+      '<img src="' + logoUrl + '" alt="Flash Pay" style="width:140px; height:auto; display:block; margin-bottom:12px;" />' +
+      '<div style="padding:8px 0;">' + body + '</div>' +
+      '<hr style="border:none; border-top:1px solid #eee; margin-top:18px;" />' +
+      '<div style="font-size:12px; color:#666; margin-top:8px;">Vous recevez cet email de la part de Flash Pay.</div>' +
+      '</div></div>';
+
+    // Envoi par lot — garder un petit délai pour éviter les limites
+    var sent = 0;
+    for (var i = 0; i < recipients.length; i++) {
+      try {
+        MailApp.sendEmail({
+          to: recipients[i],
+          subject: subject,
+          htmlBody: htmlBody,
+          name: "Flash Pay"
+        });
+        sent++;
+      } catch (err) {
+        // Log et continuer
+        Logger.log('Failed to send to: ' + recipients[i] + ' - ' + err);
+      }
+      // small delay to be polite (optional)
+      Utilities.sleep(200);
+    }
 
     result.status = "success";
-    result.message = "Email envoyé avec succès à " + recipient;
-    
+    result.message = "Emails envoyés: " + sent + " / " + recipients.length;
   } catch (error) {
     result.status = "error";
     result.message = error.toString();
   }
 
-  // Retour de la réponse au format JSON pour l'application React
   return ContentService.createTextOutput(JSON.stringify(result))
     .setMimeType(ContentService.MimeType.JSON);
 }

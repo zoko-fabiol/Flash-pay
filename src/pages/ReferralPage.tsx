@@ -84,93 +84,81 @@ export const ReferralPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="max-w-xl mx-auto space-y-6 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-        {/* Hero Section - Premium Expressive */}
-        <div className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[#6750A4] via-[#6236CC] to-[#4d259f] p-6 sm:p-8 text-white shadow-2xl shadow-[#6236CC]/20">
-          <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-[80px] animate-pulse"></div>
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-[#7C4DFF]/20 blur-[60px]"></div>
+        {/* Hero Section - Premium Glass Card */}
+        <section className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 text-white shadow-xl">
+          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-[60px] animate-pulse"></div>
           
-          <div className="relative z-10 space-y-6">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl">
-              <Share2 size={28} className="text-white drop-shadow-md" />
+          <div className="relative z-10 space-y-4">
+            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 shadow-xl">
+              <Gift size={24} className="text-white" />
             </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-black tracking-tighter sm:text-3xl">{t('referral_title')}</h1>
-              <p className="text-white/70 text-sm font-bold leading-relaxed max-w-[80%]">
-                Gagnez <span className="text-white">{formatNumber(referralBonusRUB, 'RUB')}</span> pour chaque ami parrainé qui valide son compte.
+            <div className="space-y-1.5">
+              <h1 className="text-2xl font-bold tracking-tight">{t('referral_title')}</h1>
+              <p className="text-white/70 text-sm font-medium leading-relaxed max-w-xs">
+                {t('referral_desc_bonus') || `Gagnez ${formatNumber(referralBonusRUB, 'RUB')} par ami parrainé.`}
               </p>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Stats Grid - Premium Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map(({ icon: Icon, label, value, color, bg }) => (
-            <div key={label} className={`rounded-[32px] ${bg} border border-slate-100 p-4 sm:p-6 flex flex-col gap-3 shadow-lg shadow-slate-900/5 hover:scale-[1.02] transition-all group`}>
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl bg-white/50 backdrop-blur-sm shadow-sm group-hover:scale-110 transition-transform`}>
-                   <Icon size={18} className={color} />
+            <div key={label} className="premium-card p-4 flex flex-col gap-3 group">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors`}>
+                   <Icon size={14} />
                 </div>
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{label}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
               </div>
-              <p className={`text-2xl font-black tracking-tighter ${color}`}>{value}</p>
+              <p className={`text-lg font-bold tracking-tight text-slate-900`}>{value}</p>
             </div>
           ))}
         </div>
 
         {/* Referral Code + Link Card */}
-        <div className="rounded-[40px] bg-white border border-[#eadfff] shadow-xl shadow-slate-900/5 overflow-hidden">
-          <div className="px-6 sm:px-8 pt-8 pb-4 border-b border-slate-50 flex items-center justify-between">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">{t('referral_code')}</h2>
-            <Sparkles className="text-[#6236CC] opacity-30" size={20} />
+        <div className="premium-card overflow-hidden">
+          <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('referral_code')}</h2>
+            <Sparkles className="text-primary/30" size={16} />
           </div>
 
-          {/* Code display - Modern Glass/Gradient */}
-          <div className="px-4 sm:px-8 py-8 border-b border-slate-50 bg-[#F3EDF7]/30 backdrop-blur-xl">
+          <div className="px-4 py-6 border-b border-slate-50 bg-slate-50/50">
             <div 
               onClick={handleCopyCode}
-              className="bg-white border-2 border-[#6236CC]/10 rounded-[32px] p-4 sm:p-6 text-center cursor-pointer hover:shadow-2xl hover:shadow-[#6236CC]/10 active:scale-[0.98] transition-all group/code relative overflow-hidden"
+              className="bg-white border border-slate-100 rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all group/code relative overflow-hidden"
             >
-              <div className="absolute top-4 right-4 opacity-0 group-hover/code:opacity-100 transition-opacity">
-                <Copy size={16} className="text-[#6236CC]/40" />
-              </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] mb-4">{t('votre_code_unique') || 'VOTRE CODE UNIQUE'}</p>
-              <p className="text-3xl font-black text-[#6236CC] tracking-normal sm:tracking-[0.2em] sm:text-5xl break-all">{referralCode || '...'}</p>
-              <p className="mt-4 text-[10px] font-black text-[#6236CC] uppercase tracking-[0.2em] opacity-0 group-hover/code:opacity-100 transition-all translate-y-2 group-hover/code:translate-y-0">Cliquer pour copier</p>
-              
-              {/* Animated Background Highlight */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#6236CC]/5 to-transparent opacity-0 group-hover/code:opacity-100 transition-opacity" />
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">{t('votre_code_unique') || 'CODE UNIQUE'}</p>
+              <p className="text-3xl font-bold text-primary tracking-tight break-all">{referralCode || '...'}</p>
             </div>
           </div>
 
-          {/* Link copy section */}
-          <div className="px-6 sm:px-8 py-6 flex flex-col gap-4">
+          <div className="p-5 space-y-3">
             <div 
               onClick={handleCopy}
-              className={`flex items-center justify-between gap-4 bg-[#F8F9FC] rounded-[24px] p-5 border border-slate-100 shadow-inner cursor-pointer hover:bg-[#F3EDF7]/50 transition-all group ${!referralCode && 'opacity-50 pointer-events-none'}`}
+              className={`flex items-center justify-between gap-3 bg-slate-50 rounded-xl p-3.5 border border-slate-100 cursor-pointer hover:bg-slate-100/50 transition-all group ${!referralCode && 'opacity-50 pointer-events-none'}`}
             >
               <div className="flex-1 min-w-0">
-                <p className={`text-xs sm:text-sm font-bold px-2 truncate transition-colors ${copied ? 'text-emerald-500' : 'text-slate-400 group-hover:text-[#6236CC]'}`}>{referralLink}</p>
+                <p className={`text-xs font-bold px-1 truncate transition-colors ${copied ? 'text-emerald-500' : 'text-slate-400 group-hover:text-primary'}`}>{referralLink}</p>
               </div>
-              <div className={`transition-all ${copied ? 'text-emerald-500 scale-110' : 'text-slate-300 group-hover:text-[#6236CC]'}`}>
-                <Copy size={20} className={copied ? 'animate-bounce' : ''} />
-              </div>
+              <Copy size={16} className={copied ? 'text-emerald-500 animate-bounce' : 'text-slate-300 group-hover:text-primary'} />
             </div>
             <button
               onClick={handleShare}
               disabled={!referralCode}
-              className="w-full flex items-center justify-center gap-3 py-5 rounded-[24px] border-2 border-[#6236CC]/10 text-[#6236CC] font-black uppercase text-xs tracking-widest hover:bg-[#F3EDF7] transition active:scale-95"
+              className="btn-primary w-full py-4 text-xs uppercase tracking-widest font-bold"
             >
-              <Share2 size={18} /> {t('share')}
+              <Share2 size={16} /> {t('share')}
             </button>
           </div>
         </div>
 
-        {/* How it works - Refined steps */}
-        <div className="rounded-[40px] bg-white border border-[#eadfff] shadow-xl shadow-slate-900/5 overflow-hidden">
-          <div className="px-6 sm:px-8 pt-8 pb-4 border-b border-slate-50">
-            <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">{t('how_it_works')}</h2>
+        {/* How it works */}
+        <div className="premium-card overflow-hidden">
+          <div className="px-5 pt-5 pb-3 border-b border-slate-50">
+            <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('how_it_works')}</h2>
           </div>
           <div className="divide-y divide-slate-50">
             {[
@@ -178,35 +166,33 @@ export const ReferralPage: React.FC = () => {
               { num: 2, title: t('step2_title'), desc: t('step2_desc'), icon: Users },
               { num: 3, title: t('step3_title'), desc: t('step3_desc'), icon: Gift },
             ].map(({ num, title, desc, icon: StepIcon }) => (
-              <div key={num} className="flex gap-4 sm:gap-6 px-6 sm:px-8 py-6 items-start group hover:bg-[#F3EDF7]/20 transition-colors">
-                <div className="w-12 h-12 rounded-2xl bg-[#F3EDF7] flex items-center justify-center text-[#6236CC] font-black text-lg shrink-0 shadow-sm group-hover:scale-110 transition-transform">
-                  <StepIcon size={22} />
+              <div key={num} className="flex gap-4 px-5 py-4 items-start group hover:bg-slate-50/50 transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors shrink-0 shadow-sm">
+                  <StepIcon size={18} />
                 </div>
-                <div className="space-y-1">
-                  <p className="font-black text-slate-900 text-lg tracking-tight">{title}</p>
-                  <p className="text-sm text-slate-500 font-medium leading-relaxed opacity-80">{desc}</p>
+                <div className="space-y-0.5">
+                  <p className="font-bold text-slate-900 text-sm leading-tight">{title}</p>
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed opacity-80">{desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Referred users list - Minimal Premium */}
+        {/* Referred users list */}
         {referredUsers.length > 0 && (
-          <div className="rounded-[40px] bg-white border border-[#eadfff] shadow-xl shadow-slate-900/5 overflow-hidden">
-            <div className="px-6 sm:px-8 pt-8 pb-4 border-b border-slate-50">
-              <h2 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">{t('referred_users')}</h2>
+          <div className="premium-card overflow-hidden">
+            <div className="px-5 pt-5 pb-3 border-b border-slate-50">
+              <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('referred_users')}</h2>
             </div>
             <div className="divide-y divide-slate-50">
               {referredUsers.map((userId, idx) => (
-                <div key={userId} className="flex items-center justify-between px-6 sm:px-8 py-6 hover:bg-slate-50/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 font-black text-xs border border-slate-100">{idx + 1}</div>
-                    <span className="text-slate-900 font-black text-sm tracking-tight">{t('user')} {idx + 1}</span>
+                <div key={userId} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-[10px] border border-slate-100">{idx + 1}</div>
+                    <span className="text-slate-900 font-bold text-xs tracking-tight">{t('user')} {idx + 1}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                     <span className="text-xs font-black text-emerald-500 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">+{formatNumber(referralBonusRUB, 'RUB')}</span>
-                  </div>
+                  <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">+{formatNumber(referralBonusRUB, 'RUB')}</span>
                 </div>
               ))}
             </div>

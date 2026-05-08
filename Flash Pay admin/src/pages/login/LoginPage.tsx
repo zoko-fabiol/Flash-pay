@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../lib/firebase';
 import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from 'firebase/firestore';
-import { Lock, Mail, Loader2, ArrowRight, ShieldCheck, CreditCard } from 'lucide-react';
+import { LockProIcon, MessagesProIcon, LoaderProIcon, ArrowRightProIcon, ShieldProIcon, CreditCardProIcon } from '../../components/ui/ProIcons';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -74,7 +74,7 @@ const LoginPage: React.FC = () => {
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-12 animate-in fade-in slide-in-from-top-10 duration-1000">
           <div className="w-20 h-20 bg-[#6750A4] rounded-[28px] flex items-center justify-center shadow-2xl shadow-[#6750A4]/30 mb-6 group hover:scale-110 transition-transform">
-            <CreditCard className="text-white" size={32} />
+            <CreditCardProIcon className="text-white" size={32} />
           </div>
           <h1 className="text-4xl font-black text-[#1D1B20] tracking-tighter">FLASH PAY</h1>
           <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.4em] mt-3 opacity-60">Admin Security Console</p>
@@ -96,7 +96,7 @@ const LoginPage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Email professionnel</label>
               <div className="relative group">
-                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6750A4] transition-colors" size={20} />
+                <MessagesProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6750A4] transition-colors" size={20} />
                 <input
                   type="email"
                   value={email}
@@ -111,7 +111,7 @@ const LoginPage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Mot de passe</label>
               <div className="relative group">
-                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6750A4] transition-colors" size={20} />
+                <LockProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6750A4] transition-colors" size={20} />
                 <input
                   type="password"
                   value={password}
@@ -130,10 +130,10 @@ const LoginPage: React.FC = () => {
                 className="w-full bg-[#6750A4] hover:bg-[#21005D] text-white font-black py-5 rounded-full shadow-2xl shadow-[#6750A4]/40 flex items-center justify-center gap-3 transition-all transform active:scale-95 disabled:opacity-50 text-[11px] uppercase tracking-widest"
               >
                 {loading ? (
-                  <Loader2 className="animate-spin" size={20} />
+                  <LoaderProIcon className="animate-spin" size={20} />
                 ) : (
                   <>
-                    Accéder au portail <ArrowRight size={18} />
+                    Accéder au portail <ArrowRightProIcon size={18} />
                   </>
                 )}
               </button>
@@ -141,7 +141,7 @@ const LoginPage: React.FC = () => {
           </form>
 
           <div className="mt-10 flex items-center justify-center gap-2 opacity-30">
-             <ShieldCheck size={14} />
+             <ShieldProIcon size={14} />
              <span className="text-[9px] font-black uppercase tracking-widest">End-to-End Encryption Active</span>
           </div>
         </div>

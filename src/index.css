@@ -1,22 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-:root {
+@theme {
   /* Vibrant Fintech Palette */
   --color-primary: #6236CC;
   --color-primary-dark: #4A25A3;
   --color-primary-light: #8B66E5;
   
   --color-accent: #00D1FF; /* Cyan accent for contrast */
+  --color-flash: #c084fc;
+  --color-brand: #6236CC;
+  --color-ink: #1f2937;
   
   --color-background: #F8F9FF;
   --color-surface: #FFFFFF;
   
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  
   --shadow-premium: 0 10px 40px -10px rgba(98, 54, 204, 0.12);
   --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+  --font-sans: "Outfit", sans-serif;
+}
+
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
 }
 
 * {
@@ -88,6 +95,10 @@ body {
 
 /* Buttons */
 .btn-primary {
-  @apply bg-primary text-white px-6 py-3 rounded-2xl font-semibold shadow-lg hover:shadow-primary/30 active:scale-95 transition-all;
+  @apply bg-primary text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:translate-y-[-2px] active:scale-95 transition-all flex items-center justify-center gap-2;
+}
+
+.input-field {
+  @apply w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold text-slate-900 transition-all;
 }
 

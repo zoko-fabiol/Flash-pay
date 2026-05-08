@@ -20,6 +20,7 @@ import WebhooksPage from './pages/webhooks/WebhooksPage';
 import UsersListPage from './pages/users/UsersListPage';
 import AccessControlPage from './pages/settings/AccessControlPage';
 import { canAccessAdminSection } from './lib/adminAccess';
+import MessagesToUsers from './pages/messages/MessagesToUsers';
 
 import { Loading } from './components/ui/Loading';
 
@@ -94,6 +95,7 @@ function App() {
             <Route path="settings/access-control" element={<SectionRoute section="settings"><AccessControlPage /></SectionRoute>} />
             <Route path="problems" element={<SectionRoute section="problems"><ProblemsPage /></SectionRoute>} />
             <Route path="notifications" element={<SectionRoute section="notifications"><NotificationsPage /></SectionRoute>} />
+            <Route path="messages" element={<SectionRoute section="notifications"><MessagesToUsers /></SectionRoute>} />
             <Route path="analytics" element={<SectionRoute section="analytics"><AnalyticsPage /></SectionRoute>} />
             <Route path="security/2fa" element={<SectionRoute section="security"><TwoFactorSettingsPage /></SectionRoute>} />
             <Route path="webhooks" element={<SectionRoute section="webhooks"><WebhooksPage /></SectionRoute>} />

@@ -67,6 +67,9 @@ export interface Transaction {
   recipientName?: string;
   recipientPhone?: string;
   recipientOperator?: string;
+  selectedOperator?: string;
+  recipientAccount?: string;
+  beneficiaryAccount?: string;
   narration?: string;
   route?: string;
   country?: string;

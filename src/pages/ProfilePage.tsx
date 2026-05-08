@@ -17,6 +17,7 @@ export const ProfilePage: React.FC = () => {
   const [success, setSuccess] = useState('');
   const [editing, setEditing] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -47,6 +48,10 @@ export const ProfilePage: React.FC = () => {
   };
 
   const handleUpdatePassword = async () => {
+    if (!currentPassword) {
+      setApiError('Veuillez entrer votre mot de passe actuel');
+      return;
+    }
     if (newPassword !== confirmPassword) {
       setApiError(t('passwords_dont_match'));
       return;
@@ -55,12 +60,18 @@ export const ProfilePage: React.FC = () => {
       setApiError(t('password_too_short'));
       return;
     }
+    if (currentPassword === newPassword) {
+      setApiError('Le nouveau mot de passe doit être différent du mot de passe actuel');
+      return;
+    }
 
     setLoading(true);
+    setApiError('');
     try {
-      await authService.updatePassword(newPassword);
+      await authService.updatePasswordWithReauth(currentPassword, newPassword);
       setSuccess(t('password_updated_success'));
       setShowPasswordForm(false);
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err: any) {
@@ -252,6 +263,16 @@ export const ProfilePage: React.FC = () => {
           {showPasswordForm ? (
             <div className="p-6 space-y-4 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mot de passe actuel</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
+                  placeholder="Entrez votre mot de passe actuel"
+                />
+              </div>
+              <div className="space-y-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nouveau mot de passe</label>
                 <input
                   type="password"
@@ -273,7 +294,7 @@ export const ProfilePage: React.FC = () => {
               </div>
               <button
                 onClick={handleUpdatePassword}
-                disabled={loading || !newPassword || newPassword !== confirmPassword}
+                disabled={loading || !currentPassword || !newPassword || newPassword !== confirmPassword}
                 className="w-full py-4 rounded-2xl bg-[#6236CC] text-white font-bold text-sm shadow-lg shadow-[#6236CC]/20 hover:bg-[#4A1FA0] transition disabled:opacity-50"
               >
                 {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}

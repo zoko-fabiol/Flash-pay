@@ -29,47 +29,47 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#f3eeff] via-[#ede7ff] to-[#f8f5ff] px-4">
-      <div className="w-full max-w-sm">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-mesh px-4">
+      <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white shadow-[0_8px_32px_rgba(98,54,204,0.15)] mb-4 overflow-hidden border border-[#eadfff]">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] glass-effect shadow-premium mb-6 overflow-hidden border border-white/50">
             <img src="/logo.png" alt="Flash Pay Logo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Flash Pay</h1>
-          <p className="text-slate-500 mt-1 font-medium">{t('welcome_back')}</p>
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Flash Pay</h1>
+          <p className="text-slate-500 mt-2 font-medium">{t('welcome_back')}</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-[28px] shadow-[0_20px_60px_rgba(98,54,204,0.12)] p-8 border border-[#eadfff]">
+        <div className="premium-card p-10 bg-white/80 backdrop-blur-xl border-white/50">
           {error && <Error message={error} onDismiss={() => setError('')} />}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">{t('email')}</label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('email')}</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="votre@email.com"
-                  className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6236CC]/30 focus:border-[#6236CC] font-medium text-slate-900 transition"
+                  className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-slate-900 transition-all bg-white/50"
                   required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">{t('password')}</label>
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('password')}</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-3.5 border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#6236CC]/30 focus:border-[#6236CC] font-medium text-slate-900 transition"
+                  className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-slate-900 transition-all bg-white/50"
                   required
                 />
               </div>
@@ -78,23 +78,23 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] text-white font-black py-4 rounded-2xl shadow-[0_8px_24px_rgba(98,54,204,0.35)] hover:shadow-[0_12px_32px_rgba(98,54,204,0.45)] transition-all disabled:opacity-50 active:scale-95"
+              className="btn-primary w-full py-4 text-lg shadow-primary/30"
             >
               {loading ? t('connecting') : t('login')}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-[10px] text-slate-400 leading-relaxed px-4">
-              <button onClick={() => navigate('/terms')} type="button" className="hover:text-[#6236CC] hover:underline transition">Conditions d'Utilisation</button>
+          <div className="mt-8 text-center">
+            <p className="text-[10px] text-slate-400 leading-relaxed font-medium uppercase tracking-widest">
+              <button onClick={() => navigate('/terms')} type="button" className="hover:text-primary transition">Conditions d'Utilisation</button>
               {' • '}
-              <button onClick={() => navigate('/privacy-policy')} type="button" className="hover:text-[#6236CC] hover:underline transition">Politique de Confidentialité</button>
+              <button onClick={() => navigate('/privacy-policy')} type="button" className="hover:text-primary transition">Politique de Confidentialité</button>
             </p>
           </div>
 
-          <div className="text-center mt-6 text-sm text-slate-500">
+          <div className="text-center mt-8 pt-8 border-t border-slate-50 text-sm text-slate-500 font-medium">
             {t('no_account')}{' '}
-            <button onClick={() => navigate('/signup')} className="text-[#6236CC] font-black hover:underline">
+            <button onClick={() => navigate('/signup')} className="text-primary font-bold hover:underline underline-offset-4">
               {t('signup')}
             </button>
           </div>
@@ -103,3 +103,4 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+
