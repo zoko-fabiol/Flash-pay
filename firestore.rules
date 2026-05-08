@@ -1,0 +1,99 @@
+/**
+ * Firestore Security Rules for Push Notifications
+ * 
+ * Location: Firebase Console > Firestore > Rules
+ * Deploy with: firebase deploy --only firestore:rules
+ * 
+ * Apply these rules to your Firestore database
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ─── Helper Functions ───────────────────────────────────────────────
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role in ['super', 'admin'];
+    }
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['title', 'body', 'type', 'status', 'createdAt']) &&
+             data.type in ['push', 'email', 'sms', 'in_app'] &&
+             data.status in ['pending', 'sent', 'delivered', 'failed'] &&
+             data.title is string && data.title.size() > 0 &&
+             data.body is string && data.body.size() > 0;
+    }
+
+    // ─── Notifications Collection ───────────────────────────────────────
+    match /notifications/{userId}/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isUser(userId);
+      
+      // Admin can create notifications for any user
+      allow create: if isAdmin() && isValidNotification(request.resource.data);
+      
+      // Users can update their own notifications (mark as read, delete)
+      allow update: if isUser(userId) && 
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read', 'deletedAt']));
+      
+      // Admin can delete any notification
+      allow delete: if isAdmin();
+    }
+
+    // ─── FCM Tokens Collection ──────────────────────────────────────────
+    match /fcm_tokens/{userId}/{tokenId} {
+      // Users can read/write their own FCM tokens
+      allow read, write: if isUser(userId) &&
+                            (request.resource.data.keys().hasAll(['token', 'platform', 'createdAt']) ||
+                             resource.exists());
+      
+      // Admin can read all tokens (for debugging)
+      allow read: if isAdmin();
+    }
+
+    // ─── Notification Queue (Admin only) ────────────────────────────────
+    match /notification_queue/{queueId} {
+      // Users cannot directly access queue
+      allow read: if isAdmin();
+      
+      // Cloud Functions manage the queue
+      allow write: if isAdmin();
+    }
+
+    // ─── Notification Analytics (Admin only) ────────────────────────────
+    match /notification_analytics/{analyticsId} {
+      // Users cannot read analytics
+      allow read: if isAdmin();
+      
+      // Only Cloud Functions can write analytics
+      allow write: if false; // Handled by Cloud Functions triggers
+    }
+
+    // ─── Notification Templates (Admin only) ────────────────────────────
+    match /notification_templates/{templateId} {
+      // Admins can read and manage templates
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ─── Notification Preferences (User) ────────────────────────────────
+    match /users/{userId} {
+      // Users can update their notification preferences
+      allow update: if isUser(userId) && 
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notificationPreferences']);
+    }
+
+    // ─── Default Deny ──────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
