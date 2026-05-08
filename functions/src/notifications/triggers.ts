@@ -21,9 +21,7 @@ export const onTransactionUpdated = functions.firestore.document('transactions/{
   await db.collection('notification_queue').add({
     userId,
     payload: notif,
-    channels: ['fcm', 'email'],
-    email: after.userEmail || null,
-    phone: after.userPhone || null,
+    channels: ['fcm'],
     status: 'pending',
     scheduledFor: Date.now(),
     attempts: 0,
@@ -40,7 +38,7 @@ export const onKycStatusChanged = functions.firestore.document('kyc/{kycId}').on
   const userId = after.userId;
   const notif = buildNotificationForKyc({ id: ctx.params.kycId, status: after.status });
   await db.collection('notifications').doc(userId).collection('items').doc().set({ ...notif, createdAt: Date.now(), read: false });
-  await db.collection('notification_queue').add({ userId, payload: notif, channels: ['fcm', 'email'], email: after.userEmail || null, status: 'pending', scheduledFor: Date.now(), attempts: 0 });
+  await db.collection('notification_queue').add({ userId, payload: notif, channels: ['fcm'], status: 'pending', scheduledFor: Date.now(), attempts: 0 });
   return null;
 });
 
@@ -50,6 +48,6 @@ export const onReferralReward = functions.firestore.document('referrals/{refId}'
   const userId = data.userId;
   const notif = buildNotificationForReferral({ id: ctx.params.refId, amount: data.amount });
   await db.collection('notifications').doc(userId).collection('items').doc().set({ ...notif, createdAt: Date.now(), read: false });
-  await db.collection('notification_queue').add({ userId, payload: notif, channels: ['fcm', 'email', 'sms'], email: data.email || null, phone: data.phone || null, status: 'pending', scheduledFor: Date.now(), attempts: 0 });
+  await db.collection('notification_queue').add({ userId, payload: notif, channels: ['fcm'], status: 'pending', scheduledFor: Date.now(), attempts: 0 });
   return null;
 });

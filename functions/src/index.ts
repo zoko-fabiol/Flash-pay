@@ -1,7 +1,7 @@
 import './notifications/triggers';
-import { processNotificationQueue } from './notifications/queueProcessor';
+import { onNotificationQueueCreated } from './notifications/queueProcessor';
 
-// Export scheduled processor so firebase-tools picks it up
-export { processNotificationQueue };
+// Export queue trigger so firebase-tools picks it up
+export { onNotificationQueueCreated };
 
 // Note: triggers are registered by importing triggers file above.
