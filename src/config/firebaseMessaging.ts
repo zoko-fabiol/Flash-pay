@@ -4,10 +4,9 @@
  */
 
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { app } from '../services/firebase';
 
-// Get Firebase app instance
-const app = getApps().length > 0 ? getApp() : initializeApp({})
+// Reuse app configured in src/services/firebase.ts
 
 let messaging: ReturnType<typeof getMessaging> | null = null;
 

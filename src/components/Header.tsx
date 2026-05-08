@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, Zap } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
+import { NotificationBell } from './notifications/NotificationBell';
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         <div className="hidden sm:block">
           <LanguageSwitcher />
         </div>
+        <NotificationBell />
         <button
           onClick={handleLogout}
           className="text-xs font-bold px-4 py-2 rounded-full border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 transition hidden sm:block"

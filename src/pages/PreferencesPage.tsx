@@ -6,6 +6,7 @@ import { Bell, Mail, Save, Loader, CheckCircle2 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
+import { useNotifications } from '../context/NotificationContext';
 
 interface UserPreferences {
   language: string;
@@ -17,6 +18,7 @@ interface UserPreferences {
 export const PreferencesPage: React.FC = () => {
   const { user } = useAuth();
   const { t, language: currentLang, setLanguage } = useLanguage();
+  const { enablePushNotifications } = useNotifications();
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: currentLang || 'fr',
@@ -51,6 +53,11 @@ export const PreferencesPage: React.FC = () => {
     try {
       const userRef = doc(db, 'users', user.id);
       await setDoc(userRef, { preferences: { ...preferences, updatedAt: new Date() } }, { merge: true });
+
+      if (preferences.pushNotifications) {
+        await enablePushNotifications();
+      }
+
       setLanguage(preferences.language as any);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);

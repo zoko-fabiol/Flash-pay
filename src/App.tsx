@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 import { TransferWizardProvider } from './context/TransferWizardContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { useEffect } from 'react';
 
 // Pages
@@ -159,11 +160,13 @@ function App() {
       <Toaster position="top-center" />
       <LanguageProvider>
         <AuthProvider>
-          <AppProvider>
-            <TransferWizardProvider>
-              <AppRoutes />
-            </TransferWizardProvider>
-          </AppProvider>
+          <NotificationProvider>
+            <AppProvider>
+              <TransferWizardProvider>
+                <AppRoutes />
+              </TransferWizardProvider>
+            </AppProvider>
+          </NotificationProvider>
         </AuthProvider>
       </LanguageProvider>
     </Router>
