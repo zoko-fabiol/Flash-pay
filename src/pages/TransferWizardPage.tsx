@@ -1095,8 +1095,14 @@ export const TransferWizardPage: React.FC = () => {
                           </button>
                         </div>
                         <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[#6750A4] shrink-0">
-                            {bank.type === 'phone' ? <Smartphone size={24} /> : <CreditCard size={24} />}
+                          <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-[#6750A4] shrink-0 overflow-hidden">
+                            {bank.logo ? (
+                              <img src={bank.logo} alt={bank.name} className="w-full h-full object-contain p-1.5" />
+                            ) : bank.type === 'phone' ? (
+                              <Smartphone size={24} />
+                            ) : (
+                              <CreditCard size={24} />
+                            )}
                           </div>
                           <div className="flex-1">
                             <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider mb-1">Coordonnées de dépôt</p>
@@ -1278,35 +1284,61 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 3: // Compte bénéficiaire en Russie
+      
+      case 3: // Nom du destinataire
+        const isNameValidAfRu = (transferData.recipientName?.length || 0) > 2;
+        return (
+          <Layout>
+            <div className="max-w-xl mx-auto py-12 px-4">
+              <StepWrapper title="Bénéficiaire" description="Nom complet de la personne en Russie" onBack={previousStep} onNext={nextStep} isValid={isNameValidAfRu}>
+                <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_14px_40px_rgba(15,23,42,0.04)] p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
+                      <User size={20} />
+                    </div>
+                    <span className="font-semibold text-slate-900">Nom du bénéficiaire</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={transferData.recipientName || ''}
+                    onChange={e => updateTransferData({ recipientName: e.target.value })}
+                    placeholder="Exemple: Ivan Ivanov"
+                    className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand outline-none text-slate-900 font-bold"
+                    autoFocus
+                  />
+                  <p className="text-xs text-slate-400 mt-3 font-medium">Le nom du titulaire du compte Russe</p>
+                </div>
+              </StepWrapper>
+            </div>
+          </Layout>
+        );
+      
+      case 4: // Compte bénéficiaire en Russie
         const cleanBeneficiaryAccount = (transferData.beneficiaryAccount || '').replace(/\D/g, '');
-        const isAccountValid = cleanBeneficiaryAccount.length >= 10;
+        const isAccountValidAfRu = cleanBeneficiaryAccount.length >= 10;
         
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
-              <StepWrapper title="Veuillez saisir les informations du destinataire" onBack={previousStep} onNext={nextStep} isValid={isAccountValid}>
-                <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_14px_40px_rgba(15,23,42,0.04)] p-4 sm:p-6 mb-6">
-                  
-                  {/* Account Block */}
-                  <div className="mb-6">
-                    <div className="flex items-center gap-3 mb-3">
+              <StepWrapper title="Compte Bénéficiaire" description="Numéro de compte ou téléphone SBP" onBack={previousStep} onNext={nextStep} isValid={isAccountValidAfRu}>
+                <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_14px_40px_rgba(15,23,42,0.04)] p-6 space-y-6">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
-                        <User size={20} />
+                        <CreditCard size={20} />
                       </div>
-                      <span className="font-semibold text-slate-900">Bénéficiaire en Russie</span>
+                      <span className="font-semibold text-slate-900">Compte ou Téléphone SBP</span>
                     </div>
-                    <p className="text-xs text-slate-400 mb-3 font-medium">Entrez le numéro de compte ou le téléphone SBP</p>
                     <input
                       type="text"
                       value={transferData.beneficiaryAccount || ''}
                       onChange={e => updateTransferData({ beneficiaryAccount: e.target.value })}
-                      placeholder="+7 XXX XXX XXXX"
+                      placeholder="+7 900 XXX XXXX ou numéro de compte"
                       className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand outline-none text-slate-900 font-bold"
+                      autoFocus
                     />
+                    <p className="text-xs text-slate-400 mt-3 font-medium">Numéro SBP ou compte bancaire</p>
                   </div>
-
-                  <hr className="border-slate-100 my-6" />
 
                   <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
                      <ShieldCheck className="text-emerald-500" size={20} />
@@ -1365,7 +1397,8 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 4: { // Montant & Bilan
+      
+      case 5: { // Montant & Bilan
         const sourceCurrency = transferData.currency || 'XAF';
         // Get the RUB to XAF rate first
         const rubToXafRateObj = rates.find(r => 
@@ -1498,7 +1531,7 @@ export const TransferWizardPage: React.FC = () => {
           </Layout>
         );
       }
-      case 5: // Choix opérateur dépôt
+      case 6: // Choix opérateur dépôt
         const sourceCountry = countries.find(c => c.code === transferData.originCountry);
         return (
           <Layout>
@@ -1511,7 +1544,16 @@ export const TransferWizardPage: React.FC = () => {
                       onClick={() => updateTransferData({ selectedOperator: op.name })}
                       className={`p-6 rounded-3xl border-2 transition-all flex items-center justify-between ${transferData.selectedOperator === op.name ? 'border-brand bg-brand/5' : 'border-slate-100 hover:border-slate-300'}`}
                     >
-                      <span className="font-bold text-slate-900">{op.name}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-white border border-slate-100 overflow-hidden flex items-center justify-center shrink-0">
+                          {op.logo ? (
+                            <img src={op.logo} alt={op.name} className="w-full h-full object-contain p-1.5" />
+                          ) : (
+                            <span className="text-brand font-black text-sm">{op.name?.charAt(0)?.toUpperCase()}</span>
+                          )}
+                        </div>
+                        <span className="font-bold text-slate-900">{op.name}</span>
+                      </div>
                       {transferData.selectedOperator === op.name && <CheckCircle2 className="text-brand" />}
                     </button>
                   ))}
@@ -1520,9 +1562,9 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 6: // Dépôt Info + Proof (Integrated)
-        const countryData = countries.find(c => c.code === transferData.originCountry);
-        const depAccount = countryData?.operators?.find((a: any) => a.name === transferData.selectedOperator);
+      case 7: // Dépôt Info + Proof (Integrated)
+        const countryDataAfRu = countries.find(c => c.code === transferData.originCountry);
+        const depAccountAfRu = countryDataAfRu?.operators?.find((a: any) => a.name === transferData.selectedOperator);
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
@@ -1553,23 +1595,33 @@ export const TransferWizardPage: React.FC = () => {
 
                 {/* Account Details Card */}
                 <div className="bg-white rounded-[24px] p-6 border border-slate-100 shadow-sm mb-8 relative overflow-hidden">
-                   <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand font-black">
-                         {transferData.selectedOperator?.charAt(0)}
+                   <div className="flex items-center gap-4 mb-6">
+                     <div className="w-12 h-12 rounded-full bg-brand/10 flex items-center justify-center text-brand font-black overflow-hidden border border-brand/10">
+                       {depAccountAfRu?.logo ? (
+                        <img src={depAccountAfRu.logo} alt={transferData.selectedOperator || 'Opérateur'} className="w-full h-full object-contain p-1.5" />
+                       ) : (
+                        transferData.selectedOperator?.charAt(0)
+                       )}
                       </div>
                       <div>
                          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Compte de dépôt</p>
-                         <p className="text-lg font-black text-slate-900">{depAccount?.number || depAccount?.depositNumber || 'Numéro non configuré'}</p>
+                         <p className="text-lg font-black text-slate-900">{depAccountAfRu?.depositNumber || depAccountAfRu?.number || 'Numéro non configuré'}</p>
                       </div>
                    </div>
+
+                   {/* Account Holder Name */}
+                   <div className="pb-4 mb-4 border-b border-slate-50">
+                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Titulaire du compte</p>
+                     <p className="text-sm font-bold text-slate-900">{depAccountAfRu?.depositHolder || depAccountAfRu?.holder || 'FLASH PAY'}</p>
+                   </div>
                    
-                   <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                   <div className="flex items-center justify-between pt-2">
                       <div>
                          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Opérateur</p>
                          <p className="text-sm font-bold text-slate-900">{transferData.selectedOperator}</p>
                       </div>
                       <button 
-                        onClick={() => { navigator.clipboard.writeText(depAccount?.number || depAccount?.depositNumber || ''); toast.success('Copié !'); }}
+                        onClick={() => { navigator.clipboard.writeText(depAccountAfRu?.depositNumber || depAccountAfRu?.number || ''); toast.success('Copié !'); }}
                         className="px-4 py-2 rounded-xl bg-brand/5 text-brand font-bold text-xs"
                       >
                          Copier
@@ -1617,7 +1669,7 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 7: { // Success (Paiement initié)
+      case 8: { // Success (Paiement initié)
         const successBaseAmount = transferData.isBulk 
           ? (transferData.bulkRecipients?.reduce((acc: number, r: any) => acc + r.amount, 0) || 0)
           : (transferData.amount || 0);

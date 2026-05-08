@@ -18,6 +18,8 @@ import AnalyticsPage from './pages/analytics/AnalyticsPage';
 import TwoFactorSettingsPage from './pages/security/TwoFactorSettingsPage';
 import WebhooksPage from './pages/webhooks/WebhooksPage';
 import UsersListPage from './pages/users/UsersListPage';
+import AccessControlPage from './pages/settings/AccessControlPage';
+import { canAccessAdminSection } from './lib/adminAccess';
 
 import { Loading } from './components/ui/Loading';
 
@@ -30,6 +32,24 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
   if (!user || !isAdmin) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const SectionRoute: React.FC<{ section?: Parameters<typeof canAccessAdminSection>[1]; children: React.ReactNode }> = ({ section, children }) => {
+  const { user, isAdmin, profile, loading } = useAuth();
+
+  if (loading) {
+    return <Loading fullScreen />;
+  }
+
+  if (!user || !isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
+
+  if (section && !canAccessAdminSection(profile, section)) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -62,20 +82,21 @@ function App() {
             </ProtectedRoute>
           }>
             <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="queue" element={<TransactionQueuePage />} />
-            <Route path="queue/:transactionId" element={<TransactionDetailsPage />} />
-            <Route path="kyc" element={<KYCValidationPage />} />
-            <Route path="users" element={<UsersListPage />} />
-            <Route path="countries" element={<CountriesListPage />} />
-            <Route path="partners" element={<PartnersPage />} />
-            <Route path="settings/exchange-rates" element={<ExchangeRatesPage />} />
-            <Route path="settings/commissions" element={<CommissionsPage />} />
-            <Route path="problems" element={<ProblemsPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="security/2fa" element={<TwoFactorSettingsPage />} />
-            <Route path="webhooks" element={<WebhooksPage />} />
+            <Route path="dashboard" element={<SectionRoute section="dashboard"><DashboardPage /></SectionRoute>} />
+            <Route path="queue" element={<SectionRoute section="queue"><TransactionQueuePage /></SectionRoute>} />
+            <Route path="queue/:transactionId" element={<SectionRoute section="queue"><TransactionDetailsPage /></SectionRoute>} />
+            <Route path="kyc" element={<SectionRoute section="kyc"><KYCValidationPage /></SectionRoute>} />
+            <Route path="users" element={<SectionRoute section="users"><UsersListPage /></SectionRoute>} />
+            <Route path="countries" element={<SectionRoute section="countries"><CountriesListPage /></SectionRoute>} />
+            <Route path="partners" element={<SectionRoute section="countries"><PartnersPage /></SectionRoute>} />
+            <Route path="settings/exchange-rates" element={<SectionRoute section="settings"><ExchangeRatesPage /></SectionRoute>} />
+            <Route path="settings/commissions" element={<SectionRoute section="settings"><CommissionsPage /></SectionRoute>} />
+            <Route path="settings/access-control" element={<SectionRoute section="settings"><AccessControlPage /></SectionRoute>} />
+            <Route path="problems" element={<SectionRoute section="problems"><ProblemsPage /></SectionRoute>} />
+            <Route path="notifications" element={<SectionRoute section="notifications"><NotificationsPage /></SectionRoute>} />
+            <Route path="analytics" element={<SectionRoute section="analytics"><AnalyticsPage /></SectionRoute>} />
+            <Route path="security/2fa" element={<SectionRoute section="security"><TwoFactorSettingsPage /></SectionRoute>} />
+            <Route path="webhooks" element={<SectionRoute section="webhooks"><WebhooksPage /></SectionRoute>} />
           </Route>
 
           {/* Fallback */}

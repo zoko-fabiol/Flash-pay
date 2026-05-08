@@ -35,7 +35,7 @@ const asDate = (value: any): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const StatCard = ({ title, value, change, icon: Icon, trend, color = "indigo" }: any) => {
+const StatCard = ({ title, value, change, icon: Icon, trend }: any) => {
   return (
     <div className="m3-card-elevated group relative overflow-hidden">
       <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
@@ -81,18 +81,18 @@ const DashboardPage: React.FC = () => {
 
     const unsubToday = onSnapshot(qToday, (snapshot) => {
       const txs = snapshot.docs.map(doc => doc.data() as Transaction);
-      let volumeEur = 0;
+      let volumeXaf = 0;
       let volumeRub = 0;
       
       txs.forEach(tx => {
-        if (tx.currency === 'EUR' || tx.currency === 'XAF') volumeEur += tx.amount; // Simple aggregate
+        if (tx.currency === 'XAF') volumeXaf += tx.amount;
         if (tx.currency === 'RUB') volumeRub += tx.amount;
       });
       
       setStats(prev => ({
         ...prev,
         todayTransactions: txs.length,
-        totalVolumeEur: volumeEur,
+        totalVolumeEur: volumeXaf,
         totalVolumeRub: volumeRub
       }));
     });
@@ -200,7 +200,7 @@ const DashboardPage: React.FC = () => {
           change="12"
         />
         <StatCard 
-          title="Volume EUR/XAF" 
+          title="Volume XAF" 
           value={`${stats.totalVolumeEur.toLocaleString()}`} 
           icon={DollarSign} 
           trend="up"

@@ -311,25 +311,38 @@ export const userService = {
         });
       };
 
+      const fileToDataUrl = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
       // Convert to Base64 directly
       if (files.idProof) {
-        const compressed = await compressImage(files.idProof);
-        urls.idProof = await blobToBase64(compressed);
+        urls.idProof = files.idProof.type.startsWith('image/')
+          ? await blobToBase64(await compressImage(files.idProof))
+          : await fileToDataUrl(files.idProof);
       }
 
       if (files.selfie) {
-        const compressed = await compressImage(files.selfie);
-        urls.selfie = await blobToBase64(compressed);
+        urls.selfie = files.selfie.type.startsWith('image/')
+          ? await blobToBase64(await compressImage(files.selfie))
+          : await fileToDataUrl(files.selfie);
       }
 
       if (files.addressProof) {
-        const compressed = await compressImage(files.addressProof);
-        urls.addressProof = await blobToBase64(compressed);
+        urls.addressProof = files.addressProof.type.startsWith('image/')
+          ? await blobToBase64(await compressImage(files.addressProof))
+          : await fileToDataUrl(files.addressProof);
       }
 
       if (files.localProof) {
-        const compressed = await compressImage(files.localProof);
-        urls.localProof = await blobToBase64(compressed);
+        urls.localProof = files.localProof.type.startsWith('image/')
+          ? await blobToBase64(await compressImage(files.localProof))
+          : await fileToDataUrl(files.localProof);
       }
 
       // Create KYC request document

@@ -162,9 +162,32 @@ export interface UserProfile {
   email: string;
   emailVerified: boolean;
   isAdmin: boolean;
+  adminRole?: 'super' | 'restricted' | 'email-only';
+  adminPermissions?: AdminPermissions;
   kycStatus: KYCStatus;
   statut_kyc?: 'Standard' | 'Pending' | 'Expert' | 'Rejected';
   kyc?: KYCState;
+}
+
+export type AdminSectionKey =
+  | 'dashboard'
+  | 'queue'
+  | 'users'
+  | 'kyc'
+  | 'countries'
+  | 'settings'
+  | 'problems'
+  | 'notifications'
+  | 'analytics'
+  | 'security'
+  | 'webhooks';
+
+export type AdminActionKey = 'add' | 'edit' | 'delete';
+
+export interface AdminPermissions {
+  sections?: Partial<Record<AdminSectionKey, boolean>>;
+  actions?: Partial<Record<AdminActionKey, boolean>>;
+  receiveOrderEmails?: boolean;
 }
 
 export interface RussianBank {

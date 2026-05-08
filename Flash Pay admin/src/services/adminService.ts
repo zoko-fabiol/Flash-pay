@@ -391,6 +391,23 @@ export const adminService = {
     });
   },
 
+  updateCustomRate: async (id: string, rate: number) => {
+    const rateRef = doc(db, 'custom_rates', id);
+    await updateDoc(rateRef, {
+      rate,
+      updatedAt: Timestamp.now(),
+      updatedBy: auth.currentUser?.uid
+    });
+
+    // Log action
+    await addDoc(collection(db, 'admin_logs'), {
+      adminId: auth.currentUser?.uid,
+      action: 'UPDATE_CUSTOM_RATE',
+      details: { id, rate },
+      timestamp: Timestamp.now()
+    });
+  },
+
   deleteCustomRate: async (id: string) => {
     const rateRef = doc(db, 'custom_rates', id);
     await deleteDoc(rateRef);

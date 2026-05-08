@@ -8,6 +8,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { pickImageNative, isNativeApp } from '../utils/capacitorUtils';
 
+const isPdfFile = (file: File | null) => file?.type === 'application/pdf' || file?.name.toLowerCase().endsWith('.pdf') || false;
+
 const getKycStatus = (user: any) => {
   const blockedUntil = user?.kyc?.nextEligibilityDate?.toMillis?.();
   if (user?.kyc?.status === 'blocked' || (blockedUntil && blockedUntil > Date.now())) {
@@ -91,11 +93,11 @@ export const KYCPage: React.FC = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setFile: (f: File | null) => void) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && (file.type.startsWith('image/') || file.type === 'application/pdf')) {
       setFile(file);
       setError('');
     } else if (file) {
-      setError(t('error_image_only'));
+      setError('Veuillez sélectionner une image ou un PDF');
     }
   };
 
@@ -334,16 +336,30 @@ interface FileUploadProps {
 const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange }) => {
   const { t } = useLanguage();
   const inputId = label.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const previewUrl = React.useMemo(() => (file ? URL.createObjectURL(file) : ''), [file]);
+
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
 
   return (
     <div className="space-y-4">
       <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{label}</p>
       <label htmlFor={inputId} className={`relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${file ? 'border-emerald-500 bg-emerald-50/30' : 'border-[#eadfff] bg-[#F8F9FC] hover:border-[#6236CC]/50 hover:bg-[#F3EDF7]/20'}`}>
         {file ? (
-          <div className="flex flex-col items-center p-4">
-            <CheckCircle className="text-emerald-500 mb-3" size={32} />
+          <div className="w-full h-full p-4 flex flex-col items-center justify-center gap-3">
+            {isPdfFile(file) ? (
+              <div className="w-full h-full rounded-[24px] overflow-hidden bg-white border border-slate-200">
+                <iframe src={previewUrl} title={label} className="w-full h-40" />
+              </div>
+            ) : (
+              <img src={previewUrl} alt={label} className="max-h-32 rounded-2xl object-contain shadow-sm" />
+            )}
+            <CheckCircle className="text-emerald-500" size={28} />
             <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">{t('file_selected')}</p>
-            <p className="text-[10px] text-emerald-600 mt-1 opacity-60 truncate max-w-[150px]">{file.name}</p>
+            <p className="text-[10px] text-emerald-600 opacity-60 truncate max-w-[150px]">{file.name}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center p-4">
@@ -351,7 +367,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ label, file, onChange }) => {
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('choose_file')}</p>
           </div>
         )}
-        <input id={inputId} type="file" className="hidden" accept="image/*" onChange={onChange} />
+        <input id={inputId} type="file" className="hidden" accept="image/*,application/pdf" onChange={onChange} />
       </label>
     </div>
   );

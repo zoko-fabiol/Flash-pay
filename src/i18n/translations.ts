@@ -3,7 +3,7 @@ export const translations: Record<string, Record<string, string>> = {
     "dashboard": "Tableau de bord",
     "welcome": "Bienvenue",
     "user": "Utilisateur",
-    "transfer_funds": "Transférez vos fonds instantanément avec Flash Pay.",
+    "transfer_funds": "Le moyen le plus rapide d'envoyer de l'argent.",
     "start_transfer": "Démarrer un transfert",
     "new_transfer": "Nouveau Transfert",
     "earn_referral": "Gagnez {amount} en parrainant vos amis.",

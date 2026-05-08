@@ -6,6 +6,7 @@ import { db } from '../../lib/firebase';
 import type { Transaction, BulkRecipient } from '../../types';
 import { adminService } from '../../services/adminService';
 import jsPDF from 'jspdf';
+import { ImageViewer } from '../../components/ui/ImageViewer';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -19,7 +20,8 @@ import {
   Activity,
   AlertCircle,
   FileText,
-  Check
+  Check,
+  ZoomIn
 } from 'lucide-react';
 
 
@@ -30,6 +32,8 @@ const TransactionDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [adminNote, setAdminNote] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerSrc, setViewerSrc] = useState('');
   useEffect(() => {
     if (!transactionId) return;
 
@@ -453,20 +457,29 @@ const TransactionDetailsPage: React.FC = () => {
              </div>
              
              {transaction.proofUrl ? (
-               <div className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner">
-                 <img src={transaction.proofUrl} alt="Preuve" className="w-full object-contain max-h-[600px] transition-transform duration-700 group-hover:scale-[1.02]" />
-                 <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <a href={transaction.proofUrl} target="_blank" rel="noreferrer" className="p-5 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
-                      <ExternalLink size={28} />
-                    </a>
-                 </div>
-               </div>
-             ) : (
-               <div className="p-20 text-center bg-[#F3EDF7] rounded-[32px] border-2 border-dashed border-[#E7E0EB]">
-                 <AlertCircle size={48} className="mx-auto text-[#6750A4]/20 mb-4" />
-                 <p className="text-[#49454F] font-black uppercase text-[10px] tracking-widest">Aucune preuve soumise pour le moment</p>
-               </div>
-             )}
+                <div 
+                  className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner cursor-zoom-in"
+                  onClick={() => { setViewerSrc(transaction.proofUrl!); setViewerOpen(true); }}
+                >
+                  <img 
+                    src={transaction.proofUrl} 
+                    alt="Preuve de paiement" 
+                    className="w-full object-contain max-h-[500px] transition-transform duration-700 group-hover:scale-[1.02]" 
+                  />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-[#1D1B20]/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-3">
+                    <div className="p-5 bg-white/90 backdrop-blur-sm rounded-full shadow-2xl text-[#6750A4]">
+                      <ZoomIn size={32} />
+                    </div>
+                    <p className="text-white font-black text-xs uppercase tracking-widest drop-shadow-md">Cliquer pour zoomer</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-20 text-center bg-[#F3EDF7] rounded-[32px] border-2 border-dashed border-[#E7E0EB]">
+                  <AlertCircle size={48} className="mx-auto text-[#6750A4]/20 mb-4" />
+                  <p className="text-[#49454F] font-black uppercase text-[10px] tracking-widest">Aucune preuve soumise pour le moment</p>
+                </div>
+              )}
           </div>
         </div>
 
@@ -564,6 +577,14 @@ const TransactionDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Viewer Lightbox */}
+      <ImageViewer
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        src={viewerSrc}
+        alt="Preuve de paiement"
+      />
     </div>
   );
 };

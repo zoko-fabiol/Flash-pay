@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp, deleteField } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import type { UserProfile } from '../../types';
+import { buildPresetPermissions } from '../../lib/adminAccess';
 import { 
   Users, 
   Search, 
@@ -13,7 +15,8 @@ import {
   Award,
   TrendingUp,
   Copy,
-  User as UserIcon
+  User as UserIcon,
+  UserCog
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -22,6 +25,8 @@ const UsersListPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
+  const [updatingAdminId, setUpdatingAdminId] = useState('');
+  const [adminRoleDraft, setAdminRoleDraft] = useState<UserProfile['adminRole']>('restricted');
 
   useEffect(() => {
     const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -35,6 +40,69 @@ const UsersListPage: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  const openUserDetails = (user: any) => {
+    setSelectedUser(user);
+    setAdminRoleDraft(user.adminRole || 'restricted');
+  };
+
+  const toggleAdminPrivilege = async (user: any, nextRole?: UserProfile['adminRole']) => {
+    if (!user?.id) return;
+
+    const enabling = !user.isAdmin;
+    const roleToApply = nextRole || adminRoleDraft || 'restricted';
+    const toastId = toast.loading(enabling ? 'Attribution des privilèges admin...' : 'Retrait des privilèges admin...');
+    setUpdatingAdminId(user.id);
+
+    try {
+      if (enabling) {
+        await updateDoc(doc(db, 'users', user.id), {
+          isAdmin: true,
+          adminRole: roleToApply,
+          adminPermissions: buildPresetPermissions(roleToApply),
+          updatedAt: Timestamp.now(),
+        });
+
+        setSelectedUser((current: any) =>
+          current?.id === user.id
+            ? {
+                ...current,
+                isAdmin: true,
+                adminRole: roleToApply,
+                adminPermissions: buildPresetPermissions(roleToApply),
+              }
+            : current
+        );
+
+        toast.success('Privilèges admin accordés', { id: toastId });
+      } else {
+        await updateDoc(doc(db, 'users', user.id), {
+          isAdmin: false,
+          adminRole: deleteField(),
+          adminPermissions: deleteField(),
+          updatedAt: Timestamp.now(),
+        });
+
+        setSelectedUser((current: any) =>
+          current?.id === user.id
+            ? {
+                ...current,
+                isAdmin: false,
+                adminRole: undefined,
+                adminPermissions: undefined,
+              }
+            : current
+        );
+
+        toast.success('Privilèges admin retirés', { id: toastId });
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la mise à jour des privilèges', { id: toastId });
+    } finally {
+      setUpdatingAdminId('');
+    }
+  };
 
   const filteredUsers = users.filter(user => {
     const term = searchTerm.toLowerCase();
@@ -105,7 +173,7 @@ const UsersListPage: React.FC = () => {
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer" onClick={() => setSelectedUser(user)}>
+                  <tr key={user.id} className="hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer" onClick={() => openUserDetails(user)}>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-[14px] bg-[#EADDFF] text-[#21005D] flex items-center justify-center font-black text-xs border border-[#6750A4]/10 shadow-sm group-hover:scale-110 transition-transform">
@@ -114,6 +182,11 @@ const UsersListPage: React.FC = () => {
                         <div className="flex flex-col">
                           <span className="text-[#1D1B20] font-black tracking-tight">{user.nom || 'Client Anonyme'}</span>
                           <span className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mt-0.5">ID: {user.id.substring(0, 8).toUpperCase()}</span>
+                          {user.isAdmin && (
+                            <span className="text-[9px] font-black uppercase tracking-widest mt-1 text-[#0B6E4F]">
+                              Admin {user.adminRole ? `(${user.adminRole})` : ''}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -157,12 +230,21 @@ const UsersListPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
-                      <button 
-                        onClick={() => setSelectedUser(user)}
-                        className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
-                      >
-                        <Eye size={18} />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => toggleAdminPrivilege(user, user.adminRole || 'restricted')}
+                          disabled={updatingAdminId === user.id}
+                          className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${user.isAdmin ? 'bg-[#F9DEDC] text-[#B3261E] border-[#F2B8B5]' : 'bg-[#E8DEF8] text-[#21005D] border-[#D0BCFF]'} disabled:opacity-50`}
+                        >
+                          {updatingAdminId === user.id ? '...' : user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
+                        </button>
+                        <button 
+                          onClick={() => openUserDetails(user)}
+                          className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -274,6 +356,46 @@ const UsersListPage: React.FC = () => {
                           <p className="text-[#21005D] font-mono font-black text-xl tracking-[0.2em]">{selectedUser.referralCode || 'NÉANT'}</p>
                        </div>
                        <button onClick={() => { navigator.clipboard.writeText(selectedUser.referralCode || ''); toast.success('Code Copié'); }} className="p-3 bg-white text-[#6750A4] rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-all"><Copy size={18} /></button>
+                    </div>
+                 </div>
+
+                 <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
+                    <h4 className="text-[10px] font-black text-[#6750A4] uppercase tracking-[0.2em] flex items-center gap-2">
+                      <UserCog size={16} /> Privilèges Admin
+                    </h4>
+
+                    <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] space-y-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F]">Statut actuel</p>
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${selectedUser.isAdmin ? 'bg-[#E8DEF8] text-[#21005D]' : 'bg-white text-[#49454F] border border-[#E7E0EB]'}`}>
+                          {selectedUser.isAdmin ? `Admin ${selectedUser.adminRole ? `(${selectedUser.adminRole})` : ''}` : 'Utilisateur standard'}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F]">Rôle admin à appliquer</label>
+                        <select
+                          value={adminRoleDraft || 'restricted'}
+                          onChange={(e) => setAdminRoleDraft(e.target.value as UserProfile['adminRole'])}
+                          className="w-full bg-white border border-[#CAC4D0] rounded-[16px] px-4 py-3 text-xs font-bold text-[#1D1B20] outline-none"
+                        >
+                          <option value="super">Administrateur complet</option>
+                          <option value="restricted">Accès restreint</option>
+                          <option value="email-only">Notifications seulement</option>
+                        </select>
+                      </div>
+
+                      <button
+                        onClick={() => toggleAdminPrivilege(selectedUser, adminRoleDraft || 'restricted')}
+                        disabled={updatingAdminId === selectedUser.id}
+                        className={`w-full py-3.5 rounded-[18px] font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50 ${selectedUser.isAdmin ? 'bg-[#B3261E] text-white' : 'bg-[#6750A4] text-white'}`}
+                      >
+                        {updatingAdminId === selectedUser.id
+                          ? 'Mise à jour...'
+                          : selectedUser.isAdmin
+                            ? 'Retirer les privilèges admin'
+                            : 'Accorder les privilèges admin'}
+                      </button>
                     </div>
                  </div>
               </div>

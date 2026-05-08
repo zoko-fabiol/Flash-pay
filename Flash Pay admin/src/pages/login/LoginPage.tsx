@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from 'firebase/firestore';
 import { Lock, Mail, Loader2, ArrowRight, ShieldCheck, CreditCard } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
@@ -20,15 +20,42 @@ const LoginPage: React.FC = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      const normalizedEmail = (user.email || email).toLowerCase();
 
-      // Verify if admin
+      // Primary check: canonical document by uid.
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists() && userDoc.data()?.isAdmin) {
         navigate('/admin/dashboard');
-      } else {
-        await auth.signOut();
-        setError('Accès refusé. Privilèges insuffisants.');
+        return;
       }
+
+      // Fallback for legacy records created by email instead of uid.
+      const byEmailQuery = query(
+        collection(db, 'users'),
+        where('email', '==', normalizedEmail),
+        limit(1)
+      );
+      const byEmailSnapshot = await getDocs(byEmailQuery);
+      const byEmailData = byEmailSnapshot.empty ? null : byEmailSnapshot.docs[0].data();
+
+      if (byEmailData?.isAdmin) {
+        await setDoc(
+          doc(db, 'users', user.uid),
+          {
+            email: normalizedEmail,
+            isAdmin: true,
+            adminRole: byEmailData.adminRole || 'restricted',
+            adminPermissions: byEmailData.adminPermissions,
+            updatedAt: byEmailData.updatedAt || byEmailData.createdAt,
+          },
+          { merge: true }
+        );
+        navigate('/admin/dashboard');
+        return;
+      }
+
+      await auth.signOut();
+      setError('Accès refusé. Privilèges insuffisants.');
     } catch (err: any) {
       console.error(err);
       setError('Identifiants invalides ou erreur système.');

@@ -370,7 +370,7 @@ const CountriesListPage: React.FC = () => {
                         <h4 className="text-sm font-black text-[#1D1B20] uppercase tracking-widest flex items-center gap-2">
                           <Smartphone size={16} className="text-[#6750A4]" /> Gestion des Opérateurs
                         </h4>
-                        <button type="button" onClick={() => setTempOperators([...tempOperators, { name: '', prefixes: [], logo: '', id: Date.now().toString() }])} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">
+                        <button type="button" onClick={() => setTempOperators([...tempOperators, { name: '', prefixes: [], depositNumber: '', depositHolder: '', logo: '', id: Date.now().toString() }])} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">
                           <Plus size={14} /> Ajouter un réseau
                         </button>
                       </div>
@@ -383,6 +383,8 @@ const CountriesListPage: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                <input value={op.name} onChange={e => { const n = [...tempOperators]; n[i].name = e.target.value; setTempOperators(n); }} placeholder="Nom (ex: MTN Money)" className="bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-bold" />
                                <input value={op.prefixes?.join(', ')} onChange={e => { const n = [...tempOperators]; n[i].prefixes = e.target.value.split(',').map(p => p.trim()); setTempOperators(n); }} placeholder="Préfixes (ex: 655, 677)" className="bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-mono" />
+                               <input value={op.depositNumber || ''} onChange={e => { const n = [...tempOperators]; n[i].depositNumber = e.target.value; setTempOperators(n); }} placeholder="Numéro de dépôt (ex: 694116078)" className="col-span-full bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-bold" />
+                               <input value={op.depositHolder || ''} onChange={e => { const n = [...tempOperators]; n[i].depositHolder = e.target.value; setTempOperators(n); }} placeholder="Titulaire du compte (ex: FLASH PAY)" className="col-span-full bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-bold" />
                                <div className="col-span-full flex items-center gap-4 bg-white/50 p-3 rounded-2xl border border-dashed border-[#E7E0EB]">
                                   <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-[#E7E0EB]">
                                     {op.logo ? <img src={op.logo} className="w-full h-full object-contain p-1" /> : <Upload size={14} className="text-[#6750A4]/30" />}

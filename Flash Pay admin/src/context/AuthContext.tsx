@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, query, where } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
 import type { UserProfile } from '../types';
 
@@ -25,13 +25,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        // Fetch custom claims or profile from Firestore
+        // Primary profile source: canonical users/{uid}.
         const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
           const data = userDoc.data() as UserProfile;
           setProfile({ ...data, uid: firebaseUser.uid });
         } else {
-          setProfile(null);
+          // Fallback for legacy admin records keyed by email.
+          const normalizedEmail = (firebaseUser.email || '').toLowerCase();
+          if (!normalizedEmail) {
+            setProfile(null);
+          } else {
+            const byEmailQuery = query(
+              collection(db, 'users'),
+              where('email', '==', normalizedEmail),
+              limit(1)
+            );
+            const byEmailSnapshot = await getDocs(byEmailQuery);
+
+            if (!byEmailSnapshot.empty) {
+              const data = byEmailSnapshot.docs[0].data() as UserProfile;
+              setProfile({ ...data, uid: firebaseUser.uid });
+            } else {
+              setProfile(null);
+            }
+          }
         }
       } else {
         setProfile(null);

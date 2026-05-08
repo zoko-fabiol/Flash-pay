@@ -1,15 +1,25 @@
 /**
- * Converts a File to a compressed base64 DataURL.
- * Images are stored directly in Firestore — no Firebase Storage needed.
- * Target size: < 200KB after compression.
+ * Converts a File to a base64 DataURL.
+ * Images are compressed, while non-image files such as PDFs are preserved as-is.
  */
 export const fileToBase64 = (file: File, maxWidth = 800, quality = 0.65): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.readAsDataURL(file);
+
     reader.onload = (event) => {
+      const result = event.target?.result;
+      if (typeof result !== 'string') {
+        reject(new Error('Unable to read file'));
+        return;
+      }
+
+      if (!file.type.startsWith('image/')) {
+        resolve(result);
+        return;
+      }
+
       const img = new Image();
-      img.src = event.target?.result as string;
+      img.src = result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
         let width = img.width;
@@ -33,6 +43,8 @@ export const fileToBase64 = (file: File, maxWidth = 800, quality = 0.65): Promis
       };
       img.onerror = reject;
     };
+
     reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 };

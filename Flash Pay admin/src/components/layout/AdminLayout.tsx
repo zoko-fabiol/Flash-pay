@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  History, 
-  Users, 
-  ShieldCheck, 
+import {
+  LayoutDashboard,
+  History,
+  Users,
+  ShieldCheck,
   Settings,
   LogOut,
   Globe,
@@ -14,26 +14,30 @@ import {
   CreditCard,
   AlertTriangle,
   Search,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { canAccessAdminSection, mergeAdminPermissions } from '../../lib/adminAccess';
+import type { AdminSectionKey } from '../../types';
 import toast from 'react-hot-toast';
 
 const AdminLayout: React.FC = () => {
-  const { logout, user: currentUser } = useAuth();
+  const { logout, user: currentUser, profile } = useAuth();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const permissions = mergeAdminPermissions(profile?.adminPermissions);
 
-  const menuItems = [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard', desc: 'Vue d\'ensemble' },
-    { path: '/admin/queue', icon: History, label: 'Transactions', desc: 'Flux financier' },
-    { path: '/admin/users', icon: Users, label: 'Clients', desc: 'Base de données' },
-    { path: '/admin/kyc', icon: ShieldCheck, label: 'Validation KYC', desc: 'Vérification' },
-    { path: '/admin/countries', icon: Globe, label: 'Gestion Réseau', desc: 'Pays & Opérateurs' },
-    { path: '/admin/settings/commissions', icon: Settings, label: 'Frais & Comms', desc: 'Tarification' },
-    { path: '/admin/settings/exchange-rates', icon: TrendingUp, label: 'Taux & Limites', desc: 'Configuration' },
-    { path: '/admin/problems', icon: AlertTriangle, label: 'Incidents', desc: 'Support' },
-  ];
+  const menuItems: Array<{ path: string; icon: React.ComponentType<any>; label: string; desc: string; section: AdminSectionKey }> = [
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard', desc: 'Vue d\'ensemble', section: 'dashboard' as AdminSectionKey },
+    { path: '/admin/queue', icon: History, label: 'Transactions', desc: 'Flux financier', section: 'queue' as AdminSectionKey },
+    { path: '/admin/users', icon: Users, label: 'Clients', desc: 'Base de données', section: 'users' as AdminSectionKey },
+    { path: '/admin/kyc', icon: ShieldCheck, label: 'Validation KYC', desc: 'Vérification', section: 'kyc' as AdminSectionKey },
+    { path: '/admin/countries', icon: Globe, label: 'Gestion Réseau', desc: 'Pays & Opérateurs', section: 'countries' as AdminSectionKey },
+    { path: '/admin/settings/commissions', icon: Settings, label: 'Frais & Comms', desc: 'Tarification', section: 'settings' as AdminSectionKey },
+    { path: '/admin/settings/exchange-rates', icon: TrendingUp, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
+    { path: '/admin/settings/access-control', icon: ShieldCheck, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
+    { path: '/admin/problems', icon: AlertTriangle, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
+  ].filter((item) => canAccessAdminSection(profile, item.section));
 
   const handleLogout = async () => {
     try {
@@ -46,15 +50,16 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FEF7FF] flex flex-col lg:flex-row">
-      {/* Mobile Top Bar */}
       <div className="lg:hidden bg-white border-b border-[#E7E0EB] p-4 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#6750A4] rounded-[12px] flex items-center justify-center shadow-lg shadow-[#6750A4]/20">
             <CreditCard className="text-white" size={20} />
           </div>
-          <span className="text-xl font-black text-[#1D1B20] tracking-tighter">FLASH PAY <span className="text-[#6750A4]">AD</span></span>
+          <span className="text-xl font-black text-[#1D1B20] tracking-tighter">
+            FLASH PAY <span className="text-[#6750A4]">AD</span>
+          </span>
         </div>
-        <button 
+        <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className="p-3 bg-[#F3EDF7] text-[#1D1B20] rounded-full active:scale-90 transition-all"
         >
@@ -62,21 +67,18 @@ const AdminLayout: React.FC = () => {
         </button>
       </div>
 
-      {/* Sidebar Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="lg:hidden fixed inset-0 bg-[#1D1B20]/40 backdrop-blur-sm z-[150] transition-all"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 w-[300px] bg-white border-r border-[#E7E0EB] z-[200] transform transition-transform duration-300 ease-in-out lg:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="h-full flex flex-col p-6 overflow-y-auto">
-          {/* Logo Section */}
           <div className="hidden lg:flex items-center gap-4 mb-10 px-2">
             <div className="w-12 h-12 bg-[#6750A4] rounded-[16px] flex items-center justify-center shadow-xl shadow-[#6750A4]/20">
               <CreditCard className="text-white" size={24} />
@@ -87,7 +89,6 @@ const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Navigation */}
           <nav className="flex-1 space-y-2">
             {menuItems.map((item) => (
               <NavLink
@@ -96,13 +97,13 @@ const AdminLayout: React.FC = () => {
                 onClick={() => setIsSidebarOpen(false)}
                 className={({ isActive }) => `
                   group flex items-center gap-4 px-4 py-3.5 rounded-[20px] transition-all relative overflow-hidden
-                  ${isActive 
-                    ? 'bg-[#EADDFF] text-[#21005D]' 
+                  ${isActive
+                    ? 'bg-[#EADDFF] text-[#21005D]'
                     : 'text-[#49454F] hover:bg-[#F3EDF7] hover:text-[#1D1B20]'}
                 `}
               >
                 <div className={`p-2.5 rounded-[12px] transition-colors ${location.pathname === item.path ? 'bg-[#6750A4] text-white' : 'bg-transparent text-[#49454F] group-hover:bg-[#EADDFF]/50'}`}>
-                   <item.icon size={20} />
+                  <item.icon size={20} />
                 </div>
                 <div className="flex flex-col">
                   <span className="font-bold text-sm leading-none mb-1">{item.label}</span>
@@ -115,18 +116,19 @@ const AdminLayout: React.FC = () => {
             ))}
           </nav>
 
-          {/* Footer Sidebar */}
           <div className="mt-auto pt-8 border-t border-[#E7E0EB]">
             <div className="bg-[#F3EDF7] p-4 rounded-[24px] mb-6 flex items-center gap-3">
-               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#6750A4] font-black shadow-sm">
-                 {currentUser?.email?.charAt(0).toUpperCase()}
-               </div>
-               <div className="flex-1 min-w-0">
-                 <p className="text-xs font-black text-[#1D1B20] truncate">{currentUser?.email}</p>
-                 <p className="text-[9px] font-bold text-[#6750A4] uppercase tracking-widest">Administrateur</p>
-               </div>
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#6750A4] font-black shadow-sm">
+                {currentUser?.email?.charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-[#1D1B20] truncate">{currentUser?.email}</p>
+                <p className="text-[9px] font-bold text-[#6750A4] uppercase tracking-widest">
+                              {profile?.adminRole === 'restricted' ? 'Accès restreint' : profile?.adminRole === 'email-only' ? 'Notification seulement' : 'Administrateur complet'}
+                </p>
+              </div>
             </div>
-            <button 
+            <button
               onClick={handleLogout}
               className="w-full flex items-center gap-4 px-6 py-4 text-[#B3261E] font-black uppercase text-[10px] tracking-widest hover:bg-[#F9DEDC]/50 rounded-[20px] transition-all"
             >
@@ -136,34 +138,33 @@ const AdminLayout: React.FC = () => {
         </div>
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 h-screen overflow-y-auto">
-        {/* Header Content */}
         <header className="hidden lg:flex h-20 items-center justify-between px-10 bg-white/50 backdrop-blur-md sticky top-0 z-50 border-b border-[#E7E0EB]">
-           <div className="m3-search w-96">
-             <Search size={18} className="text-[#49454F]" />
-             <input type="text" placeholder="Rechercher une transaction, un client..." className="bg-transparent border-none outline-none text-sm font-medium w-full" />
-           </div>
-           
-           <div className="flex items-center gap-4">
-             <button className="p-3 bg-white text-[#49454F] rounded-full hover:bg-[#F3EDF7] transition-all relative shadow-sm border border-[#E7E0EB]">
-                <Bell size={20} />
-                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#B3261E] rounded-full border-2 border-white"></span>
-             </button>
-             <div className="h-8 w-px bg-[#E7E0EB]"></div>
-             <div className="flex items-center gap-3 pl-2">
-                <div className="text-right">
-                  <p className="text-xs font-black text-[#1D1B20]">Support Flash Pay</p>
-                  <p className="text-[10px] font-bold text-[#6750A4] uppercase tracking-widest">En ligne</p>
-                </div>
-                <div className="w-10 h-10 bg-[#EADDFF] rounded-[12px] flex items-center justify-center text-[#21005D]">
-                   <ShieldCheck size={20} />
-                </div>
-             </div>
-           </div>
+          <div className="m3-search w-96">
+            <Search size={18} className="text-[#49454F]" />
+            <input type="text" placeholder="Rechercher une transaction, un client..." className="bg-transparent border-none outline-none text-sm font-medium w-full" />
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button className="p-3 bg-white text-[#49454F] rounded-full hover:bg-[#F3EDF7] transition-all relative shadow-sm border border-[#E7E0EB]">
+              <Bell size={20} />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#B3261E] rounded-full border-2 border-white"></span>
+            </button>
+            <div className="h-8 w-px bg-[#E7E0EB]"></div>
+            <div className="flex items-center gap-3 pl-2">
+              <div className="text-right">
+                <p className="text-xs font-black text-[#1D1B20]">Support Flash Pay</p>
+                <p className="text-[10px] font-bold text-[#6750A4] uppercase tracking-widest">
+                  {permissions.receiveOrderEmails ? 'Notifications actives' : 'Notifications désactivées'}
+                </p>
+              </div>
+              <div className="w-10 h-10 bg-[#EADDFF] rounded-[12px] flex items-center justify-center text-[#21005D]">
+                <ShieldCheck size={20} />
+              </div>
+            </div>
+          </div>
         </header>
 
-        {/* Page Content */}
         <div className="p-4 lg:p-10 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Outlet />
         </div>

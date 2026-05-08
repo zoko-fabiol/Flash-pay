@@ -8,6 +8,7 @@ import {
 import { db } from '../../lib/firebase';
 import type { KYCRequest } from '../../types';
 import { adminService } from '../../services/adminService';
+import { ImageViewer } from '../../components/ui/ImageViewer';
 import { 
   ShieldCheck, 
   User, 
@@ -18,9 +19,16 @@ import {
   Search,
   ExternalLink,
   X,
-  FileText
+  FileText,
+  ZoomIn
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+const isPdfDocument = (url?: string) => {
+  if (!url) return false;
+  const lowerUrl = url.toLowerCase();
+  return lowerUrl.startsWith('data:application/pdf') || lowerUrl.includes('.pdf');
+};
 
 const KYCValidationPage: React.FC = () => {
   const [requests, setRequests] = useState<KYCRequest[]>([]);
@@ -30,6 +38,15 @@ const KYCValidationPage: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<KYCRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [viewerSrc, setViewerSrc] = useState('');
+  const [viewerAlt, setViewerAlt] = useState('');
+
+  const openViewer = (url: string, alt: string) => {
+    setViewerSrc(url);
+    setViewerAlt(alt);
+    setViewerOpen(true);
+  };
 
   useEffect(() => {
     const q = query(collection(db, 'kyc_requests'), orderBy('submittedAt', 'desc'));
@@ -66,8 +83,8 @@ const KYCValidationPage: React.FC = () => {
     }
   };
 
-  const handleViewImage = (url: string) => {
-    window.open(url, '_blank');
+  const handleOpenDocument = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const filteredRequests = requests.filter(req => {
@@ -213,14 +230,37 @@ const KYCValidationPage: React.FC = () => {
                       </div>
                       <div className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner">
                         {docData?.url ? (
-                          <>
-                            <img src={docData.url} alt={docType.label} className="w-full aspect-video object-contain bg-black/5" />
-                            <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                               <button onClick={() => handleViewImage(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
-                                 <ExternalLink size={24} />
-                               </button>
-                            </div>
-                          </>
+                          isPdfDocument(docData.url) ? (
+                            <>
+                              <iframe
+                                src={docData.url}
+                                title={docType.label}
+                                className="w-full aspect-video bg-white"
+                              />
+                              <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                 <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
+                                   <ExternalLink size={24} />
+                                 </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <img 
+                                src={docData.url} 
+                                alt={docType.label} 
+                                className="w-full aspect-video object-contain bg-black/5 cursor-zoom-in" 
+                              />
+                              <div 
+                                className="absolute inset-0 bg-[#1D1B20]/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-zoom-in"
+                                onClick={() => openViewer(docData.url, docType.label)}
+                              >
+                                <div className="p-4 bg-white/90 backdrop-blur-sm rounded-full shadow-2xl text-[#6750A4]">
+                                  <ZoomIn size={28} />
+                                </div>
+                                <p className="text-white font-black text-[10px] uppercase tracking-widest drop-shadow-md">Zoomer</p>
+                              </div>
+                            </>
+                          )
                         ) : (
                           <div className="aspect-video flex items-center justify-center text-[#49454F]/20 italic text-xs">Non fourni</div>
                         )}
@@ -311,6 +351,14 @@ const KYCValidationPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Image Viewer Lightbox */}
+      <ImageViewer
+        isOpen={viewerOpen}
+        onClose={() => setViewerOpen(false)}
+        src={viewerSrc}
+        alt={viewerAlt}
+      />
     </div>
   );
 };
