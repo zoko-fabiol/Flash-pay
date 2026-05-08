@@ -45,50 +45,51 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
       )}
       
       <aside className={`
-        fixed lg:static inset-y-0 left-0 w-64 bg-white border-r border-slate-200 
+        fixed lg:static inset-y-0 left-0 w-72 glass-effect border-r border-white/20
         transform transition-transform z-50 overflow-y-auto
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-4 flex justify-between items-center lg:hidden">
-          <span className="font-bold text-primary">Flash Pay</span>
-          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded">
+        <div className="p-6 flex justify-between items-center lg:hidden">
+          <span className="font-bold text-primary text-xl">Flash Pay</span>
+          <button onClick={onClose} className="p-2 hover:bg-primary/10 rounded-xl">
             <X size={20} />
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-6 space-y-2 mt-4">
           {menuItems.map(item => {
             const Icon = item.icon;
+            const active = isActive(item.path);
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-                  ${isActive(item.path)
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-slate-700 hover:bg-slate-100'
+                  flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all
+                  ${active
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20 font-semibold'
+                    : 'text-slate-600 hover:bg-primary/5 hover:text-primary'
                   }
                 `}
               >
                 <Icon size={20} />
-                <span>{item.label}</span>
+                <span className="text-sm">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 bg-white">
-          <div className="mb-4 flex justify-center sm:hidden">
+        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/20">
+          <div className="mb-6 flex justify-center sm:hidden">
             <LanguageSwitcher />
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors font-semibold"
+            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-rose-500 hover:bg-rose-50 transition-colors font-semibold"
           >
             <LogOut size={20} />
-            <span>{t('logout')}</span>
+            <span className="text-sm">{t('logout')}</span>
           </button>
         </div>
       </aside>

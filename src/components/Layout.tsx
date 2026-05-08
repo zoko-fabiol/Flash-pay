@@ -32,7 +32,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[radial-gradient(circle_at_top_left,_#f5efff_0%,_#fbf9ff_42%,_#f7f3ff_100%)]">
+    <div className="flex flex-col h-screen bg-gradient-mesh">
       <Header onMenuClick={() => setSidebarOpen(true)} />
       
       <div className="flex flex-1 overflow-hidden">

@@ -6,21 +6,21 @@ interface Tab { path: string; label: string; icon: ComponentType<any>; featured?
 
 const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = ({ tabs, isActive }) => {
   return (
-    <nav className="fixed bottom-4 left-1/2 z-50 transform -translate-x-1/2 w-[92%] max-w-3xl lg:hidden">
-      <div className="bg-white rounded-3xl shadow-[0_10px_30px_rgba(69,34,143,0.08)] border border-[#F0E9FF] px-3 py-2">
+    <nav className="fixed bottom-6 left-1/2 z-50 transform -translate-x-1/2 w-[92%] max-w-3xl lg:hidden">
+      <div className="glass-effect rounded-[32px] shadow-glass px-3 py-3 border border-white/40">
         <div className="grid grid-cols-5 gap-1 items-center">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = isActive(tab.path);
             if (tab.featured) {
               return (
-                <div key={tab.path} className="flex items-center justify-center -mt-6">
+                <div key={tab.path} className="flex items-center justify-center -mt-8">
                   <Link 
                     to={tab.path} 
-                    className={`flex items-center justify-center rounded-full transition-transform ${active ? 'bg-gradient-to-br from-[#7d49df] to-[#5f2fc4] text-white shadow-[0_18px_40px_rgba(98,54,204,0.28)]' : 'bg-white text-slate-400 shadow-[0_6px_16px_rgba(0,0,0,0.06)]' } w-16 h-16`}
+                    className={`flex items-center justify-center rounded-[20px] transition-all ${active ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-white text-slate-400 shadow-sm' } w-14 h-14 hover:scale-110 active:scale-90`}
                     aria-label={tab.label}
                   >
-                    <Icon size={22} />
+                    <Icon size={24} />
                   </Link>
                 </div>
               );
@@ -30,12 +30,13 @@ const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = (
               <Link 
                 key={tab.path} 
                 to={tab.path} 
-                className={`flex flex-col items-center justify-center py-1 px-1 ${active ? 'text-[#6236CC]' : 'text-slate-500'}`}
+                className={`flex flex-col items-center justify-center transition-all ${active ? 'text-primary' : 'text-slate-400 hover:text-slate-600'}`}
                 aria-label={tab.label}
               >
-                <span className={`flex h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-[#6236CC]/10' : 'bg-transparent'}`}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${active ? 'bg-primary/10' : 'bg-transparent'}`}>
                   <Icon size={20} />
-                </span>
+                </div>
+                <span className={`text-[10px] mt-1 font-semibold ${active ? 'opacity-100' : 'opacity-0'}`}>{tab.label}</span>
               </Link>
             );
           })}
