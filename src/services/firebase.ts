@@ -25,6 +25,7 @@ import {
   where,
   getDocs,
   limit,
+  orderBy,
   arrayUnion,
   type Firestore,
   Timestamp,
@@ -1176,3 +1177,25 @@ async function generateUniqueReferralCode(): Promise<string> {
 
   return `${generateReferralCode()}${Date.now().toString(36).slice(-2).toUpperCase()}`;
 }
+// Support Service
+export const supportService = {
+  async submitTicket(userId: string, data: { description: string; type?: string; transactionId?: string }) {
+    return await addDoc(collection(db, 'problem_reports'), {
+      userId,
+      ...data,
+      type: data.type || 'Anomalie',
+      status: 'pending',
+      createdAt: Timestamp.now(),
+    });
+  },
+
+  async getUserTickets(userId: string) {
+    const q = query(
+      collection(db, 'problem_reports'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+};

@@ -18,6 +18,7 @@ import { TransactionsPage } from './pages/TransactionsPage';
 import { KYCPage } from './pages/KYCPage';
 import { ReferralPage } from './pages/ReferralPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { SupportPage } from './pages/SupportPage';
 import { PreferencesPage } from './pages/PreferencesPage';
 import { ExportsPage } from './pages/ExportsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
@@ -142,6 +143,7 @@ function AppRoutes() {
         <Route path="/security-2fa" element={<ProtectedRoute><Security2FAPage /></ProtectedRoute>} />
         <Route path="/webhooks" element={<ProtectedRoute><WebhooksPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
+        <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
         <Route path="/admin/rates" element={<ProtectedRoute><AdminExchangeRatesPage /></ProtectedRoute>} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms" element={<TermsOfServicePage />} />

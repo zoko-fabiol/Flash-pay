@@ -90,7 +90,7 @@ export const DashboardPage: React.FC = () => {
       <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Banner Section - M3 Expressive Style */}
-        <section className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[#6750A4] via-[#6236CC] to-[#4d259f] p-8 sm:p-12 text-white shadow-2xl shadow-[#6236CC]/20 mx-2">
+        <section className="relative overflow-hidden rounded-[40px] bg-gradient-to-br from-[#6750A4] via-[#6236CC] to-[#4d259f] p-6 sm:p-12 text-white shadow-2xl shadow-[#6236CC]/20 mx-2">
           <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-[100px] animate-pulse"></div>
           <div className="absolute right-0 top-0 h-full w-1/2 opacity-10 flex items-center justify-center">
              <Globe size={320} className="text-white translate-x-20 translate-y-10 rotate-12" />
@@ -121,7 +121,7 @@ export const DashboardPage: React.FC = () => {
 
         <div className="grid gap-8 lg:grid-cols-2 px-2">
           {/* Referral Section - Glassmorphism */}
-          <section className="bg-gradient-to-br from-[#E8DEF8] to-[#F3EDF7] rounded-[40px] p-8 sm:p-10 relative overflow-hidden border border-[#D0BCFF]/30 shadow-xl shadow-[#6236CC]/5">
+          <section className="bg-gradient-to-br from-[#E8DEF8] to-[#F3EDF7] rounded-[40px] p-6 sm:p-10 relative overflow-hidden border border-[#D0BCFF]/30 shadow-xl shadow-[#6236CC]/5">
             <div className="flex justify-between items-start mb-10 relative z-10">
               <div className="max-w-[80%] space-y-3">
                 <div className="bg-white/40 backdrop-blur-md px-4 py-2 rounded-2xl inline-flex items-center gap-2 text-[#6750A4] font-black text-[10px] uppercase border border-white/40 shadow-sm">
@@ -153,7 +153,7 @@ export const DashboardPage: React.FC = () => {
           </section>
 
           {/* Exchange Rate Section - High Contrast */}
-          <section className="bg-white rounded-[40px] p-8 sm:p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5 relative overflow-hidden group">
+          <section className="bg-white rounded-[40px] p-6 sm:p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5 relative overflow-hidden group">
             <div className="flex items-center justify-between mb-10">
               <div className="px-5 py-2.5 bg-[#F3EDF7] rounded-2xl flex items-center gap-3 text-[#21005D] font-black text-[11px] uppercase tracking-widest border border-[#eadfff] shadow-sm">
                 <Globe size={18} /> {t('current_rate_title')}
@@ -180,7 +180,7 @@ export const DashboardPage: React.FC = () => {
 
         <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] px-2">
           {/* Account/KYC Card */}
-          <div className="rounded-[40px] border border-[#eadfff] bg-white p-8 sm:p-10 shadow-xl shadow-slate-900/5 space-y-8">
+          <div className="rounded-[40px] border border-[#eadfff] bg-white p-6 sm:p-10 shadow-xl shadow-slate-900/5 space-y-8">
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#6236CC]">{t('account')}</p>
               <div className="p-3 bg-[#F3EDF7] rounded-2xl text-[#6236CC]">
@@ -188,12 +188,12 @@ export const DashboardPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center justify-between gap-6 pb-6 border-b border-slate-50">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pb-6 border-b border-slate-50">
               <div>
                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">{t('kyc_status')}</h3>
-                <p className="mt-1 text-sm text-slate-400 font-bold uppercase tracking-widest opacity-60">{t('verification_level')}</p>
+                <p className="mt-1 text-xs sm:text-sm text-slate-400 font-bold uppercase tracking-widest opacity-60">{t('verification_level')}</p>
               </div>
-              <span className={`rounded-xl px-5 py-2 text-[10px] font-black uppercase tracking-widest shadow-sm border border-current/10 ${
+              <span className={`rounded-xl px-4 sm:px-5 py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-sm border border-current/10 shrink-0 ${
                 getKycStatus(user) === 'blocked' ? 'bg-orange-50 text-orange-600' :
                 getKycStatus(user) === 'approved' ? 'bg-emerald-50 text-emerald-600' :
                 getKycStatus(user) === 'pending' ? 'bg-amber-50 text-amber-600' :
@@ -214,7 +214,7 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Activity/Recent Transactions Card */}
-          <div className="rounded-[40px] border border-[#eadfff] bg-white p-8 sm:p-10 shadow-xl shadow-slate-900/5 space-y-8">
+          <div className="rounded-[40px] border border-[#eadfff] bg-white p-6 sm:p-10 shadow-xl shadow-slate-900/5 space-y-8">
             <div className="flex items-center justify-between gap-4">
               <div className="space-y-1">
                 <p className="text-[11px] font-black uppercase tracking-[0.3em] text-[#6236CC]">{t('activity')}</p>
@@ -234,22 +234,32 @@ export const DashboardPage: React.FC = () => {
                   <button 
                     key={tx.id} 
                     onClick={() => navigate(`/transactions/${tx.id}`)} 
-                    className="flex w-full items-center justify-between gap-6 rounded-[32px] border border-slate-50 bg-[#F8F9FC]/50 p-6 text-left transition-all hover:border-[#6236CC]/30 hover:bg-white hover:shadow-lg hover:shadow-[#6236CC]/5 group"
+                    className="group relative flex w-full flex-col gap-4 rounded-[32px] border border-slate-100 bg-white p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-[#6236CC]/10 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center font-black text-[#6236CC] shadow-sm border border-slate-50 group-hover:scale-110 transition-transform">
-                            {tx.recipientName?.charAt(0) || '?'}
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-900 text-lg tracking-tight group-hover:text-[#6236CC] transition-colors">{tx.recipientName || t('unknown_recipient')}</p>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{formatDate(tx.createdAt)}</p>
-                        </div>
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#F8F9FC] border border-slate-50 font-black text-[#6236CC] shadow-sm transition-transform duration-500 group-hover:scale-110">
+                        {tx.recipientName?.charAt(0) || '?'}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <h4 className="truncate text-lg font-black tracking-tight text-slate-900 transition-colors group-hover:text-[#6236CC]">
+                          {tx.recipientName || t('unknown_recipient')}
+                        </h4>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          {formatDate(tx.createdAt)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right space-y-1">
-                      <p className="text-xl font-black text-slate-900 tracking-tighter">{formatNumber(tx.amount, tx.currency)}</p>
-                      <div className="flex items-center justify-end gap-1.5">
-                         <div className="w-1.5 h-1.5 bg-brand rounded-full animate-pulse" />
-                         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t(`status_${(tx.status || 'pending').toLowerCase()}`)}</p>
+                    <div className="flex items-center justify-between border-t border-slate-50 pt-4 sm:flex-col sm:items-end sm:justify-center sm:border-t-0 sm:pt-0">
+                      <div className="text-xl font-black tracking-tighter text-slate-900">
+                        {formatNumber(tx.amount, tx.currency)}
+                      </div>
+                      <div className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest ${
+                        (tx.status || 'pending').toLowerCase() === 'completed' ? 'bg-emerald-50 text-emerald-600' :
+                        (tx.status || 'pending').toLowerCase() === 'failed' ? 'bg-rose-50 text-rose-600' :
+                        'bg-amber-50 text-amber-600'
+                      }`}>
+                         <div className="h-1 w-1 rounded-full bg-current opacity-50 animate-pulse" />
+                         {t(`status_${(tx.status || 'pending').toLowerCase()}`)}
                       </div>
                     </div>
                   </button>

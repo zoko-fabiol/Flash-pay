@@ -312,9 +312,11 @@ export const ProfilePage: React.FC = () => {
           ))}
         </div>
 
-        {/* ── Assistance ── */}
         <div className="grid grid-cols-2 gap-4">
-          <button className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left">
+          <button 
+            onClick={() => navigate('/support')}
+            className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left"
+          >
             <HelpCircle size={20} className="text-[#6236CC]" />
             <p className="font-bold text-slate-900 text-sm">{t('contact_support')}</p>
             <p className="text-xs text-slate-400">{t('support_desc')}</p>

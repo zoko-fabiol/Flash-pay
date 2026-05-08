@@ -203,21 +203,21 @@ export const KYCPage: React.FC = () => {
         </div>
 
         {/* Current Status */}
-        <div className="bg-white rounded-[40px] p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5 relative overflow-hidden group">
+        <div className="bg-white rounded-[40px] p-6 sm:p-10 border border-[#eadfff] shadow-xl shadow-slate-900/5 relative overflow-hidden group">
           <div className="absolute -right-20 -top-20 w-48 h-48 bg-[#6236CC]/5 rounded-full blur-3xl group-hover:bg-[#6236CC]/10 transition-colors"></div>
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 relative z-10">{t('kyc_status')}</h3>
           <div className="space-y-8 relative z-10">
-            <div className="flex items-center justify-between pb-6 border-b border-slate-50">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-6 border-b border-slate-50">
               <div className="space-y-1">
                 <span className="text-slate-900 font-black text-lg tracking-tight">{t('verification_level')}</span>
               </div>
               {getStatusBadge()}
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-slate-900 font-black text-lg tracking-tight">{t('daily_transfer_limit')}</span>
               </div>
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 {(() => {
                   const isExpert = kycStatus === 'approved';
                   const activeLimit = isExpert ? expertLimit : standardLimit;
@@ -225,7 +225,7 @@ export const KYCPage: React.FC = () => {
                   if (kycStatus === 'pending') return <p className="font-black text-amber-500">{t('kyc_pending')}</p>;
                   return (
                     <div className="space-y-1">
-                      <p className={`text-3xl font-black tracking-tighter ${isExpert ? 'text-[#6236CC]' : 'text-slate-900'}`}>
+                      <p className={`text-2xl sm:text-3xl font-black tracking-tighter ${isExpert ? 'text-[#6236CC]' : 'text-slate-900'}`}>
                         {activeLimit.toLocaleString('fr-FR')} <span className="text-sm font-bold opacity-40">RUB</span>
                       </p>
                     </div>
@@ -240,7 +240,7 @@ export const KYCPage: React.FC = () => {
         {success && <Success message={success} />}
 
         {(kycStatus === 'not_started' || kycStatus === 'rejected') && (
-          <div className="bg-white rounded-[40px] p-10 border border-[#eadfff] shadow-2xl shadow-slate-900/5">
+          <div className="bg-white rounded-[40px] p-6 sm:p-10 border border-[#eadfff] shadow-2xl shadow-slate-900/5">
             <div className="flex items-center gap-4 mb-10">
               <div className="w-12 h-12 bg-[#F3EDF7] rounded-2xl flex items-center justify-center text-[#6236CC] shadow-sm">
                 <Shield size={24} />
@@ -249,7 +249,7 @@ export const KYCPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-10">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('first_name')}</label>
                   <input type="text" name="firstName" value={formData.firstName} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
@@ -276,7 +276,7 @@ export const KYCPage: React.FC = () => {
                 <input type="text" name="address" value={formData.address} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">{t('city')}</label>
                   <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:border-[#6236CC] font-black text-slate-900" />

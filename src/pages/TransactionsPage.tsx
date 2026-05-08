@@ -160,54 +160,55 @@ export const TransactionsPage: React.FC = () => {
                 <button
                   key={tx.id}
                   onClick={() => navigate(`/transactions/${tx.id}`)}
-                  className={`bg-white p-6 sm:p-8 rounded-[40px] border transition-all duration-500 flex flex-col lg:flex-row lg:items-center justify-between gap-6 group text-left relative overflow-hidden ${
+                  className={`group relative flex flex-col gap-6 rounded-[32px] border bg-white p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-[#6236CC]/10 lg:flex-row lg:items-center lg:justify-between ${
                     isBulk 
-                      ? 'border-[#6236CC]/30 bg-gradient-to-br from-white via-white to-[#F3EDF7]/40 shadow-2xl shadow-[#6236CC]/10' 
-                      : 'border-[#eadfff] hover:border-[#6236CC]/40 hover:shadow-2xl hover:shadow-[#6236CC]/15 shadow-xl shadow-slate-900/5'
+                      ? 'border-[#6236CC]/30 shadow-lg shadow-[#6236CC]/5' 
+                      : 'border-slate-100 shadow-sm'
                   }`}
                 >
-                  <div className="flex items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center text-2xl text-[#6236CC] border border-slate-100 font-black shrink-0 overflow-hidden shadow-sm group-hover:scale-110 transition-transform duration-500">
-                      {logoUrl ? (
-                        <img src={logoUrl} alt="logo" className="w-full h-full object-contain p-2" />
-                      ) : (
-                        <div className="w-full h-full bg-[#F3EDF7] flex items-center justify-center">
-                          {displayName.charAt(0).toUpperCase()}
+                    <div className="flex items-center gap-5">
+                      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#F8F9FC] border border-slate-50 shadow-sm transition-transform duration-500 group-hover:scale-110">
+                        {logoUrl ? (
+                          <img src={logoUrl} alt="logo" className="h-full w-full object-contain p-2" />
+                        ) : (
+                          <span className="text-xl font-black text-[#6236CC]">
+                            {displayName.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <h4 className="truncate text-lg font-black tracking-tight text-slate-900 transition-colors group-hover:text-[#6236CC]">
+                          {displayName}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          <span className="truncate">{displayPhone}</span>
+                          <span className="h-1 w-1 shrink-0 rounded-full bg-slate-200" />
+                          <span className="truncate">{getCountryName(tx)}</span>
                         </div>
-                      )}
-                    </div>
-                    <div>
-                      <div className="font-black text-slate-900 text-xl tracking-tight mb-1 group-hover:text-[#6236CC] transition-colors">{displayName}</div>
-                      <div className="text-[11px] text-slate-400 font-black uppercase tracking-[0.1em] opacity-80 flex items-center gap-2">
-                        {displayPhone}
-                        <span className="w-1 h-1 bg-slate-300 rounded-full" />
-                        {getCountryName(tx)}
                       </div>
                     </div>
-                  </div>
                   
-                  <div className="flex flex-col sm:flex-row lg:flex-col items-start sm:items-center lg:items-end justify-between gap-4 relative z-10 border-t border-slate-50 lg:border-0 pt-6 lg:pt-0">
-                    <div className="text-left lg:text-right">
-                      <div className="font-black text-3xl text-slate-900 tracking-tighter mb-1">
+                  <div className="flex flex-1 flex-row items-end justify-between border-t border-slate-50 pt-4 lg:flex-col lg:items-end lg:justify-center lg:border-t-0 lg:pt-0">
+                    <div className="space-y-1 text-left lg:text-right">
+                      <div className="text-2xl font-black tracking-tighter text-slate-900 sm:text-3xl">
                         {formatNumber(tx.amount, tx.currency)}
                       </div>
                       {tx.fee > 0 && (
-                        <div className="inline-flex px-2 py-0.5 bg-rose-50 text-rose-500 text-[10px] font-black rounded-lg border border-rose-100 uppercase tracking-widest">
-                          {t('fees')}: {formatNumber(tx.fee, 'RUB')}
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-rose-400">
+                          +{formatNumber(tx.fee, 'RUB')} {t('fees')}
                         </div>
                       )}
                     </div>
-                    
-                    <div className="flex items-center gap-3">
-                      <div className="flex flex-col items-end">
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1.5 opacity-60">
-                          {tx.createdAt?.toDate 
-                            ? tx.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) 
-                            : new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                        </span>
-                        <span className={`px-4 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-widest shadow-sm border border-current/10 ${getStatusClass(tx.status)}`}>
-                          {getStatusLabel(tx.status)}
-                        </span>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-[0.1em] text-slate-300">
+                        {tx.createdAt?.toDate 
+                          ? tx.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) 
+                          : new Date(tx.createdAt?.seconds ? tx.createdAt.seconds * 1000 : tx.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                      </span>
+                      <div className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-[9px] font-black uppercase tracking-widest shadow-sm transition-colors ${getStatusClass(tx.status)}`}>
+                        <div className="h-1.5 w-1.5 rounded-full bg-current opacity-50 animate-pulse" />
+                        {getStatusLabel(tx.status)}
                       </div>
                     </div>
                   </div>

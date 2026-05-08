@@ -15,7 +15,11 @@ const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = (
             if (tab.featured) {
               return (
                 <div key={tab.path} className="flex items-center justify-center -mt-6">
-                  <Link to={tab.path} className={`flex items-center justify-center rounded-full transition-transform ${active ? 'bg-gradient-to-br from-[#7d49df] to-[#5f2fc4] text-white shadow-[0_18px_40px_rgba(98,54,204,0.28)]' : 'bg-white text-slate-400 shadow-[0_6px_16px_rgba(0,0,0,0.06)]' } w-16 h-16`}>
+                  <Link 
+                    to={tab.path} 
+                    className={`flex items-center justify-center rounded-full transition-transform ${active ? 'bg-gradient-to-br from-[#7d49df] to-[#5f2fc4] text-white shadow-[0_18px_40px_rgba(98,54,204,0.28)]' : 'bg-white text-slate-400 shadow-[0_6px_16px_rgba(0,0,0,0.06)]' } w-16 h-16`}
+                    aria-label={tab.label}
+                  >
                     <Icon size={22} />
                   </Link>
                 </div>
@@ -23,11 +27,15 @@ const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = (
             }
 
             return (
-              <Link key={tab.path} to={tab.path} className={`flex flex-col items-center justify-center py-2 px-1 text-[11px] font-semibold ${active ? 'text-[#6236CC]' : 'text-slate-500'}`}>
-                <span className={`mb-1 flex h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-[#6236CC]/10' : 'bg-transparent'}`}>
-                  <Icon size={18} />
+              <Link 
+                key={tab.path} 
+                to={tab.path} 
+                className={`flex flex-col items-center justify-center py-1 px-1 ${active ? 'text-[#6236CC]' : 'text-slate-500'}`}
+                aria-label={tab.label}
+              >
+                <span className={`flex h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-[#6236CC]/10' : 'bg-transparent'}`}>
+                  <Icon size={20} />
                 </span>
-                <span className="truncate">{tab.label}</span>
               </Link>
             );
           })}

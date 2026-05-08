@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp, deleteField } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp, deleteField, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import type { UserProfile } from '../../types';
 import { buildPresetPermissions } from '../../lib/adminAccess';
 import { 
@@ -16,6 +17,7 @@ import {
   Award,
   TrendingUp,
   Copy,
+  Trash2,
   User as UserIcon,
   UserCog
 } from 'lucide-react';
@@ -105,6 +107,23 @@ const UsersListPage: React.FC = () => {
     }
   };
 
+  const handleDeleteUser = async (user: any) => {
+    if (!user?.id) return;
+    
+    const confirmDelete = window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement le compte de ${user.nom || user.email} ? Cette action est irréversible.`);
+    if (!confirmDelete) return;
+
+    const toastId = toast.loading('Suppression de l\'utilisateur...');
+    try {
+      await deleteDoc(doc(db, 'users', user.id));
+      toast.success('Utilisateur supprimé avec succès', { id: toastId });
+      if (selectedUser?.id === user.id) setSelectedUser(null);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erreur lors de la suppression', { id: toastId });
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const term = searchTerm.toLowerCase();
     return (user.nom?.toLowerCase().includes(term) || 
@@ -112,6 +131,9 @@ const UsersListPage: React.FC = () => {
             user.tel?.includes(term) ||
             user.referralCode?.toLowerCase().includes(term));
   });
+
+  const { profile } = useAuth();
+  const isSuperAdmin = profile?.adminRole === 'super';
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -232,6 +254,15 @@ const UsersListPage: React.FC = () => {
                     </td>
                     <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => handleDeleteUser(user)}
+                            className="p-2.5 bg-white border border-[#F2B8B5] text-[#B3261E] hover:bg-[#B3261E] hover:text-white rounded-xl transition-all shadow-sm"
+                            title="Supprimer définitivement"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
                         <button
                           onClick={() => toggleAdminPrivilege(user, user.adminRole || 'restricted')}
                           disabled={updatingAdminId === user.id}

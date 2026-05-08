@@ -57,7 +57,9 @@ const AccessControlPage: React.FC = () => {
         .map((entry) => ({ id: entry.id, ...(entry.data() as UserProfile) }))
         .filter((entry) => entry.isAdmin);
 
-      setAdmins(data);
+      // Deduplicate by email to avoid showing the same account twice
+      const uniqueAdmins = Array.from(new Map(data.map(admin => [admin.email, admin])).values());
+      setAdmins(uniqueAdmins);
 
       if (!selectedAdminId && data.length > 0) {
         const firstAdmin = data[0];
