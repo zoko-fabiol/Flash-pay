@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import toast from 'react-hot-toast';
 import { 
   collection, 
@@ -349,10 +350,10 @@ const ExchangeRatesPage: React.FC = () => {
       </div>
 
       {/* MODAL: EDIT RATE OR CUSTOM RATE */}
-      {(editingRate || editingCustomRate) && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      {(editingRate || editingCustomRate) && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => { setEditingRate(null); setEditingCustomRate(null); }} />
-          <div className="relative bg-[#FEF7FF] w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden border border-[#E7E0EB] p-8 animate-in zoom-in-95 duration-300">
+          <div className="relative bg-[#FEF7FF] w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden border border-[#E7E0EB] p-8 animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
              <div className="flex justify-between items-center mb-8">
                 <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight">
                   {editingRate ? `${editingRate.from} ➔ ${editingRate.to}` : `${editingCustomRate?.from} ➔ ${editingCustomRate?.to}`}
@@ -396,14 +397,15 @@ const ExchangeRatesPage: React.FC = () => {
                 </div>
              </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL: ADD CUSTOM RATE */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      {isAddModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 animate-in fade-in duration-300">
            <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => setIsAddModalOpen(false)} />
-           <div className="relative bg-[#FEF7FF] w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden border border-[#E7E0EB] p-10 animate-in zoom-in-95 duration-300 text-center">
+           <div className="relative bg-[#FEF7FF] w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden border border-[#E7E0EB] p-10 animate-in zoom-in-95 duration-300 text-center" onClick={e => e.stopPropagation()}>
               <div className="w-20 h-20 bg-[#EADDFF] text-[#21005D] rounded-[28px] flex items-center justify-center mx-auto mb-8 shadow-lg">
                  <Coins size={40} />
               </div>
@@ -426,7 +428,8 @@ const ExchangeRatesPage: React.FC = () => {
                  <button onClick={handleAddCustomRate} className="w-full m3-btn-filled py-4 mt-4 text-[10px] tracking-widest uppercase shadow-xl">Ajouter la paire</button>
               </div>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

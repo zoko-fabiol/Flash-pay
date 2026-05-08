@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   collection, 
   onSnapshot, 
@@ -8,7 +9,7 @@ import {
 import { db } from '../../lib/firebase';
 import type { KYCRequest } from '../../types';
 import { adminService } from '../../services/adminService';
-import { ImageViewer } from '../../components/ui/ImageViewer';
+import ImageLightbox from '../../components/ui/ImageLightbox';
 import { 
   ShieldCheck, 
   User, 
@@ -19,8 +20,7 @@ import {
   Search,
   ExternalLink,
   X,
-  FileText,
-  ZoomIn
+  FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -38,15 +38,6 @@ const KYCValidationPage: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<KYCRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewerSrc, setViewerSrc] = useState('');
-  const [viewerAlt, setViewerAlt] = useState('');
-
-  const openViewer = (url: string, alt: string) => {
-    setViewerSrc(url);
-    setViewerAlt(alt);
-    setViewerOpen(true);
-  };
 
   useEffect(() => {
     const q = query(collection(db, 'kyc_requests'), orderBy('submittedAt', 'desc'));
@@ -83,8 +74,36 @@ const KYCValidationPage: React.FC = () => {
     }
   };
 
+  const [lightboxImages, setLightboxImages] = useState<string[] | null>(null);
+  const [lightboxLabels, setLightboxLabels] = useState<string[]>([]);
+  const [lightboxStartIndex, setLightboxStartIndex] = useState<number>(0);
+
+  const DOC_KEYS = [
+    { key: 'idProof',      label: "Pièce d'identité" },
+    { key: 'selfie',       label: 'Selfie de vérification' },
+    { key: 'addressProof', label: 'Preuve de domicile' },
+  ];
+
   const handleOpenDocument = (url: string) => {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    if (isPdfDocument(url)) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!selectedRequest) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    const docs = selectedRequest.documents as any;
+    const entries = DOC_KEYS
+      .map(({ key, label }) => ({ url: docs?.[key]?.url as string | undefined, label }))
+      .filter(({ url: u }) => u && !isPdfDocument(u)) as { url: string; label: string }[];
+
+    const images = entries.map(e => e.url);
+    const labels = entries.map(e => e.label);
+    const idx    = images.findIndex(i => i === url);
+    setLightboxImages(images);
+    setLightboxLabels(labels);
+    setLightboxStartIndex(idx >= 0 ? idx : 0);
   };
 
   const filteredRequests = requests.filter(req => {
@@ -124,7 +143,7 @@ const KYCValidationPage: React.FC = () => {
             key={status}
             onClick={() => setStatusFilter(status as any)}
             className={`
-              px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm
+              px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm
               ${statusFilter === status 
                 ? 'bg-[#6750A4] text-white shadow-lg shadow-[#6750A4]/20' 
                 : 'bg-white text-[#49454F] border border-[#E7E0EB] hover:bg-[#F3EDF7]'}
@@ -192,7 +211,7 @@ const KYCValidationPage: React.FC = () => {
       </div>
 
       {/* Review Modal */}
-      {selectedRequest && (
+      {selectedRequest && createPortal(
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setSelectedRequest(null)} />
           <div className="relative bg-[#FEF7FF] w-full max-w-5xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
@@ -239,25 +258,17 @@ const KYCValidationPage: React.FC = () => {
                               />
                               <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                  <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
-                                   <ExternalLink size={24} />
+                                       <ExternalLink size={24} />
                                  </button>
                               </div>
                             </>
-                          ) : (
+                            ) : (
                             <>
-                              <img 
-                                src={docData.url} 
-                                alt={docType.label} 
-                                className="w-full aspect-video object-contain bg-black/5 cursor-zoom-in" 
-                              />
-                              <div 
-                                className="absolute inset-0 bg-[#1D1B20]/30 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center gap-2 cursor-zoom-in"
-                                onClick={() => openViewer(docData.url, docType.label)}
-                              >
-                                <div className="p-4 bg-white/90 backdrop-blur-sm rounded-full shadow-2xl text-[#6750A4]">
-                                  <ZoomIn size={28} />
-                                </div>
-                                <p className="text-white font-black text-[10px] uppercase tracking-widest drop-shadow-md">Zoomer</p>
+                              <img onClick={() => handleOpenDocument(docData.url)} src={docData.url} alt={docType.label} className="w-full aspect-video object-contain bg-black/5 cursor-pointer" />
+                              <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                 <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#6750A4] hover:scale-110 transition-transform">
+                                   <ExternalLink size={24} />
+                                 </button>
                               </div>
                             </>
                           )
@@ -350,15 +361,15 @@ const KYCValidationPage: React.FC = () => {
             </div>
           </div>
         </div>
+      , document.body)}
+      {lightboxImages && (
+        <ImageLightbox
+          images={lightboxImages}
+          labels={lightboxLabels}
+          startIndex={lightboxStartIndex}
+          onClose={() => setLightboxImages(null)}
+        />
       )}
-
-      {/* Image Viewer Lightbox */}
-      <ImageViewer
-        isOpen={viewerOpen}
-        onClose={() => setViewerOpen(false)}
-        src={viewerSrc}
-        alt={viewerAlt}
-      />
     </div>
   );
 };

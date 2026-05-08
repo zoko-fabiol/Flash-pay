@@ -37,7 +37,7 @@ const AdminLayout: React.FC = () => {
     { path: '/admin/settings/exchange-rates', icon: TrendingUp, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
     { path: '/admin/settings/access-control', icon: ShieldCheck, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
     { path: '/admin/problems', icon: AlertTriangle, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
-  ].filter((item) => canAccessAdminSection(profile, item.section));
+  ].filter((item) => (profile?.adminRole === 'super') || canAccessAdminSection(profile, item.section));
 
   const handleLogout = async () => {
     try {

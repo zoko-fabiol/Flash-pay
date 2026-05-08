@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp, deleteField } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { UserProfile } from '../../types';
@@ -255,10 +256,10 @@ const UsersListPage: React.FC = () => {
       </div>
 
       {/* User Details Modal */}
-      {selectedUser && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
+      {selectedUser && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setSelectedUser(null)} />
-          <div className="relative bg-[#FEF7FF] w-full max-w-4xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
+          <div className="relative bg-[#FEF7FF] w-full max-w-4xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
             
             <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
               <div className="flex items-center gap-4">
@@ -405,7 +406,8 @@ const UsersListPage: React.FC = () => {
                <button onClick={() => setSelectedUser(null)} className="m3-btn-tonal !px-10 py-4 !rounded-full text-[10px] tracking-widest uppercase">Fermer le Profil</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

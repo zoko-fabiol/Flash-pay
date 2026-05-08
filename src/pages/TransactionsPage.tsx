@@ -121,7 +121,7 @@ export const TransactionsPage: React.FC = () => {
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-8 py-4 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-sm ${
+              className={`px-2.5 py-1 rounded-full font-black text-xs uppercase tracking-widest transition-all shadow-sm ${
                 filter === status
                   ? 'bg-[#6750A4] text-white shadow-xl shadow-[#6750A4]/20'
                   : 'bg-[#F3EDF7] text-[#6750A4] hover:bg-[#EADDFF]'

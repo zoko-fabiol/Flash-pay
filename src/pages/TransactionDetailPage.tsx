@@ -49,10 +49,21 @@ export const TransactionDetailPage: React.FC = () => {
 
   const currentStatus = transaction?.status || 'pending';
 
+  const steps = useMemo(() => {
+    if (currentStatus === 'failed') {
+      // If failed, we show up to the point it reached then add failure
+      const reached = ['pending'];
+      if (transaction?.proofUrl) reached.push('proof_received');
+      if (transaction?.statusHistory?.some((h: any) => h.status === 'confirmed')) reached.push('confirmed');
+      return [...reached, 'failed'] as string[];
+    }
+    return statusOrder;
+  }, [currentStatus, transaction]);
+
   const stepIndex = useMemo(() => {
-    const index = statusOrder.indexOf(currentStatus as any);
+    const index = steps.indexOf(currentStatus as any);
     return index === -1 ? 0 : index;
-  }, [currentStatus]);
+  }, [currentStatus, steps]);
 
   const handleReceiptDownload = (recipient?: any) => {
     if (!transaction) return;
@@ -347,24 +358,31 @@ export const TransactionDetailPage: React.FC = () => {
                 
                 <div className="space-y-12 relative ml-3">
                   <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-[#f3edff]" />
-                  {statusOrder.map((status, index) => {
+                  {steps.map((status, index) => {
                     const active = index <= stepIndex;
+                    const isFailed = status === 'failed' && currentStatus === 'failed';
 
                     return (
                       <div key={status} className="flex gap-10 relative z-10 group">
                         <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-700 ${
+                            isFailed ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30' :
                             active ? 'bg-[#6236CC] text-white shadow-xl shadow-[#6236CC]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
                         }`}>
-                          <CheckCircle2 size={18} strokeWidth={3} className={active ? 'animate-in zoom-in duration-500' : ''} />
+                          {isFailed ? <ArrowLeft size={18} strokeWidth={3} className="rotate-[135deg]" /> : <CheckCircle2 size={18} strokeWidth={3} className={active ? 'animate-in zoom-in duration-500' : ''} />}
                         </div>
                         <div className="flex-1 space-y-1">
-                          <p className={`font-black text-xl tracking-tight transition-colors duration-500 ${active ? 'text-slate-900' : 'text-slate-200'}`}>{statusLabels[status]}</p>
-                          <p className={`text-sm font-medium leading-relaxed transition-colors duration-500 ${active ? 'text-slate-500' : 'text-slate-100'}`}>
+                          <p className={`font-black text-xl tracking-tight transition-colors duration-500 ${isFailed ? 'text-rose-600' : active ? 'text-slate-900' : 'text-slate-200'}`}>{statusLabels[status]}</p>
+                          <div className={`text-sm font-medium leading-relaxed transition-colors duration-500 ${isFailed ? 'text-rose-500' : active ? 'text-slate-500' : 'text-slate-100'}`}>
                             {status === 'pending' && 'La demande a été transmise à notre service.'}
                             {status === 'proof_received' && 'Nous avons bien reçu votre justificatif de paiement.'}
                             {status === 'confirmed' && 'Votre paiement est validé, les fonds sont en route.'}
                             {status === 'completed' && 'Félicitations ! Le transfert est terminé.'}
-                          </p>
+                            {isFailed && (
+                              <div className="mt-3 p-4 bg-rose-50 rounded-2xl border border-rose-100 italic">
+                                "{transaction.adminNote || 'Votre justificatif n\'a pas pu être validé.'}"
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

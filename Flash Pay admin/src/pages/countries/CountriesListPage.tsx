@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import toast from 'react-hot-toast';
 import {
   collection,
@@ -287,10 +288,10 @@ const CountriesListPage: React.FC = () => {
       </div>
 
       {/* MODAL: ADD/EDIT COUNTRY OR BANK */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
+      {isModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 lg:p-10 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-[#FEF7FF] w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
+          <div className="relative bg-[#FEF7FF] w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
             <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[16px] flex items-center justify-center shadow-sm">
@@ -458,14 +459,15 @@ const CountriesListPage: React.FC = () => {
               </form>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL: RESTRICTION CONFIG */}
-      {restrictionModal.open && (
-        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 animate-in fade-in duration-300">
+      {restrictionModal.open && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => setRestrictionModal({ open: false, country: null })} />
-          <div className="relative bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden p-8 border border-[#E7E0EB]">
+          <div className="relative bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden p-8 border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-8">
               <div className="w-20 h-20 bg-[#EADDFF] text-[#21005D] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-lg">
                  <ArrowRightLeft size={40} />
@@ -514,7 +516,8 @@ const CountriesListPage: React.FC = () => {
               Fermer sans changer
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
