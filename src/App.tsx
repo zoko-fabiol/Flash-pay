@@ -87,10 +87,10 @@ const PushNotificationHandler: React.FC = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       initializePushNotifications(user.id);
     }
-  }, [user]);
+  }, [user?.id]);
 
   return null;
 };

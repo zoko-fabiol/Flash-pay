@@ -210,10 +210,18 @@ export const userService = {
   },
 
   async savePushToken(userId: string, token: string) {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      if (data.fcmToken === token && data.pushEnabled === true) {
+        return; // Already up to date, skip write to prevent snapshot loop
+      }
+    }
+    
     await updateDoc(doc(db, 'users', userId), {
       fcmToken: token,
       pushEnabled: true,
-      updatedAt: new Date(),
+      updatedAt: serverTimestamp(),
     });
   },
 

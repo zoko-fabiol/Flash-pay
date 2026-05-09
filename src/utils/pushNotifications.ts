@@ -34,13 +34,17 @@ async function initializeNativePushNotifications(userId: string) {
       return;
     }
 
+    // Remove existing listeners to prevent duplicates
+    await PushNotifications.removeAllListeners();
+
     // Register with Apple / Google to receive push notifications
     await PushNotifications.register();
 
     // On success, we should be able to receive notifications
     PushNotifications.addListener('registration', async (token) => {
-      console.log('✅ Push registration success (native), token:', token.value.substring(0, 20) + '...');
+      console.log('✅ Push registration success (native)');
       try {
+        // Only update if needed (this prevents loops)
         await userService.savePushToken(userId, token.value);
       } catch (err) {
         console.error('❌ Error saving push token to Firestore:', err);

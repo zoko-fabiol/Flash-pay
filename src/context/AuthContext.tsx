@@ -29,13 +29,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     let unsubUser: (() => void) | null = null;
 
-    const unsubscribeAuth = authService.onAuthStateChanged(async (fbUser) => {
+    const unsubscribeAuth = authService.onAuthStateChanged((fbUser) => {
+      setFirebaseUser(fbUser);
+      
+      // Clean up previous user listener if it exists
+      if (unsubUser) {
+        unsubUser();
+        unsubUser = null;
+      }
+
       if (fbUser) {
-        setFirebaseUser(fbUser);
         // Listen to user document in real-time
         unsubUser = onSnapshot(doc(db, 'users', fbUser.uid), (docSnap) => {
           if (docSnap.exists()) {
-            setUser({ id: docSnap.id, ...docSnap.data() } as User);
+            const userData = { id: docSnap.id, ...docSnap.data() } as User;
+            setUser(prevUser => {
+              // Simple check to avoid re-render if data is identical
+              // (Comparing stringified versions is a quick way for flat objects)
+              if (JSON.stringify(prevUser) === JSON.stringify(userData)) {
+                return prevUser;
+              }
+              return userData;
+            });
           }
           setLoading(false);
         }, (err) => {
@@ -43,9 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setLoading(false);
         });
       } else {
-        if (unsubUser) unsubUser();
         setUser(null);
-        setFirebaseUser(null);
         setLoading(false);
       }
     });
