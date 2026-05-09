@@ -91,39 +91,39 @@ export const DashboardPage: React.FC = () => {
       <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Banner Section - Matching Screenshot */}
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#6236CC] to-[#3B1F8C] p-8 text-white shadow-xl mx-2 min-h-[220px]">
-          {/* Africa Map Background - Dotted Style */}
-          <div className="absolute right-0 top-0 h-full w-1/2 opacity-30 pointer-events-none">
-            <svg viewBox="0 0 200 200" className="h-full w-full object-contain translate-x-8">
-              <path fill="white" d="M106.1,23.1c-1.8-0.9-3.8-1.5-5.9-1.8c-2.1-0.3-4.2-0.3-6.3,0c-2.1,0.3-4.1,0.9-5.9,1.8c-1.8,0.9-3.4,2.2-4.7,3.7c-1.3,1.5-2.2,3.3-2.7,5.2c-0.5,1.9-0.5,3.9-0.2,5.8c0.3,1.9,1,3.7,2.1,5.2c1.1,1.5,2.5,2.8,4.1,3.7c1.6,0.9,3.4,1.5,5.2,1.8c1.8,0.3,3.7,0.3,5.5,0c1.8-0.3,3.5-0.9,5.1-1.8c1.6-0.9,2.9-2.2,4-3.7c1.1-1.5,1.8-3.3,2.2-5.2c0.4-1.9,0.4-3.9,0-5.8c-0.4-1.9-1.1-3.7-2.3-5.2C109.5,25.3,107.9,24,106.1,23.1z" opacity="0.05" />
-              <path fill="currentColor" d="M85,35c-10,5-15,15-12,25c2,8,10,12,15,18c5,6,3,15,8,22c5,7,15,5,22,8c7,3,12,10,18,8c6-2,8-10,12-15c4-5,12-5,15-10c3-5,0-15-5-20c-5-5-15-8-25-10c-10-2-20-3-28-1c-8,2-15,10-20,15" opacity="0.1" />
-              {/* Dotted pattern overlay - simplified for performance */}
+        <section className="relative mx-2 min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#6A44D3] via-[#5833B4] to-[#33206F] p-7 text-white shadow-[0_24px_60px_rgba(33,16,82,0.28)] sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_26%)]" />
+          <div className="absolute inset-y-0 right-0 w-[70%] opacity-45 pointer-events-none overflow-hidden">
+            <svg viewBox="0 0 200 200" className="h-full w-full translate-x-12 text-white">
               <defs>
-                <pattern id="dots" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
-                  <circle cx="2" cy="2" r="1.2" fill="white" opacity="0.4" />
+                <pattern id="banner-dots" x="0" y="0" width="4.5" height="4.5" patternUnits="userSpaceOnUse">
+                  <circle cx="1.2" cy="1.2" r="0.9" fill="currentColor" opacity="0.6" />
                 </pattern>
+                <mask id="banner-africa-mask">
+                  <path fill="white" d="M85.4,32.2c-2.3,0.9-4.5,2.1-6.6,3.6c-2.1,1.5-4,3.2-5.7,5.2c-1.7,2-3.1,4.2-4.2,6.6c-1.1,2.4-1.8,5-2.2,7.7c-0.4,2.7-0.4,5.5,0,8.3c0.4,2.8,1.2,5.5,2.4,8.1c1.2,2.6,2.8,5,4.8,7.2c2,2.2,4.3,4.1,6.8,5.7c2.5,1.6,5.2,2.9,8.1,3.8c2.9,0.9,5.9,1.4,8.9,1.5c3,0.1,6.1,0,9.1-0.4c3-0.4,6-1.1,8.9-2.1c2.9-1,5.6-2.4,8.1-4c2.5-1.6,4.8-3.5,6.8-5.7c2-2.2,3.6-4.6,4.8-7.2c1.2-2.6,2-5.3,2.4-8.1c0.4-2.8,0.4-5.6,0-8.3c-0.4-2.7-1.1-5.3-2.2-7.7c-1.1-2.4-2.5-4.6-4.2-6.6c-1.7-2-3.6-3.7-5.7-5.2c-2.1-1.5-4.3-2.7-6.6-3.6c-2.3-0.9-4.7-1.5-7.1-1.8C95.2,30.3,90.3,30.8,85.4,32.2z M100,20c15-5,35,0,45,15c5,10,5,25,15,35c10,10,25,5,35,15c10,10,5,30,0,45c-5,15-15,20-20,35c-5,15,5,35-5,50c-10,15-30,10-45,25c-15,15-5,35-25,40c-20,5-35-10-45-25c-10-15-5-35-20-50c-15-15-35-5-40-20c-5-15,10-30,20-45c10-15,5-30,15-45c10-15,30-10,40-25C80,30,85,25,100,20z" />
+                </mask>
               </defs>
-              <rect width="200" height="200" fill="url(#dots)" mask="url(#africa-mask)" />
-              <mask id="africa-mask">
-                <path fill="white" d="M90,30c-15,5-25,20-20,40c3,15,15,20,20,35c5,15,0,30,10,45c10,15,30,10,40,25c10,15,5,35,20,40c15,5,25-10,35-20c10-10,15-25,10-40c-5-15-20-20-25-35c-5-15,5-30-5-45c-10-15-30-10-40-25c-10-15-5-35-20-40c-15-5-20,5-25,20" />
-              </mask>
+              <rect width="200" height="200" fill="url(#banner-dots)" mask="url(#banner-africa-mask)" />
             </svg>
           </div>
 
-          <div className="relative z-10 space-y-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">
-              {t('dashboard')}
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight">
-              {t('welcome')}, {user?.nom?.split(' ')[0] || t('user')}
-            </h1>
-            <p className="max-w-[200px] text-sm font-medium text-white/70 leading-relaxed">
-              {t('transfer_funds')}
-            </p>
-            <div className="pt-4">
+          <div className="relative z-10 flex h-full flex-col justify-between gap-6">
+            <div className="space-y-3 pr-24 sm:pr-32">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-white/60">
+                {t('dashboard')}
+              </p>
+              <h1 className="max-w-[220px] text-[2.05rem] font-black leading-[1.02] tracking-tight sm:max-w-[290px] sm:text-[2.7rem]">
+                {t('welcome')}, {user?.nom?.split(' ')[0] || t('user')}
+              </h1>
+              <p className="max-w-[230px] text-sm font-medium leading-relaxed text-white/72 sm:max-w-[260px]">
+                {t('transfer_funds')}
+              </p>
+            </div>
+
+            <div>
               <button 
                 onClick={() => navigate('/transfer')} 
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#6236CC] shadow-lg transition-transform active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#5030B1] shadow-[0_10px_24px_rgba(14,8,42,0.2)] transition-transform active:scale-95"
               >
                 {t('start_transfer')} 
                 <ArrowRight size={16} />
@@ -146,9 +146,6 @@ export const DashboardPage: React.FC = () => {
                   className="rounded-xl bg-[#6236CC] px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 transition-all"
                 >
                   {t('refer_now')}
-                </button>
-                <button className="text-sm font-bold text-slate-500 hover:text-slate-700">
-                  {t('ignore')}
                 </button>
               </div>
             </div>
