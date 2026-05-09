@@ -72,5 +72,70 @@ export const emailService = {
         </div>
       </div>
     `;
+  },
+
+  /**
+   * Génère le template HTML pour un transfert réussi
+   */
+  getTransferSuccessTemplate(txData: any) {
+    return `
+      <div style="font-family: sans-serif; background-color: #f7f3ff; padding: 40px; text-align: center;">
+        <div style="background-color: #ffffff; border-radius: 24px; padding: 40px; max-width: 450px; margin: 0 auto; border: 1px solid #eadfff; text-align: left;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="width: 60px; height: 60px; background-color: #e8fff3; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+              <span style="color: #10b981; fontSize: 30px;">✓</span>
+            </div>
+            <h1 style="color: #1e293b; margin: 0; font-size: 24px;">Transfert Réussi !</h1>
+            <p style="color: #64748b; margin-top: 8px;">Votre argent a été envoyé avec succès.</p>
+          </div>
+          
+          <div style="background-color: #f7f3ff; padding: 20px; border-radius: 16px; margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span style="color: #64748b; font-size: 13px;">Montant envoyé :</span>
+              <span style="color: #1e293b; font-weight: bold;">${txData.amount} ${txData.currency}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <span style="color: #64748b; font-size: 13px;">Bénéficiaire :</span>
+              <span style="color: #1e293b; font-weight: bold;">${txData.recipientName}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #64748b; font-size: 13px;">ID Transaction :</span>
+              <span style="color: #1e293b; font-size: 11px;">${txData.txId}</span>
+            </div>
+          </div>
+          
+          <div style="text-align: center;">
+            <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">Merci d'avoir choisi Flash Pay pour vos transferts.</p>
+            <a href="https://flash-pay-937d7.web.app" style="background-color: #6236CC; color: white; padding: 14px 28px; border-radius: 14px; text-decoration: none; font-weight: bold; display: inline-block;">Voir mes transactions</a>
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Génère le template HTML pour un message personnalisé
+   */
+  getCustomMessageTemplate(message: string) {
+    const formattedMessage = message.replace(/\n/g, '<br>');
+    return `
+      <div style="font-family: sans-serif; background-color: #f7f3ff; padding: 40px;">
+        <div style="background-color: #ffffff; border-radius: 24px; padding: 40px; max-width: 500px; margin: 0 auto; border: 1px solid #eadfff;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #6236CC; margin: 0; font-size: 28px;">FLASH PAY</h1>
+            <div style="height: 2px; width: 40px; background-color: #6236CC; margin: 15px auto;"></div>
+          </div>
+          
+          <div style="color: #1e293b; font-size: 16px; line-height: 1.6;">
+            ${formattedMessage}
+          </div>
+          
+          <div style="margin-top: 40px; padding-top: 25px; border-top: 1px solid #f1f5f9; text-align: center;">
+            <p style="color: #94a3b8; font-size: 13px; margin: 0;">L'équipe Flash Pay</p>
+            <p style="color: #cbd5e1; font-size: 11px; margin-top: 8px;">Ceci est un message officiel de Flash Pay.</p>
+          </div>
+        </div>
+      </div>
+    `;
   }
 };

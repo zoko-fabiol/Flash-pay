@@ -16,6 +16,7 @@ import { db, auth } from '../lib/firebase';
 import type { TransactionStatus, ProblemFlag } from '../types';
 
 import { fileToBase64 } from '../lib/imageUtils';
+import { emailService } from './emailService';
 
 export const adminService = {
   /**
@@ -87,11 +88,26 @@ export const adminService = {
 
         // Referral Bonus Logic on First Completed Transfer
         if (newStatus === 'completed') {
+          // Send Success Email
           const userRef = doc(db, 'users', userId);
           const userDoc = await getDoc(userRef);
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
+            if (userData.email) {
+              try {
+                const emailBody = emailService.getTransferSuccessTemplate({
+                  amount: txData.amount,
+                  currency: txData.currency || 'RUB',
+                  recipientName: txData.recipientName || txData.receiverName || 'Bénéficiaire',
+                  txId: transactionId.substring(0, 10).toUpperCase()
+                });
+                await emailService.sendEmail(userData.email, 'Votre transfert Flash Pay est réussi !', emailBody);
+              } catch (emailErr) {
+                console.error('Failed to send success email:', emailErr);
+              }
+            }
+
             const referrerId = userData.referredBy;
             
             if (referrerId && !userData.referralBonusOnTransferPaid) {

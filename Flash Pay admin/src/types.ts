@@ -82,6 +82,11 @@ export interface Transaction {
   commissionPercentage?: number;
   receivedAmount?: number;
   points?: number;
+  paymentMethod?: 'bonus' | 'external';
+  payWithBonus?: boolean;
+  bonusUsed?: number;
+  paidByCash?: number;
+  isHybrid?: boolean;
 }
 
 export interface ExchangeRate {

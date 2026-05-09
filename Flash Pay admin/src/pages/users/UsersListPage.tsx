@@ -22,6 +22,7 @@ import {
   UserCog
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { emailService } from '../../services/emailService';
 
 const UsersListPage: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -30,6 +31,12 @@ const UsersListPage: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [updatingAdminId, setUpdatingAdminId] = useState('');
   const [adminRoleDraft, setAdminRoleDraft] = useState<UserProfile['adminRole']>('restricted');
+  
+  // Email Manual State
+  const [emailUser, setEmailUser] = useState<any | null>(null);
+  const [emailSubject, setEmailSubject] = useState('Message de Flash Pay');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -47,6 +54,25 @@ const UsersListPage: React.FC = () => {
   const openUserDetails = (user: any) => {
     setSelectedUser(user);
     setAdminRoleDraft(user.adminRole || 'restricted');
+  };
+
+  const handleSendManualEmail = async () => {
+    if (!emailUser?.email || !emailMessage) return;
+    
+    setIsSendingEmail(true);
+    const t = toast.loading('Envoi de l\'email...');
+    try {
+      const htmlBody = emailService.getCustomMessageTemplate(emailMessage);
+      await emailService.sendEmail(emailUser.email, emailSubject, htmlBody);
+      toast.success('Email envoyé avec succès !', { id: t });
+      setEmailUser(null);
+      setEmailMessage('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de l\'envoi de l\'email', { id: t });
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const toggleAdminPrivilege = async (user: any, nextRole?: UserProfile['adminRole']) => {
@@ -254,6 +280,13 @@ const UsersListPage: React.FC = () => {
                     </td>
                     <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setEmailUser(user)}
+                          className="p-2.5 bg-white border border-[#EADDFF] text-[#6750A4] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm"
+                          title="Envoyer un email"
+                        >
+                          <Mail size={18} />
+                        </button>
                         {isSuperAdmin && (
                           <button
                             onClick={() => handleDeleteUser(user)}
@@ -263,13 +296,15 @@ const UsersListPage: React.FC = () => {
                             <Trash2 size={18} />
                           </button>
                         )}
-                        <button
-                          onClick={() => toggleAdminPrivilege(user, user.adminRole || 'restricted')}
-                          disabled={updatingAdminId === user.id}
-                          className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${user.isAdmin ? 'bg-[#F9DEDC] text-[#B3261E] border-[#F2B8B5]' : 'bg-[#E8DEF8] text-[#21005D] border-[#D0BCFF]'} disabled:opacity-50`}
-                        >
-                          {updatingAdminId === user.id ? '...' : user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
-                        </button>
+                        {isSuperAdmin && (
+                          <button
+                            onClick={() => toggleAdminPrivilege(user, user.adminRole || 'restricted')}
+                            disabled={updatingAdminId === user.id}
+                            className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${user.isAdmin ? 'bg-[#F9DEDC] text-[#B3261E] border-[#F2B8B5]' : 'bg-[#E8DEF8] text-[#21005D] border-[#D0BCFF]'} disabled:opacity-50`}
+                          >
+                            {updatingAdminId === user.id ? '...' : user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
+                          </button>
+                        )}
                         <button 
                           onClick={() => openUserDetails(user)}
                           className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
@@ -285,6 +320,71 @@ const UsersListPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Manual Email Modal */}
+      {emailUser && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setEmailUser(null)} />
+          <div className="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
+            <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#EADDFF] text-[#21005D] rounded-xl flex items-center justify-center">
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Envoyer un mail</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">À: {emailUser.email}</p>
+                </div>
+              </div>
+              <button onClick={() => setEmailUser(null)} className="p-2 hover:bg-[#F3EDF7] rounded-full transition-all">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] px-1">Sujet du message</label>
+                <input 
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full bg-[#F3EDF7] border border-transparent rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#6750A4] outline-none transition-all"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] px-1">Contenu du mail</label>
+                <textarea 
+                  value={emailMessage}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  placeholder="Écrivez votre message ici..."
+                  className="w-full bg-[#F3EDF7] border border-transparent rounded-[24px] px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#6750A4] outline-none transition-all h-48 resize-none"
+                />
+                <p className="text-[9px] text-[#49454F] opacity-60 px-1 font-medium italic">
+                  * L'email sera envoyé même si l'utilisateur a désactivé les notifications.
+                </p>
+              </div>
+            </div>
+            
+            <div className="p-8 bg-[#F3EDF7]/30 border-t border-[#E7E0EB] flex gap-4">
+              <button 
+                onClick={() => setEmailUser(null)}
+                className="flex-1 py-4 rounded-full text-[10px] font-black uppercase tracking-widest text-[#49454F] hover:bg-white transition-all border border-transparent hover:border-[#CAC4D0]"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={handleSendManualEmail}
+                disabled={isSendingEmail || !emailMessage}
+                className="flex-[2] py-4 bg-[#6750A4] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#6750A4]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isSendingEmail ? 'Envoi en cours...' : 'Envoyer le mail'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
       {/* User Details Modal */}
       {selectedUser && ReactDOM.createPortal(
@@ -302,9 +402,18 @@ const UsersListPage: React.FC = () => {
                   <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest opacity-60">ID: {selectedUser.id}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedUser(null)} className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
-                <X size={24} />
-              </button>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => { setEmailUser(selectedUser); setSelectedUser(null); }}
+                  className="p-3 bg-[#EADDFF] text-[#21005D] rounded-full hover:shadow-md transition-all"
+                  title="Envoyer un mail"
+                >
+                  <Mail size={24} />
+                </button>
+                <button onClick={() => setSelectedUser(null)} className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
+                  <X size={24} />
+                </button>
+              </div>
             </div>
             
             <div className="p-8 overflow-y-auto scrollbar-hide flex-1 grid grid-cols-1 lg:grid-cols-2 gap-10">
@@ -391,45 +500,47 @@ const UsersListPage: React.FC = () => {
                     </div>
                  </div>
 
-                 <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
-                    <h4 className="text-[10px] font-black text-[#6750A4] uppercase tracking-[0.2em] flex items-center gap-2">
-                      <UserCog size={16} /> Privilèges Admin
-                    </h4>
+                 {isSuperAdmin && (
+                   <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
+                      <h4 className="text-[10px] font-black text-[#6750A4] uppercase tracking-[0.2em] flex items-center gap-2">
+                        <UserCog size={16} /> Privilèges Admin
+                      </h4>
 
-                    <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F]">Statut actuel</p>
-                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${selectedUser.isAdmin ? 'bg-[#E8DEF8] text-[#21005D]' : 'bg-white text-[#49454F] border border-[#E7E0EB]'}`}>
-                          {selectedUser.isAdmin ? `Admin ${selectedUser.adminRole ? `(${selectedUser.adminRole})` : ''}` : 'Utilisateur standard'}
-                        </span>
-                      </div>
+                      <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F]">Statut actuel</p>
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${selectedUser.isAdmin ? 'bg-[#E8DEF8] text-[#21005D]' : 'bg-white text-[#49454F] border border-[#E7E0EB]'}`}>
+                            {selectedUser.isAdmin ? `Admin ${selectedUser.adminRole ? `(${selectedUser.adminRole})` : ''}` : 'Utilisateur standard'}
+                          </span>
+                        </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F]">Rôle admin à appliquer</label>
-                        <select
-                          value={adminRoleDraft || 'restricted'}
-                          onChange={(e) => setAdminRoleDraft(e.target.value as UserProfile['adminRole'])}
-                          className="w-full bg-white border border-[#CAC4D0] rounded-[16px] px-4 py-3 text-xs font-bold text-[#1D1B20] outline-none"
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F]">Rôle admin à appliquer</label>
+                          <select
+                            value={adminRoleDraft || 'restricted'}
+                            onChange={(e) => setAdminRoleDraft(e.target.value as UserProfile['adminRole'])}
+                            className="w-full bg-white border border-[#CAC4D0] rounded-[16px] px-4 py-3 text-xs font-bold text-[#1D1B20] outline-none"
+                          >
+                            <option value="super">Administrateur complet</option>
+                            <option value="restricted">Accès restreint</option>
+                            <option value="email-only">Notifications seulement</option>
+                          </select>
+                        </div>
+
+                        <button
+                          onClick={() => toggleAdminPrivilege(selectedUser, adminRoleDraft || 'restricted')}
+                          disabled={updatingAdminId === selectedUser.id}
+                          className={`w-full py-3.5 rounded-[18px] font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50 ${selectedUser.isAdmin ? 'bg-[#B3261E] text-white' : 'bg-[#6750A4] text-white'}`}
                         >
-                          <option value="super">Administrateur complet</option>
-                          <option value="restricted">Accès restreint</option>
-                          <option value="email-only">Notifications seulement</option>
-                        </select>
+                          {updatingAdminId === selectedUser.id
+                            ? 'Mise à jour...'
+                            : selectedUser.isAdmin
+                              ? 'Retirer les privilèges admin'
+                              : 'Accorder les privilèges admin'}
+                        </button>
                       </div>
-
-                      <button
-                        onClick={() => toggleAdminPrivilege(selectedUser, adminRoleDraft || 'restricted')}
-                        disabled={updatingAdminId === selectedUser.id}
-                        className={`w-full py-3.5 rounded-[18px] font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50 ${selectedUser.isAdmin ? 'bg-[#B3261E] text-white' : 'bg-[#6750A4] text-white'}`}
-                      >
-                        {updatingAdminId === selectedUser.id
-                          ? 'Mise à jour...'
-                          : selectedUser.isAdmin
-                            ? 'Retirer les privilèges admin'
-                            : 'Accorder les privilèges admin'}
-                      </button>
-                    </div>
-                 </div>
+                   </div>
+                 )}
               </div>
             </div>
             

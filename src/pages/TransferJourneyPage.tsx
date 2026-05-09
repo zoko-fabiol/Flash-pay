@@ -42,7 +42,7 @@ type BankAccountView = {
   logo?: string;
 };
 
-async function fileToBase64(file: File | Blob, maxWidth = 1000, quality = 0.72): Promise<string> {
+async function fileToBase64(file: File | Blob, maxWidth = 900, quality = 0.5): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     const blob = file instanceof File ? file : new File([file], 'image.jpg', { type: 'image/jpeg' });

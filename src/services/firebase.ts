@@ -1362,17 +1362,12 @@ export const transactionService = {
 
 // ===== Helper Functions =====
 
-// Compress image before upload (max 5MB)
-export async function compressImage(file: File): Promise<Blob> {
-  // Validate file size first
-  if (file.size > 5 * 1024 * 1024) {
-    throw new Error('File size exceeds 5MB limit');
-  }
-
+// Compress image before upload
+export async function compressImage(file: File, maxWidth = 1000, quality = 0.5): Promise<Blob> {
   // Validate MIME type
   const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
   if (!validTypes.includes(file.type)) {
-    throw new Error('Invalid image format. Use JPG or PNG.');
+    throw new Error('Format d\'image invalide. Utilisez JPG ou PNG.');
   }
 
   return new Promise((resolve, reject) => {
@@ -1384,25 +1379,28 @@ export async function compressImage(file: File): Promise<Blob> {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
+        if (!ctx) return reject(new Error('Canvas context failed'));
+
+        let width = img.width;
+        let height = img.height;
+
+        // Resize logic to stay under ~200KB
+        if (width > maxWidth) {
+          height = (maxWidth / width) * height;
+          width = maxWidth;
         }
 
-        canvas.width = img.width;
-        canvas.height = img.height;
-        ctx.drawImage(img, 0, 0);
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
           (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('Failed to compress image'));
-            }
+            if (blob) resolve(blob);
+            else reject(new Error('Compression failed'));
           },
           'image/jpeg',
-          0.85 // 85% quality
+          quality
         );
       };
       img.onerror = () => reject(new Error('Failed to load image'));

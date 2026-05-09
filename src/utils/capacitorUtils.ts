@@ -102,3 +102,34 @@ export const isNativeApp = (): boolean => {
   return typeof (window as any)?.Capacitor !== 'undefined' &&
     (window as any).Capacitor?.isNativePlatform?.() === true;
 };
+
+// ─── PDF Download / Share (Native) ────────────────────────────────────────────
+export const downloadPdfNative = async (base64Data: string, fileName: string): Promise<boolean> => {
+  try {
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const { Share } = await import('@capacitor/share');
+
+    // Remove the prefix if present (e.g., data:application/pdf;base64,)
+    const base64 = base64Data.includes('base64,') 
+      ? base64Data.split('base64,')[1] 
+      : base64Data;
+
+    // Save to Cache directory for sharing
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64,
+      directory: Directory.Cache,
+    });
+
+    // Share the file (this allows user to "Save to Files" or send via WhatsApp/Email)
+    await Share.share({
+      title: fileName,
+      url: result.uri,
+    });
+
+    return true;
+  } catch (error) {
+    console.error('PDF Native Error:', error);
+    return false;
+  }
+};

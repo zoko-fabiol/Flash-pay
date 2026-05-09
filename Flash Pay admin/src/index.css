@@ -57,6 +57,32 @@
   .m3-search {
     @apply bg-[var(--m3-surface-variant)]/50 rounded-full px-6 py-3 flex items-center gap-3 border border-transparent focus-within:border-[var(--m3-primary)] focus-within:bg-white transition-all shadow-sm;
   }
+
+  /* Premium M3 Checkbox */
+  .m3-checkbox {
+    @apply appearance-none w-6 h-6 border-2 border-[var(--m3-outline)] rounded-[8px] cursor-pointer transition-all relative flex items-center justify-center bg-white shrink-0;
+  }
+  
+  .m3-checkbox:checked {
+    @apply bg-[var(--m3-primary)] border-[var(--m3-primary)] shadow-lg shadow-[var(--m3-primary)]/30;
+  }
+  
+  .m3-checkbox:checked::after {
+    content: '';
+    @apply w-[6px] h-[11px] border-r-[2.5px] border-b-[2.5px] border-white rotate-45 mb-[2px];
+  }
+  
+  .m3-checkbox:hover {
+    @apply border-[var(--m3-primary)] scale-110 shadow-md;
+  }
+  
+  .m3-checkbox:focus {
+    @apply ring-4 ring-[var(--m3-primary)]/20 outline-none;
+  }
+  
+  .m3-checkbox:active {
+    @apply scale-95;
+  }
 }
 
 /* Custom Scrollbar */

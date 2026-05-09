@@ -357,7 +357,7 @@ const AccessControlPage: React.FC = () => {
               {ADMIN_SECTION_DEFINITIONS.map((section) => {
                 const isEnabled = permissions.sections?.[section.key] ?? false;
                 return (
-                  <label key={section.key} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-white">
+                  <label key={section.key} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-white hover:bg-[#F3EDF7] hover:border-[#6750A4]/30 transition-all cursor-pointer group">
                     <span className="text-sm font-bold text-[#1D1B20]">{section.label}</span>
                     <input
                       type="checkbox"
@@ -371,7 +371,7 @@ const AccessControlPage: React.FC = () => {
                           },
                         }))
                       }
-                      className="h-5 w-5 accent-[#6750A4]"
+                      className="m3-checkbox"
                     />
                   </label>
                 );
@@ -385,7 +385,7 @@ const AccessControlPage: React.FC = () => {
               {(['add', 'edit', 'delete'] as const).map((action) => {
                 const checked = permissions.actions?.[action] ?? false;
                 return (
-                  <label key={action} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-[#F3EDF7]">
+                  <label key={action} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-[#F3EDF7] hover:bg-[#EADDFF] hover:border-[#6750A4]/30 transition-all cursor-pointer group">
                     <span className="text-sm font-bold text-[#1D1B20]">{ADMIN_ACTION_LABELS[action]}</span>
                     <input
                       type="checkbox"
@@ -399,7 +399,7 @@ const AccessControlPage: React.FC = () => {
                           },
                         }))
                       }
-                      className="h-5 w-5 accent-[#6750A4]"
+                      className="m3-checkbox"
                     />
                   </label>
                 );
@@ -407,7 +407,7 @@ const AccessControlPage: React.FC = () => {
             </div>
           </div>
 
-          <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#EADDFF]/40">
+          <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#EADDFF]/40 hover:bg-[#EADDFF]/60 hover:border-[#6750A4]/30 transition-all cursor-pointer group">
             <div>
               <p className="text-sm font-black text-[#1D1B20]">Recevoir les emails de commande</p>
               <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">Liste des destinataires lorsqu’une commande arrive</p>
@@ -416,7 +416,7 @@ const AccessControlPage: React.FC = () => {
               type="checkbox"
               checked={permissions.receiveOrderEmails ?? false}
               onChange={(e) => setPermissions((current) => ({ ...current, receiveOrderEmails: e.target.checked }))}
-              className="h-6 w-6 accent-[#6750A4]"
+              className="m3-checkbox h-7 w-7"
             />
           </label>
 

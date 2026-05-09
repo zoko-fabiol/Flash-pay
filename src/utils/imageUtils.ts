@@ -2,7 +2,7 @@
  * Compresses an image file by resizing it and reducing its quality.
  * Target size is roughly < 1MB.
  */
-export const compressImage = async (file: File, maxWidth = 1200, quality = 0.7): Promise<Blob> => {
+export const compressImage = async (file: File, maxWidth = 900, quality = 0.5): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);

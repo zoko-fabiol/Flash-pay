@@ -5,13 +5,25 @@ import { useAuth } from '../context/AuthContext';
 import { useTransferWizard } from '../context/TransferWizardContext';
 import { Layout } from '../components/Layout';
 import { ChevronLeft, ChevronRight, Globe, CreditCard, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send, X, Pencil } from 'lucide-react';
-import { collection, onSnapshot, addDoc, Timestamp, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { 
+  collection, 
+  onSnapshot, 
+  addDoc, 
+  Timestamp, 
+  query, 
+  where, 
+  orderBy, 
+  limit, 
+  getDocs, 
+  updateDoc, 
+  doc 
+} from 'firebase/firestore';
 import { db, auth, calculateTransactionRecap, userService } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { emailService } from '../services/emailService';
 import { notificationService } from '../services/notificationService';
 
-async function fileToBase64(file: File | Blob, maxWidth = 800, quality = 0.65): Promise<string> {
+async function fileToBase64(file: File | Blob, maxWidth = 900, quality = 0.5): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     const blob = file instanceof File ? file : new File([file], 'image.jpg', { type: 'image/jpeg' });
@@ -587,10 +599,12 @@ export const TransferWizardPage: React.FC = () => {
     try {
       // 1. Handle Proof (Base64) or Bonus Payment
       let proofUrl = '';
-      if (payWithBonus) {
-        proofUrl = 'PAID_WITH_BONUS';
-      } else if (proofFile) {
+      if (proofFile) {
+        // If we have a file, it's always the proofUrl, regardless of bonus usage (Hybrid)
         proofUrl = await fileToBase64(proofFile);
+      } else if (payWithBonus) {
+        // Only set to PAID_WITH_BONUS if no proof was provided (meaning full bonus coverage)
+        proofUrl = 'PAID_WITH_BONUS';
       } else {
         throw new Error(t('payment_proof_missing'));
       }
@@ -662,7 +676,11 @@ export const TransferWizardPage: React.FC = () => {
           status: 'pending',
           timestamp: Timestamp.now(),
           notes: transferData.isBulk ? t('bulk_order_initiated') : t('order_initiated_by_client')
-        }]
+        }],
+        // Hybrid Payment Details
+        payWithBonus,
+        bonusUsed: 0, // Will be updated below
+        paidByCash: calculation.totalToPay, // Default to full amount
       });
 
       // 4.0 Notify Admin of new transaction
@@ -703,18 +721,34 @@ export const TransferWizardPage: React.FC = () => {
 
       // 4.5 Deduct bonus if applicable (Hybrid support)
       if (payWithBonus) {
-        let bonusCost = calculation.totalToPay;
+        let bonusCostInRUB = calculation.totalToPay;
         if (inputCurrency === 'XAF') {
           const rateObj = rates.find(r => r.from === 'XAF' && r.to === 'RUB');
           const rate = rateObj?.rate || 0.1385;
-          bonusCost = calculation.totalToPay * rate;
+          bonusCostInRUB = calculation.totalToPay * rate;
         }
         
-        // Only deduct what the user actually has (the rest was paid via proof)
-        const actualDeduction = Math.min(user?.solde_bonus || 0, bonusCost);
+        // Only deduct what the user actually has
+        const actualDeductionInRUB = Math.min(user?.solde_bonus || 0, bonusCostInRUB);
         
-        await userService.deductBonus(user?.id || auth.currentUser?.uid || '', actualDeduction, t('transfer_to_recipient', { 
-          recipient: (transferData.recipientName || t('recipient')) + (actualDeduction < bonusCost ? ' ' + t('partial') : '') 
+        // Calculate equivalent cash paid
+        let cashPaidInInputCurrency = 0;
+        if (actualDeductionInRUB < bonusCostInRUB) {
+           const rubToXafRate = 1 / (rates.find(r => r.from === 'XAF' && r.to === 'RUB')?.rate || 0.1385);
+           const coverageInInputCurrency = inputCurrency === 'XAF' 
+              ? (actualDeductionInRUB * rubToXafRate)
+              : actualDeductionInRUB;
+           cashPaidInInputCurrency = Math.max(0, calculation.totalToPay - coverageInInputCurrency);
+        }
+
+        await updateDoc(doc(db, 'transactions', txDocRef.id), {
+          bonusUsed: actualDeductionInRUB,
+          paidByCash: cashPaidInInputCurrency,
+          isHybrid: actualDeductionInRUB > 0 && cashPaidInInputCurrency > 0
+        });
+        
+        await userService.deductBonus(user?.id || auth.currentUser?.uid || '', actualDeductionInRUB, t('transfer_to_recipient', { 
+          recipient: (transferData.recipientName || t('recipient')) + (actualDeductionInRUB < bonusCostInRUB ? ' ' + t('partial') : '') 
         }));
       }
 

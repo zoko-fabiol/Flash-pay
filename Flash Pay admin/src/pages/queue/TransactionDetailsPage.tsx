@@ -19,10 +19,15 @@ import {
   Activity,
   AlertCircle,
   FileText,
-  Check
+  Check,
+  Mail,
+  X,
+  ChevronDown,
+  Award
 } from 'lucide-react';
 import ImageLightbox from '../../components/ui/ImageLightbox';
-import { ChevronDown } from 'lucide-react';
+import ReactDOM from 'react-dom';
+import { emailService } from '../../services/emailService';
 
 const REJECTION_REASONS = [
   "Justificatif invalide ou illisible",
@@ -42,6 +47,13 @@ const TransactionDetailsPage: React.FC = () => {
   const [adminNote, setAdminNote] = useState('');
   const [selectedReason, setSelectedReason] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
+
+  // Email Manual State
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState('À propos de votre transfert Flash Pay');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
   useEffect(() => {
     if (!transactionId) return;
 
@@ -54,6 +66,25 @@ const TransactionDetailsPage: React.FC = () => {
 
     return () => unsubscribe();
   }, [transactionId]);
+
+  const handleSendManualEmail = async () => {
+    if (!transaction?.clientEmail || !emailMessage) return;
+    
+    setIsSendingEmail(true);
+    const t = toast.loading('Envoi de l\'email...');
+    try {
+      const htmlBody = emailService.getCustomMessageTemplate(emailMessage);
+      await emailService.sendEmail(transaction.clientEmail, emailSubject, htmlBody);
+      toast.success('Email envoyé avec succès !', { id: t });
+      setIsEmailModalOpen(false);
+      setEmailMessage('');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de l\'envoi de l\'email', { id: t });
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const handleStatusUpdate = async (status: TransactionStatus) => {
     if (!transaction) return;
@@ -304,7 +335,7 @@ const TransactionDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Premium Status Header (Image 2 style) */}
+      {/* Premium Status Header */}
       {transaction.status === 'completed' && (
         <div className="m3-card-elevated flex flex-col items-center justify-center py-16 text-center animate-in zoom-in duration-700 border-b-4 border-[#6750A4]">
           <div className="w-24 h-24 bg-[#6750A4] text-white rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-[#6750A4]/40 scale-110">
@@ -342,7 +373,18 @@ const TransactionDetailsPage: React.FC = () => {
                   <h3 className="text-lg font-black text-[#1D1B20] tracking-tight truncate">{transaction.clientName || 'Inconnu'}</h3>
                   <div className="flex flex-col mt-1">
                     {transaction.clientPhone && <a href={`tel:${transaction.clientPhone}`} className="text-[#6750A4] text-[10px] font-bold hover:underline">{transaction.clientPhone}</a>}
-                    {transaction.clientEmail && <a href={`mailto:${transaction.clientEmail}`} className="text-[#49454F] text-[9px] font-bold opacity-60 hover:underline">{transaction.clientEmail}</a>}
+                    {transaction.clientEmail && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <a href={`mailto:${transaction.clientEmail}`} className="text-[#49454F] text-[9px] font-bold opacity-60 hover:underline truncate max-w-[120px]">{transaction.clientEmail}</a>
+                        <button 
+                          onClick={() => setIsEmailModalOpen(true)}
+                          className="p-1.5 bg-[#EADDFF] text-[#21005D] rounded-md hover:bg-[#6750A4] hover:text-white transition-all shadow-sm flex items-center justify-center"
+                          title="Envoyer un mail direct"
+                        >
+                          <Mail size={12} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
             </div>
@@ -361,12 +403,29 @@ const TransactionDetailsPage: React.FC = () => {
             <div className="m3-card bg-[#EADDFF] border-transparent flex flex-col justify-between relative overflow-hidden">
                <div className="absolute -right-4 -bottom-4 opacity-[0.05]"><Activity size={100} /></div>
                <div className="flex justify-between items-start mb-4">
-                 <div className="p-3 bg-white text-[#6750A4] rounded-[16px] shadow-sm"><Activity size={24} /></div>
-                 <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-white px-2 py-0.5 rounded-md">{transaction.destinationCurrency}</div>
+                 <div className="p-3 bg-white text-[#6750A4] rounded-[16px] shadow-sm">
+                   {transaction.paymentMethod === 'bonus' ? <Award size={24} /> : <Activity size={24} />}
+                 </div>
+                 <div className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-white px-2 py-0.5 rounded-md">
+                   {transaction.paymentMethod === 'bonus' ? 'Bonus Parrainage' : 'Transfert Classique'}
+                 </div>
                </div>
                <div>
-                 <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">Net à Distribuer</p>
-                 <h3 className="text-2xl font-black text-[#21005D] tracking-tighter">{(transaction.receivedAmount || transaction.amount).toLocaleString()} <span className="text-sm opacity-40">{transaction.destinationCurrency}</span></h3>
+                 <p className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mb-1">
+                   {transaction.paymentMethod === 'bonus' 
+                     ? (transaction.isHybrid ? 'Payé par Bonus + Cash' : 'Payé par Bonus')
+                     : 'Net à Distribuer'}
+                 </p>
+                 <h3 className="text-2xl font-black text-[#21005D] tracking-tighter">
+                   {transaction.paymentMethod === 'bonus' 
+                     ? (transaction.bonusUsed ? `${transaction.bonusUsed.toLocaleString()} RUB` : 'TOTAL')
+                     : `${(transaction.receivedAmount || transaction.amount).toLocaleString()} ${transaction.destinationCurrency}`}
+                 </h3>
+                 {transaction.isHybrid && (
+                   <p className="text-[9px] font-black text-[#6750A4] mt-1 opacity-60">
+                     + {transaction.paidByCash?.toLocaleString()} {transaction.currency} cash
+                   </p>
+                 )}
                </div>
             </div>
           </div>
@@ -498,7 +557,7 @@ const TransactionDetailsPage: React.FC = () => {
                </h3>
              </div>
              
-             {transaction.proofUrl ? (
+             {transaction.proofUrl && transaction.proofUrl !== 'PAID_WITH_BONUS' ? (
                <div className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner">
                 <img onClick={() => openProof(transaction.proofUrl)} src={transaction.proofUrl} alt="Preuve" className="w-full object-contain max-h-[600px] transition-transform duration-700 group-hover:scale-[1.02] cursor-pointer" />
                 <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -507,6 +566,12 @@ const TransactionDetailsPage: React.FC = () => {
                    </button>
                 </div>
               </div>
+             ) : transaction.proofUrl === 'PAID_WITH_BONUS' ? (
+               <div className="p-20 text-center bg-[#EADDFF]/30 rounded-[32px] border-2 border-dashed border-[#6750A4]/20">
+                 <Award size={48} className="mx-auto text-[#6750A4] mb-4 animate-bounce" />
+                 <p className="text-[#6750A4] font-black uppercase text-[12px] tracking-[0.1em] mb-2">Payé Intégralement par Bonus</p>
+                 <p className="text-[#49454F] text-[10px] font-bold opacity-60">Aucun transfert de fonds externe requis pour ce client.</p>
+               </div>
              ) : (
                <div className="p-20 text-center bg-[#F3EDF7] rounded-[32px] border-2 border-dashed border-[#E7E0EB]">
                  <AlertCircle size={48} className="mx-auto text-[#6750A4]/20 mb-4" />
@@ -672,6 +737,71 @@ const TransactionDetailsPage: React.FC = () => {
           startIndex={lightboxStartIndex}
           onClose={() => setLightboxImages(null)}
         />
+      )}
+
+      {/* Manual Email Modal */}
+      {isEmailModalOpen && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setIsEmailModalOpen(false)} />
+          <div className="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
+            <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#EADDFF] text-[#21005D] rounded-xl flex items-center justify-center">
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Message au Client</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">À: {transaction.clientEmail}</p>
+                </div>
+              </div>
+              <button onClick={() => setIsEmailModalOpen(false)} className="p-2 hover:bg-[#F3EDF7] rounded-full transition-all">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] px-1">Sujet du message</label>
+                <input 
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  className="w-full bg-[#F3EDF7] border border-transparent rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#6750A4] outline-none transition-all"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] px-1">Contenu du mail</label>
+                <textarea 
+                  value={emailMessage}
+                  onChange={(e) => setEmailMessage(e.target.value)}
+                  placeholder="Écrivez votre message ici..."
+                  className="w-full bg-[#F3EDF7] border border-transparent rounded-[24px] px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#6750A4] outline-none transition-all h-48 resize-none"
+                />
+                <p className="text-[9px] text-[#49454F] opacity-60 px-1 font-medium italic">
+                  * L'email sera envoyé même si l'utilisateur a désactivé les notifications.
+                </p>
+              </div>
+            </div>
+            
+            <div className="p-8 bg-[#F3EDF7]/30 border-t border-[#E7E0EB] flex gap-4">
+              <button 
+                onClick={() => setIsEmailModalOpen(false)}
+                className="flex-1 py-4 rounded-full text-[10px] font-black uppercase tracking-widest text-[#49454F] hover:bg-white transition-all border border-transparent hover:border-[#CAC4D0]"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={handleSendManualEmail}
+                disabled={isSendingEmail || !emailMessage}
+                className="flex-[2] py-4 bg-[#6750A4] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#6750A4]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isSendingEmail ? 'Envoi en cours...' : 'Envoyer le mail'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

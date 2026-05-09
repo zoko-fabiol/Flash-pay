@@ -8,6 +8,7 @@ import { Loading } from '../components/UI';
 import { useLanguage } from '../context/LanguageContext';
 import jsPDF from 'jspdf';
 import toast from 'react-hot-toast';
+import { isNativeApp, downloadPdfNative } from '../utils/capacitorUtils';
 
 const statusOrder = ['pending', 'proof_received', 'confirmed', 'completed'] as const;
 
@@ -65,7 +66,7 @@ export const TransactionDetailPage: React.FC = () => {
     return index === -1 ? 0 : index;
   }, [currentStatus, steps]);
 
-  const handleReceiptDownload = (recipient?: any) => {
+  const handleReceiptDownload = async (recipient?: any) => {
     if (!transaction) return;
     const t_toast = toast.loading('Génération du reçu...');
     
@@ -189,14 +190,23 @@ export const TransactionDetailPage: React.FC = () => {
         pdf.text(isComp ? 'VALIDE' : 'EN ATTENTE', pageWidth / 2, y + 6.5, { align: 'center' });
       }
 
-      // Footer
+      y += 22;
+      
       pdf.setTextColor(180, 180, 180);
       pdf.setFontSize(7);
       pdf.setFont('helvetica', 'normal');
-      pdf.text('Merci d\'avoir utilisé Flash Pay.', pageWidth / 2, pageHeight - 8, { align: 'center' });
+      pdf.text('Merci d\'utiliser Flash Pay.', pageWidth / 2, pageHeight - 8, { align: 'center' });
       
-      pdf.save(`FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}.pdf`);
-      toast.success('Reçu téléchargé !', { id: t_toast });
+      const fileName = `FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}.pdf`;
+
+      if (isNativeApp()) {
+        const pdfBase64 = pdf.output('datauristring');
+        await downloadPdfNative(pdfBase64, fileName);
+        toast.success('Prêt à partager !', { id: t_toast });
+      } else {
+        pdf.save(fileName);
+        toast.success('Reçu téléchargé !', { id: t_toast });
+      }
     } catch (error) {
       console.error(error);
       toast.error('Erreur lors du téléchargement', { id: t_toast });

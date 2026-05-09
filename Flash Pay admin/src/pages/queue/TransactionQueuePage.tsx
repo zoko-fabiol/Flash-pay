@@ -164,7 +164,14 @@ const TransactionQueuePage: React.FC = () => {
                          </div>
                          <div className="flex flex-col">
                             <span className="text-[#1D1B20] font-mono text-sm font-black tracking-tight">#{tx.id.substring(0, 10).toUpperCase()}</span>
-                            <span className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest mt-0.5">{tx.isBulk ? 'Multi-Envoi' : 'Unique'}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[#6750A4] text-[9px] font-black uppercase tracking-widest">{tx.isBulk ? 'Multi-Envoi' : 'Unique'}</span>
+                              {tx.paymentMethod === 'bonus' && (
+                                <span className="text-emerald-600 text-[8px] font-black uppercase tracking-widest bg-emerald-100 px-1.5 py-0.5 rounded-sm">
+                                  {tx.isHybrid ? 'Hybride' : 'Bonus'}
+                                </span>
+                              )}
+                            </div>
                          </div>
                       </div>
                     </td>

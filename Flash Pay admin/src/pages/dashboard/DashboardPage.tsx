@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   TrendingUp, 
   Users, 
@@ -78,21 +79,55 @@ const DashboardPage: React.FC = () => {
     totalVolumeRub: 0,
     activeUsers: 0
   });
+  const [timeRange, setTimeRange] = useState<'24h' | 'this_week' | 'last_week' | 'this_month' | 'this_year'>('this_week');
+  const navigate = useNavigate();
   const [alerts, setAlerts] = useState<ProblemReport[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [popularRoutes, setPopularRoutes] = useState<{name: string, count: number}[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
 
   useEffect(() => {
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    const getRangeQuery = () => {
+      const now = new Date();
+      let start = new Date();
+      let end = new Date();
+      
+      switch (timeRange) {
+        case '24h':
+          start.setHours(now.getHours() - 24);
+          break;
+        case 'this_week':
+          // Start of Monday
+          const day = now.getDay() || 7;
+          start.setHours(0,0,0,0);
+          start.setDate(now.getDate() - day + 1);
+          break;
+        case 'last_week':
+          const lDay = now.getDay() || 7;
+          start.setDate(now.getDate() - lDay - 6);
+          start.setHours(0,0,0,0);
+          end.setDate(now.getDate() - lDay);
+          end.setHours(23,59,59,999);
+          break;
+        case 'this_month':
+          start = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case 'this_year':
+          start = new Date(now.getFullYear(), 0, 1);
+          break;
+      }
+      return { start, end: timeRange === 'last_week' ? end : now };
+    };
+
+    const { start: rangeStart, end: rangeEnd } = getRangeQuery();
     
-    const qToday = query(
+    const qMain = query(
       collection(db, 'transactions'),
-      where('createdAt', '>=', Timestamp.fromDate(startOfDay))
+      where('createdAt', '>=', Timestamp.fromDate(rangeStart)),
+      where('createdAt', '<=', Timestamp.fromDate(rangeEnd))
     );
 
-    const unsubToday = onSnapshot(qToday, (snapshot) => {
+    const unsubMain = onSnapshot(qMain, (snapshot) => {
       const txs = snapshot.docs.map(doc => doc.data() as Transaction);
       let volumeXaf = 0;
       let volumeRub = 0;
@@ -108,6 +143,45 @@ const DashboardPage: React.FC = () => {
         totalVolumeEur: volumeXaf,
         totalVolumeRub: volumeRub
       }));
+
+      // Update Chart Data based on range
+      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      const counts: Record<string, number> = {};
+      
+      if (timeRange === '24h' || timeRange.includes('week')) {
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(rangeEnd);
+          d.setDate(d.getDate() - i);
+          counts[days[d.getDay()]] = 0;
+        }
+        txs.forEach(tx => {
+          const date = asDate((tx as any).createdAt);
+          if (!date) return;
+          const dayName = days[date.getDay()];
+          if (counts[dayName] !== undefined) counts[dayName]++;
+        });
+        setChartData(Object.entries(counts).map(([name, value]) => ({ name, value })));
+      } else if (timeRange === 'this_month') {
+        // By week of month
+        const weekCounts: Record<string, number> = { 'Sem 1': 0, 'Sem 2': 0, 'Sem 3': 0, 'Sem 4': 0, 'Sem 5': 0 };
+        txs.forEach(tx => {
+          const date = asDate((tx as any).createdAt);
+          if (!date) return;
+          const weekNum = Math.ceil(date.getDate() / 7);
+          weekCounts[`Sem ${weekNum}`]++;
+        });
+        setChartData(Object.entries(weekCounts).map(([name, value]) => ({ name, value })));
+      } else if (timeRange === 'this_year') {
+        const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'];
+        const monthCounts: Record<string, number> = {};
+        months.forEach(m => monthCounts[m] = 0);
+        txs.forEach(tx => {
+          const date = asDate((tx as any).createdAt);
+          if (!date) return;
+          monthCounts[months[date.getMonth()]]++;
+        });
+        setChartData(Object.entries(monthCounts).map(([name, value]) => ({ name, value })));
+      }
     });
 
     const qRecent = query(
@@ -132,10 +206,7 @@ const DashboardPage: React.FC = () => {
     });
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      setStats(prev => ({
-        ...prev,
-        activeUsers: snapshot.size
-      }));
+      setStats(prev => ({ ...prev, activeUsers: snapshot.size }));
     });
 
     const qAlerts = query(collection(db, 'problem_reports'), where('status', '==', 'pending'));
@@ -151,43 +222,13 @@ const DashboardPage: React.FC = () => {
       setAlerts(alertRows);
     });
 
-    const qChart = query(
-      collection(db, 'transactions'),
-      orderBy('createdAt', 'desc'),
-      limit(100)
-    );
-    const unsubChart = onSnapshot(qChart, (snapshot) => {
-      const txs = snapshot.docs.map(doc => doc.data() as Transaction);
-      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-      const counts: Record<string, number> = {};
-      
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        counts[days[d.getDay()]] = 0;
-      }
-
-      txs.forEach(tx => {
-        const date = asDate((tx as any).createdAt);
-        if (!date) return;
-        const dayName = days[date.getDay()];
-        if (counts[dayName] !== undefined) {
-          counts[dayName]++;
-        }
-      });
-
-      const formattedData = Object.entries(counts).map(([name, value]) => ({ name, value }));
-      setChartData(formattedData);
-    });
-
     return () => {
-      unsubToday();
+      unsubMain();
       unsubRecent();
       unsubUsers();
       unsubAlerts();
-      unsubChart();
     };
-  }, []);
+  }, [timeRange]);
 
   return (
     <div className="space-y-10 pb-20 animate-in fade-in duration-700">
@@ -197,41 +238,54 @@ const DashboardPage: React.FC = () => {
            <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight">Tableau de Bord</h2>
            <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Suivi global des opérations Flash Pay</p>
         </div>
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-[#E7E0EB] shadow-sm">
-           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-           <span className="text-[10px] font-black uppercase tracking-widest text-[#1D1B20]">Système Live</span>
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-[#F3EDF7] rounded-[24px] border border-[#E7E0EB] shadow-sm">
+           {[
+             { id: '24h', label: '24h' },
+             { id: 'this_week', label: 'Semaine' },
+             { id: 'last_week', label: 'S-1' },
+             { id: 'this_month', label: 'Mois' },
+             { id: 'this_year', label: 'Année' }
+           ].map(range => (
+             <button 
+              key={range.id}
+              onClick={() => setTimeRange(range.id as any)}
+              className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range.id ? 'bg-[#6750A4] text-white shadow-md' : 'text-[#49454F] hover:bg-white'}`}
+             >
+               {range.label}
+             </button>
+           ))}
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         <StatCard 
-          title="Transactions (24h)" 
+          title={timeRange === '24h' ? "Transactions (24h)" : "Transactions (Période)"} 
           value={stats.todayTransactions} 
           icon={CreditCard} 
           trend="up"
-          change="12"
+          change="-"
         />
         <StatCard 
           title="Volume XAF" 
           value={`${stats.totalVolumeEur.toLocaleString()}`} 
           icon={DollarSign} 
           trend="up"
-          change="8"
+          change="-"
         />
         <StatCard 
           title="Volume RUB" 
           value={`${stats.totalVolumeRub.toLocaleString()} ₽`} 
           icon={TrendingUp} 
           trend="up" 
-          change="5"
+          change="-"
         />
         <StatCard 
           title="Total Clients" 
           value={stats.activeUsers} 
           icon={Users} 
           trend="up" 
-          change="2"
+          change="-"
         />
       </div>
 
@@ -244,9 +298,11 @@ const DashboardPage: React.FC = () => {
                 <div className="p-2 bg-[#EADDFF] text-[#21005D] rounded-lg shadow-sm"><Activity size={18} /></div>
                 <h2 className="text-xl font-black text-[#1D1B20] tracking-tight">Flux Hebdomadaire</h2>
               </div>
-              <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest ml-11 opacity-60">Volume des transactions par jour</p>
+              <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest ml-11 opacity-60">
+                {timeRange === 'this_year' ? 'Volume mensuel' : timeRange === 'this_month' ? 'Volume par semaine' : 'Volume journalier'}
+              </p>
             </div>
-            <button className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">Détails <ArrowRight size={14} /></button>
+            <button onClick={() => navigate('/admin/analytics')} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">Analyses <ArrowRight size={14} /></button>
           </div>
           
           <div className="h-[350px] w-full min-w-0">
@@ -307,7 +363,7 @@ const DashboardPage: React.FC = () => {
               </div>
             ) : (
               alerts.map((alert: ProblemReport) => (
-                <div key={alert.id} className="group p-5 bg-[#FEF7FF] border border-[#E7E0EB] rounded-[28px] hover:bg-[#F9DEDC]/20 hover:border-[#F9DEDC] transition-all cursor-pointer relative overflow-hidden shadow-sm">
+                <div key={alert.id} onClick={() => navigate(`/admin/queue/${alert.transactionId}`)} className="group p-5 bg-[#FEF7FF] border border-[#E7E0EB] rounded-[28px] hover:bg-[#F9DEDC]/20 hover:border-[#F9DEDC] transition-all cursor-pointer relative overflow-hidden shadow-sm">
                   <div className="flex gap-4 relative z-10">
                     <div className="text-[#B3261E] shrink-0 p-2 bg-white rounded-xl shadow-sm"><AlertCircle size={20} /></div>
                     <div className="flex-1 min-w-0">
@@ -326,7 +382,7 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
           
-          <button className="w-full mt-8 m3-btn-tonal !py-4 uppercase text-[10px] tracking-widest">Voir tous les incidents</button>
+          <button onClick={() => navigate('/admin/problems')} className="w-full mt-8 m3-btn-tonal !py-4 uppercase text-[10px] tracking-widest">Voir tous les incidents</button>
         </div>
       </div>
 
@@ -369,7 +425,7 @@ const DashboardPage: React.FC = () => {
           
           <div className="space-y-4">
             {recentTransactions.map((tx) => (
-              <div key={tx.id} className="flex items-center gap-4 p-4 hover:bg-[#F3EDF7]/50 rounded-[28px] transition-all border border-transparent hover:border-[#E7E0EB] group cursor-pointer shadow-sm bg-white/50">
+              <div key={tx.id} onClick={() => navigate(`/admin/queue/${tx.id}`)} className="flex items-center gap-4 p-4 hover:bg-[#F3EDF7]/50 rounded-[28px] transition-all border border-transparent hover:border-[#E7E0EB] group cursor-pointer shadow-sm bg-white/50">
                 <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[18px] flex items-center justify-center font-black text-sm shadow-inner group-hover:scale-110 transition-transform">
                   {tx.toCountry?.charAt(0) || '?'}
                 </div>
