@@ -17,6 +17,7 @@
     "@capacitor/core": "^8.3.3",
     "@capacitor/filesystem": "^8.1.2",
     "@capacitor/share": "^8.0.1",
+    "@tailwindcss/postcss": "^4.3.0",
     "@tailwindcss/vite": "^4.2.4",
     "axios": "^1.16.0",
     "clsx": "^2.1.1",
