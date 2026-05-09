@@ -88,183 +88,148 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-10 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
-        {/* Banner Section - Premium Glass Card */}
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-primary p-8 sm:p-14 text-white shadow-2xl shadow-primary/30 mx-2">
-          <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-white/10 blur-[100px] animate-pulse"></div>
-          <div className="absolute right-0 top-0 h-full w-1/2 opacity-10 flex items-center justify-center">
-             <Globe size={320} className="text-white translate-x-20 translate-y-10 rotate-12" />
+        {/* Banner Section - Matching Screenshot */}
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#6236CC] to-[#3B1F8C] p-8 text-white shadow-xl mx-2 min-h-[220px]">
+          {/* Africa Map Background - Dotted Style */}
+          <div className="absolute right-0 top-0 h-full w-1/2 opacity-30 pointer-events-none">
+            <svg viewBox="0 0 200 200" className="h-full w-full object-contain translate-x-8">
+              <path fill="white" d="M106.1,23.1c-1.8-0.9-3.8-1.5-5.9-1.8c-2.1-0.3-4.2-0.3-6.3,0c-2.1,0.3-4.1,0.9-5.9,1.8c-1.8,0.9-3.4,2.2-4.7,3.7c-1.3,1.5-2.2,3.3-2.7,5.2c-0.5,1.9-0.5,3.9-0.2,5.8c0.3,1.9,1,3.7,2.1,5.2c1.1,1.5,2.5,2.8,4.1,3.7c1.6,0.9,3.4,1.5,5.2,1.8c1.8,0.3,3.7,0.3,5.5,0c1.8-0.3,3.5-0.9,5.1-1.8c1.6-0.9,2.9-2.2,4-3.7c1.1-1.5,1.8-3.3,2.2-5.2c0.4-1.9,0.4-3.9,0-5.8c-0.4-1.9-1.1-3.7-2.3-5.2C109.5,25.3,107.9,24,106.1,23.1z" opacity="0.05" />
+              <path fill="currentColor" d="M85,35c-10,5-15,15-12,25c2,8,10,12,15,18c5,6,3,15,8,22c5,7,15,5,22,8c7,3,12,10,18,8c6-2,8-10,12-15c4-5,12-5,15-10c3-5,0-15-5-20c-5-5-15-8-25-10c-10-2-20-3-28-1c-8,2-15,10-20,15" opacity="0.1" />
+              {/* Dotted pattern overlay - simplified for performance */}
+              <defs>
+                <pattern id="dots" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1.2" fill="white" opacity="0.4" />
+                </pattern>
+              </defs>
+              <rect width="200" height="200" fill="url(#dots)" mask="url(#africa-mask)" />
+              <mask id="africa-mask">
+                <path fill="white" d="M90,30c-15,5-25,20-20,40c3,15,15,20,20,35c5,15,0,30,10,45c10,15,30,10,40,25c10,15,5,35,20,40c15,5,25-10,35-20c10-10,15-25,10-40c-5-15-20-20-25-35c-5-15,5-30-5-45c-10-15-30-10-40-25c-10-15-5-35-20-40c-15-5-20,5-25,20" />
+              </mask>
+            </svg>
           </div>
 
-          <div className="relative z-10 space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md text-[10px] font-bold uppercase tracking-widest text-white/90 border border-white/20 shadow-sm">
-              <Zap size={14} className="text-accent" /> {t('dashboard')}
-            </div>
-            <h1 className="text-5xl font-bold leading-[1.1] sm:text-6xl tracking-tight">
-              {t('welcome')}, <br/>
-              <span className="text-white/70 font-light">{user?.nom?.split(' ')[0] || t('user')}</span>
+          <div className="relative z-10 space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">
+              {t('dashboard')}
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {t('welcome')}, {user?.nom?.split(' ')[0] || t('user')}
             </h1>
-            <p className="max-w-[320px] text-lg font-normal text-white/60 leading-relaxed">
+            <p className="max-w-[200px] text-sm font-medium text-white/70 leading-relaxed">
               {t('transfer_funds')}
             </p>
-            <div className="pt-6">
+            <div className="pt-4">
               <button 
                 onClick={() => navigate('/transfer')} 
-                className="group inline-flex items-center gap-4 rounded-2xl bg-white px-8 py-4 text-base font-bold text-primary shadow-xl hover:translate-y-[-4px] active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-[#6236CC] shadow-lg transition-transform active:scale-95"
               >
                 {t('start_transfer')} 
-                <div className="p-1 bg-primary/10 rounded-lg group-hover:translate-x-1 transition-transform">
-                  <ArrowRight size={20} />
-                </div>
+                <ArrowRight size={16} />
               </button>
             </div>
           </div>
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-2 px-2">
-          {/* Exchange Rate Section - Bento Style */}
-          <section className="premium-card p-8 group relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8">
-              <div className="px-4 py-2 bg-slate-50 rounded-xl flex items-center gap-3 text-slate-600 font-bold text-[11px] uppercase tracking-wider border border-slate-100 shadow-sm">
-                <Globe size={18} className="text-primary" /> {t('current_rate_title')}
-              </div>
-              <div className="p-3 bg-primary/10 rounded-xl text-primary group-hover:scale-110 transition-transform">
-                <TrendingUp size={24} />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('rub_rate_info')}</p>
-               <div className="flex items-baseline gap-3">
-                 <span className="text-6xl font-bold text-slate-900 tracking-tight">
-                   {exchangeRate.toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'fr-FR')}
-                 </span>
-                 <span className="text-2xl font-bold text-slate-300 uppercase">XAF</span>
-               </div>
-            </div>
-
-            <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl -z-10 group-hover:bg-primary/10 transition-colors"></div>
-          </section>
-
-          {/* Referral Section - Bento Style */}
-          <section className="premium-card p-8 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden border-primary/5">
-            <div className="flex justify-between items-start mb-8 relative z-10">
-              <div className="space-y-4">
-                <div className="bg-primary/10 px-4 py-2 rounded-xl inline-flex items-center gap-2 text-primary font-bold text-[10px] uppercase">
-                  <Gift size={16} /> {t('promo')}
-                </div>
-                <h3 className="text-3xl font-bold text-slate-900 leading-tight tracking-tight max-w-[280px]">
-                  {t('earn_referral', { amount: formatNumber(referralBonus, 'RUB') })}
-                </h3>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-6 relative z-10">
+        {/* Referral Card - Matching Screenshot */}
+        <section className="relative mx-2 overflow-hidden rounded-[32px] bg-[#F5F3FF] p-6 shadow-sm border border-[#E9E4FF]">
+          <div className="flex justify-between items-start">
+            <div className="space-y-6 flex-1 pr-4">
+              <h3 className="text-lg font-bold text-slate-800 leading-snug">
+                {t('earn_referral', { amount: formatNumber(referralBonus, 'RUB') })}
+              </h3>
+              
+              <div className="flex items-center gap-4">
                 <button 
                   onClick={() => navigate('/referral')} 
-                  className="btn-primary w-full sm:w-auto"
+                  className="rounded-xl bg-[#6236CC] px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 transition-all"
                 >
                   {t('refer_now')}
                 </button>
+                <button className="text-sm font-bold text-slate-500 hover:text-slate-700">
+                  {t('ignore')}
+                </button>
+              </div>
             </div>
-            
-            <div className="absolute right-[-20px] top-[-20px] opacity-[0.03] rotate-12">
-                <Gift size={200} />
+
+            <div className="flex flex-col items-end gap-2 shrink-0">
+               <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[10px] font-bold text-[#6236CC] shadow-sm border border-[#E9E4FF]">
+                 <Gift size={12} /> {t('special_offer')}
+               </div>
+               <div className="mt-2 scale-110">
+                 {/* Placeholder for gift box illustration */}
+                 <Gift size={80} className="text-[#A78BFA]" />
+               </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="px-4 pt-4">
+          <h2 className="text-xl font-bold text-slate-900 mb-4">{t('current_rate_title')}</h2>
+          
+          {/* Exchange Rate Card - Matching Screenshot */}
+          <section className="rounded-[32px] bg-[#F8F7FF] p-8 border border-[#F0EFFF]">
+            <div className="space-y-4">
+               <div>
+                 <p className="text-lg font-bold text-[#6236CC]">RUB</p>
+                 <p className="text-xs font-bold text-slate-400">RUB vers XAF</p>
+               </div>
+               <div className="flex items-baseline gap-2">
+                 <span className="text-3xl font-bold text-[#6236CC]">
+                   {exchangeRate.toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'fr-FR')}
+                 </span>
+                 <span className="text-xl font-bold text-[#6236CC]">XAF</span>
+               </div>
             </div>
           </section>
         </div>
 
-        <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] px-2">
-          {/* Account/KYC Card */}
-          <div className="premium-card p-8 space-y-8">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-bold uppercase tracking-widest text-primary">{t('account')}</p>
-              <div className="p-2.5 bg-slate-50 rounded-xl text-primary border border-slate-100">
-                <Shield size={22} />
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-4 pb-6 border-b border-slate-50">
-              <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{t('kyc_status')}</h3>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{t('verification_level')}</p>
-                <span className={`rounded-lg px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest border border-current/10 ${
-                  getKycStatus(user) === 'blocked' ? 'bg-orange-50 text-orange-600' :
-                  getKycStatus(user) === 'approved' ? 'bg-emerald-50 text-emerald-600' :
-                  getKycStatus(user) === 'pending' ? 'bg-amber-50 text-amber-600' :
-                  getKycStatus(user) === 'rejected' ? 'bg-rose-50 text-rose-600' :
-                  'bg-slate-50 text-slate-500'
-                }`}>
-                  {t(`kyc_${getKycStatus(user)}`)}
-                </span>
-              </div>
-            </div>
-
-            <div className="rounded-3xl bg-slate-50 p-6 space-y-3 border border-slate-100">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('available_bonus')}</p>
-              <p className="text-4xl font-bold text-primary tracking-tight">{formatNumber(user?.solde_bonus || 0, 'RUB')}</p>
-              <p className="text-[11px] font-medium text-slate-400 leading-relaxed">{t('use_on_transfers')}</p>
-            </div>
+        {/* Recent Transactions Section */}
+        <section className="px-4 pt-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold text-slate-900">{t('recent_transactions')}</h3>
+            <button 
+              onClick={() => navigate('/transactions')} 
+              className="text-sm font-bold text-primary"
+            >
+              {t('see_all')}
+            </button>
           </div>
 
-          {/* Activity/Recent Transactions Card */}
-          <div className="premium-card p-8 space-y-8">
-            <div className="flex items-center justify-between gap-4">
-              <div className="space-y-1">
-                <p className="text-[11px] font-bold uppercase tracking-widest text-primary">{t('activity')}</p>
-                <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{t('recent_transactions')}</h3>
+          <div className="space-y-3">
+            {recentTransactions.length > 0 ? (
+              recentTransactions.map((tx) => (
+                <button 
+                  key={tx.id} 
+                  onClick={() => navigate(`/transactions/${tx.id}`)} 
+                  className="flex w-full items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-50 transition-all active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-primary font-bold">
+                      {tx.recipientName?.charAt(0) || '?'}
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-bold text-slate-800 text-sm">
+                        {tx.recipientName || t('unknown_recipient')}
+                      </h4>
+                      <p className="text-[10px] font-bold text-slate-400">
+                        {formatDate(tx.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold text-slate-900 text-sm">
+                      {formatNumber(tx.amount, tx.currency)}
+                    </div>
+                  </div>
+                </button>
+              ))
+            ) : (
+              <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center text-slate-300">
+                <p className="text-xs font-bold uppercase tracking-widest">{t('no_transactions')}</p>
               </div>
-              <button 
-                onClick={() => navigate('/transactions')} 
-                className="px-5 py-2.5 bg-slate-50 text-slate-600 font-bold text-[11px] uppercase tracking-wider rounded-xl hover:bg-primary hover:text-white transition-all border border-slate-100"
-              >
-                {t('see_all')}
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {recentTransactions.length > 0 ? (
-                recentTransactions.map((tx) => (
-                  <button 
-                    key={tx.id} 
-                    onClick={() => navigate(`/transactions/${tx.id}`)} 
-                    className="group flex w-full items-center justify-between rounded-2xl border border-slate-50 bg-white p-4 transition-all hover:bg-slate-50 hover:shadow-sm"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/5 text-primary font-bold group-hover:scale-110 transition-transform">
-                        {tx.recipientName?.charAt(0) || '?'}
-                      </div>
-                      <div className="text-left">
-                        <h4 className="font-bold text-slate-900 transition-colors group-hover:text-primary">
-                          {tx.recipientName || t('unknown_recipient')}
-                        </h4>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5">
-                          {formatDate(tx.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-slate-900">
-                        {formatNumber(tx.amount, tx.currency)}
-                      </div>
-                      <div className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${
-                        (tx.status || 'pending').toLowerCase() === 'completed' ? 'text-emerald-600' :
-                        (tx.status || 'pending').toLowerCase() === 'failed' ? 'text-rose-600' :
-                        'text-amber-600'
-                      }`}>
-                         {t(`status_${(tx.status || 'pending').toLowerCase()}`)}
-                      </div>
-                    </div>
-                  </button>
-                ))
-              ) : (
-                <div className="rounded-3xl border-2 border-dashed border-slate-100 p-10 text-center text-slate-300">
-                  <History size={40} className="mx-auto mb-3 opacity-20" />
-                  <p className="text-xs font-bold uppercase tracking-widest">{t('no_transactions')}</p>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </section>
       </div>
