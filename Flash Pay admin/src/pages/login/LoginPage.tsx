@@ -25,7 +25,7 @@ const LoginPage: React.FC = () => {
       // Primary check: canonical document by uid.
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists() && userDoc.data()?.isAdmin) {
-        navigate('/admin/dashboard');
+        navigate('/dashboard');
         return;
       }
 
@@ -50,7 +50,7 @@ const LoginPage: React.FC = () => {
           },
           { merge: true }
         );
-        navigate('/admin/dashboard');
+        navigate('/dashboard');
         return;
       }
 

@@ -304,7 +304,7 @@ const TransactionDetailsPage: React.FC = () => {
       <div className="m3-card p-12 text-center max-w-xl mx-auto">
         <h2 className="text-2xl font-black text-[#1D1B20] mb-4 tracking-tight">Transaction Introuvable</h2>
         <p className="text-[#49454F] mb-8 font-medium">Cette transaction n'existe pas ou a été supprimée.</p>
-        <button onClick={() => navigate('/admin/queue')} className="m3-btn-filled mx-auto">
+        <button onClick={() => navigate('/queue')} className="m3-btn-filled mx-auto">
           <ArrowLeft size={20} /> Retour à la liste
         </button>
       </div>
@@ -316,7 +316,7 @@ const TransactionDetailsPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
-          <button onClick={() => navigate('/admin/queue')} className="flex items-center gap-2 text-[#6750A4] font-black uppercase text-[10px] tracking-widest mb-4 hover:translate-x-[-4px] transition-transform">
+          <button onClick={() => navigate('/queue')} className="flex items-center gap-2 text-[#6750A4] font-black uppercase text-[10px] tracking-widest mb-4 hover:translate-x-[-4px] transition-transform">
             <ArrowLeft size={16} /> Retour à la file d'attente
           </button>
           <div className="flex items-center gap-4">

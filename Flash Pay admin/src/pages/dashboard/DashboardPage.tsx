@@ -302,7 +302,7 @@ const DashboardPage: React.FC = () => {
                 {timeRange === 'this_year' ? 'Volume mensuel' : timeRange === 'this_month' ? 'Volume par semaine' : 'Volume journalier'}
               </p>
             </div>
-            <button onClick={() => navigate('/admin/analytics')} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">Analyses <ArrowRight size={14} /></button>
+            <button onClick={() => navigate('/analytics')} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">Analyses <ArrowRight size={14} /></button>
           </div>
           
           <div className="h-[350px] w-full min-w-0">
@@ -363,7 +363,7 @@ const DashboardPage: React.FC = () => {
               </div>
             ) : (
               alerts.map((alert: ProblemReport) => (
-                <div key={alert.id} onClick={() => navigate(`/admin/queue/${alert.transactionId}`)} className="group p-5 bg-[#FEF7FF] border border-[#E7E0EB] rounded-[28px] hover:bg-[#F9DEDC]/20 hover:border-[#F9DEDC] transition-all cursor-pointer relative overflow-hidden shadow-sm">
+                <div key={alert.id} onClick={() => navigate(`/queue/${alert.transactionId}`)} className="group p-5 bg-[#FEF7FF] border border-[#E7E0EB] rounded-[28px] hover:bg-[#F9DEDC]/20 hover:border-[#F9DEDC] transition-all cursor-pointer relative overflow-hidden shadow-sm">
                   <div className="flex gap-4 relative z-10">
                     <div className="text-[#B3261E] shrink-0 p-2 bg-white rounded-xl shadow-sm"><AlertCircle size={20} /></div>
                     <div className="flex-1 min-w-0">
@@ -382,7 +382,7 @@ const DashboardPage: React.FC = () => {
             )}
           </div>
           
-          <button onClick={() => navigate('/admin/problems')} className="w-full mt-8 m3-btn-tonal !py-4 uppercase text-[10px] tracking-widest">Voir tous les incidents</button>
+          <button onClick={() => navigate('/problems')} className="w-full mt-8 m3-btn-tonal !py-4 uppercase text-[10px] tracking-widest">Voir tous les incidents</button>
         </div>
       </div>
 
@@ -425,7 +425,7 @@ const DashboardPage: React.FC = () => {
           
           <div className="space-y-4">
             {recentTransactions.map((tx) => (
-              <div key={tx.id} onClick={() => navigate(`/admin/queue/${tx.id}`)} className="flex items-center gap-4 p-4 hover:bg-[#F3EDF7]/50 rounded-[28px] transition-all border border-transparent hover:border-[#E7E0EB] group cursor-pointer shadow-sm bg-white/50">
+              <div key={tx.id} onClick={() => navigate(`/queue/${tx.id}`)} className="flex items-center gap-4 p-4 hover:bg-[#F3EDF7]/50 rounded-[28px] transition-all border border-transparent hover:border-[#E7E0EB] group cursor-pointer shadow-sm bg-white/50">
                 <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[18px] flex items-center justify-center font-black text-sm shadow-inner group-hover:scale-110 transition-transform">
                   {tx.toCountry?.charAt(0) || '?'}
                 </div>

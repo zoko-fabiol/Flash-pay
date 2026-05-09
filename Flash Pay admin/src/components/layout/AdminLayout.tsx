@@ -34,16 +34,16 @@ const AdminLayout: React.FC = () => {
   const permissions = mergeAdminPermissions(profile?.adminPermissions);
 
   const menuItems: Array<{ path: string; icon: ComponentType<any>; label: string; desc: string; section: AdminSectionKey }> = [
-    { path: '/admin/dashboard', icon: DashboardProIcon, label: 'Dashboard', desc: 'Vue d\'ensemble', section: 'dashboard' as AdminSectionKey },
-    { path: '/admin/queue', icon: HistoryProIcon, label: 'Transactions', desc: 'Flux financier', section: 'queue' as AdminSectionKey },
-    { path: '/admin/users', icon: UsersProIcon, label: 'Clients', desc: 'Base de données', section: 'users' as AdminSectionKey },
-    { path: '/admin/kyc', icon: KycProIcon, label: 'Validation KYC', desc: 'Vérification', section: 'kyc' as AdminSectionKey },
-    { path: '/admin/countries', icon: NetworkProIcon, label: 'Gestion Réseau', desc: 'Pays & Opérateurs', section: 'countries' as AdminSectionKey },
-    { path: '/admin/messages', icon: MessagesProIcon, label: 'Messages', desc: 'Diffusion', section: 'notifications' as AdminSectionKey },
-    { path: '/admin/settings/commissions', icon: SettingsProIcon, label: 'Frais & Comms', desc: 'Tarification', section: 'settings' as AdminSectionKey },
-    { path: '/admin/settings/exchange-rates', icon: TrendingProIcon, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
-    { path: '/admin/settings/access-control', icon: KycProIcon, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
-    { path: '/admin/problems', icon: ProblemsProIcon, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
+    { path: '/dashboard', icon: DashboardProIcon, label: 'Dashboard', desc: 'Vue d\'ensemble', section: 'dashboard' as AdminSectionKey },
+    { path: '/queue', icon: HistoryProIcon, label: 'Transactions', desc: 'Flux financier', section: 'queue' as AdminSectionKey },
+    { path: '/users', icon: UsersProIcon, label: 'Clients', desc: 'Base de données', section: 'users' as AdminSectionKey },
+    { path: '/kyc', icon: KycProIcon, label: 'Validation KYC', desc: 'Vérification', section: 'kyc' as AdminSectionKey },
+    { path: '/countries', icon: NetworkProIcon, label: 'Gestion Réseau', desc: 'Pays & Opérateurs', section: 'countries' as AdminSectionKey },
+    { path: '/messages', icon: MessagesProIcon, label: 'Messages', desc: 'Diffusion', section: 'notifications' as AdminSectionKey },
+    { path: '/settings/commissions', icon: SettingsProIcon, label: 'Frais & Comms', desc: 'Tarification', section: 'settings' as AdminSectionKey },
+    { path: '/settings/exchange-rates', icon: TrendingProIcon, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
+    { path: '/settings/access-control', icon: KycProIcon, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
+    { path: '/problems', icon: ProblemsProIcon, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
   ].filter((item) => (profile?.adminRole === 'super') || canAccessAdminSection(profile, item.section));
 
   const handleLogout = async () => {
@@ -68,7 +68,7 @@ const AdminLayout: React.FC = () => {
         </div>
         <div className="flex items-center gap-2">
           <button 
-            onClick={() => navigate('/admin/notifications')}
+            onClick={() => navigate('/notifications')}
             className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full active:scale-90 transition-all relative"
           >
             <BellProIcon size={20} />
@@ -165,7 +165,7 @@ const AdminLayout: React.FC = () => {
 
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => navigate('/admin/notifications')}
+              onClick={() => navigate('/notifications')}
               className="p-3 bg-white text-[#49454F] rounded-full hover:bg-[#F3EDF7] transition-all relative shadow-sm border border-[#E7E0EB]"
               title={`${unreadCount} notifications non lues`}
             >
