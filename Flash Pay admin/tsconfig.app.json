@@ -16,6 +16,10 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "allowArbitraryExtensions": true,
+    "moduleDetection": "force",
+    "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
