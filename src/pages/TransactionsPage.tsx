@@ -22,13 +22,13 @@ export const TransactionsPage: React.FC = () => {
     
     if (!user) return;
 
-    const q = query(collection(db, 'transactions'), where('userId', '==', user.id));
+    const q = query(collection(db, 'transactions'), where('userId', '==', user.id), limit(100));
     const unsubT = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as any[];
       // Sort by createdAt descending
       data.sort((a, b) => {
-        const t1 = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || a.createdAt || 0;
-        const t2 = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || b.createdAt || 0;
+        const t1 = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || (a.createdAt instanceof Date ? a.createdAt.getTime() : 0) || 0;
+        const t2 = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || (b.createdAt instanceof Date ? b.createdAt.getTime() : 0) || 0;
         return t2 - t1;
       });
       setTransactions(data);

@@ -45,11 +45,15 @@ export const DashboardPage: React.FC = () => {
 
     const userId = user?.id;
     const unsubTransactions = userId
-      ? onSnapshot(query(collection(db, 'transactions'), where('userId', '==', userId)), (snapshot) => {
+      ? onSnapshot(query(
+          collection(db, 'transactions'), 
+          where('userId', '==', userId),
+          limit(30) // Fetch slightly more to handle client-side sorting if needed, but much less than infinity
+        ), (snapshot) => {
           const data = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() as any) })) as any[];
           data.sort((a, b) => {
-            const t1 = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || 0;
-            const t2 = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || 0;
+            const t1 = a.createdAt?.toMillis?.() || a.createdAt?.seconds * 1000 || (a.createdAt instanceof Date ? a.createdAt.getTime() : 0);
+            const t2 = b.createdAt?.toMillis?.() || b.createdAt?.seconds * 1000 || (b.createdAt instanceof Date ? b.createdAt.getTime() : 0);
             return t2 - t1;
           });
           setRecentTransactions(data.slice(0, 3));
