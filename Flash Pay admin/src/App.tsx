@@ -1,6 +1,6 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AdminLayout from './components/layout/AdminLayout';
 import LoginPage from './pages/login/LoginPage';
@@ -34,7 +34,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }: {
   }
 
   if (!user || !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;
@@ -48,11 +48,11 @@ const SectionRoute: React.FC<{ section?: AdminSectionKey; children: React.ReactN
   }
 
   if (!user || !isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (section && !canAccessAdminSection(profile, section)) {
-    return <Navigate to="/admin/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
@@ -76,11 +76,11 @@ function App() {
           },
         }}
       />
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
-          <Route path="/admin/login" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
           
-          <Route path="/admin" element={
+          <Route path="/" element={
             <ProtectedRoute>
               <AdminLayout />
             </ProtectedRoute>
@@ -105,9 +105,9 @@ function App() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
       </AdminNotificationProvider>
     </AuthProvider>
   );
