@@ -48,12 +48,7 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
 
-      # 6. Ajouter la plateforme Android (si pas déjà dans le repo)
-      - name: Add Android platform
-        run: npx cap add android
-        continue-on-error: true  # Ignore l'erreur si android/ existe déjà
-
-      # 8. Synchroniser le build Vite vers Android
+      # 6. Synchroniser le build Vite vers Android (Le dossier android/ existe déjà)
       - name: Sync Capacitor → Android
         run: npx cap sync android
 
