@@ -26,19 +26,19 @@
   --glass-border: rgba(255, 255, 255, 0.5);
 }
 
+* {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: 'Outfit', sans-serif;
   background-color: var(--color-background);
   color: #1A1A2E;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  overscroll-behavior-y: none; /* Prevent pull-to-refresh feel if not needed */
-}
-
-/* Optimize transitions: avoid using * { transition: all } */
-.btn-primary, .input-field, .premium-card, a, button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Glassmorphism Utility */
