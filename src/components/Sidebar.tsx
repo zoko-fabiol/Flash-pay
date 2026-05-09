@@ -41,12 +41,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose} />
+        <div className="fixed inset-0 bg-black/50 z-[60] lg:hidden" onClick={onClose} />
       )}
       
       <aside className={`
         fixed lg:static inset-y-0 left-0 w-72 glass-effect border-r border-white/20
-        transform transition-transform z-50 overflow-y-auto
+        transform transition-transform z-[70] overflow-y-auto
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="p-6 flex justify-between items-center lg:hidden">
