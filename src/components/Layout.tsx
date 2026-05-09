@@ -16,20 +16,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const { t } = useLanguage();
 
-  const mobileTabs = [
+  const mobileTabs = React.useMemo(() => [
     { path: '/', label: t('menu_dashboard'), icon: Home },
     { path: '/transactions', label: t('menu_history'), icon: History },
     { path: '/transfer', label: t('menu_transfer'), icon: Send, featured: true },
     { path: '/referral', label: t('menu_referral'), icon: Share2 },
     { path: '/profile', label: t('menu_profile'), icon: User },
-  ];
+  ], [t]);
 
-  const isActive = (path: string) => {
+  const isActive = React.useCallback((path: string) => {
     if (path === '/transfer') {
       return location.pathname.startsWith('/transfer');
     }
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
-  };
+  }, [location.pathname]);
 
   return (
     <div className="flex flex-col h-screen bg-gradient-mesh">

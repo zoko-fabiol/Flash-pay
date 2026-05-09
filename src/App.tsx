@@ -8,13 +8,15 @@ import { LanguageProvider } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useEffect } from 'react';
 
-// Pages (Lazy Loaded for better mobile performance)
+// Core Pages (Statically imported for instant navigation)
+import { DashboardPage } from './pages/DashboardPage';
+import { TransferWizardPage } from './pages/TransferWizardPage';
+import { TransactionsPage } from './pages/TransactionsPage';
+
+// Secondary Pages (Lazy Loaded to keep initial bundle size manageable)
 const LoginPage = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage = React.lazy(() => import('./pages/SignupPage').then(m => ({ default: m.SignupPage })));
 const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerificationPage').then(m => ({ default: m.EmailVerificationPage })));
-const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const TransferWizardPage = React.lazy(() => import('./pages/TransferWizardPage').then(m => ({ default: m.TransferWizardPage })));
-const TransactionsPage = React.lazy(() => import('./pages/TransactionsPage').then(m => ({ default: m.TransactionsPage })));
 const KYCPage = React.lazy(() => import('./pages/KYCPage').then(m => ({ default: m.KYCPage })));
 const ReferralPage = React.lazy(() => import('./pages/ReferralPage').then(m => ({ default: m.ReferralPage })));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));

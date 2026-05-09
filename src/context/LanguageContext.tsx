@@ -37,7 +37,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     document.documentElement.lang = language;
   }, [language]);
 
-  const t = (key: string, vars?: Record<string, any>) => {
+  const t = React.useCallback((key: string, vars?: Record<string, any>) => {
     const dict = translations[language] || translations['fr'];
     let text = dict[key] || key;
 
@@ -47,15 +47,15 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
       });
     }
     return text;
-  };
+  }, [language]);
 
-  const formatNumber = (value: number, currency?: string) => {
+  const formatNumber = React.useCallback((value: number, currency?: string) => {
     const locale = language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'fr-FR';
     const options: Intl.NumberFormatOptions = currency ? { style: 'currency', currency } : {};
     return new Intl.NumberFormat(locale, options).format(value);
-  };
+  }, [language]);
 
-  const formatDate = (d: any) => {
+  const formatDate = React.useCallback((d: any) => {
     try {
       // Handle Firestore Timestamp objects
       const date = d?.toDate ? d.toDate() : d instanceof Date ? d : new Date(d);
@@ -64,10 +64,18 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {
       return '—';
     }
-  };
+  }, [language]);
+
+  const value = React.useMemo(() => ({
+    language,
+    setLanguage,
+    t,
+    formatNumber,
+    formatDate
+  }), [language, setLanguage, t, formatNumber, formatDate]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, formatNumber, formatDate }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
