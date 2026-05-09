@@ -21,10 +21,12 @@ import UsersListPage from './pages/users/UsersListPage';
 import AccessControlPage from './pages/settings/AccessControlPage';
 import { canAccessAdminSection } from './lib/adminAccess';
 import MessagesToUsers from './pages/messages/MessagesToUsers';
+import type { AdminSectionKey } from './types';
 
 import { Loading } from './components/ui/Loading';
+import { AdminNotificationProvider } from './context/AdminNotificationContext';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
   const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
@@ -38,7 +40,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-const SectionRoute: React.FC<{ section?: Parameters<typeof canAccessAdminSection>[1]; children: React.ReactNode }> = ({ section, children }) => {
+const SectionRoute: React.FC<{ section?: AdminSectionKey; children: React.ReactNode }> = ({ section, children }: { section?: AdminSectionKey; children: React.ReactNode }) => {
   const { user, isAdmin, profile, loading } = useAuth();
 
   if (loading) {
@@ -59,6 +61,7 @@ const SectionRoute: React.FC<{ section?: Parameters<typeof canAccessAdminSection
 function App() {
   return (
     <AuthProvider>
+      <AdminNotificationProvider>
       <Toaster 
         position="top-right"
         toastOptions={{
@@ -105,6 +108,7 @@ function App() {
           <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
+      </AdminNotificationProvider>
     </AuthProvider>
   );
 }

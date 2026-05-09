@@ -17,7 +17,7 @@ import {
   type Unsubscribe,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Notification, PlatformType } from '../types/notifications';
+import type { Notification, PlatformType, NotificationType, NotificationPriority } from '../types/notifications';
 
 const DEFAULT_LIMIT = 50;
 
@@ -414,5 +414,33 @@ export const notificationService = {
       unsubscribeSub();
       unsubscribeBroadcast();
     };
+  },
+
+  async sendNotification(params: {
+    userId: string;
+    title: string;
+    body: string;
+    type?: NotificationType;
+    priority?: NotificationPriority;
+    data?: Record<string, any>;
+    channels?: NotificationType[];
+  }): Promise<string> {
+    const { userId, title, body, type = 'in_app', priority = 'normal', data = {}, channels = ['in_app'] } = params;
+
+    const docRef = await addDoc(userNotificationsCollection(userId), {
+      userId,
+      title,
+      body,
+      type,
+      priority,
+      channels,
+      data,
+      read: false,
+      createdAt: serverTimestamp(),
+      status: 'delivered',
+      sentAt: serverTimestamp(),
+    });
+
+    return docRef.id;
   },
 };

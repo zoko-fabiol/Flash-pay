@@ -44,6 +44,12 @@ export interface User {
     type: string;
     awardedAt: Timestamp;
   }>;
+  firstName?: string;
+  lastName?: string;
+  nationality?: string;
+  address?: string;
+  city?: string;
+  postalCode?: string;
   createdAt: Date;
   updatedAt: Date;
 }

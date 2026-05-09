@@ -14,9 +14,6 @@ import {
 } from 'firebase/auth';
 import {
   getFirestore,
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
   collection,
   doc,
   setDoc,
@@ -32,6 +29,7 @@ import {
   type Firestore,
   Timestamp,
   increment,
+  serverTimestamp,
 } from 'firebase/firestore';
 import {
   getStorage,
@@ -55,16 +53,8 @@ const firebaseConfig = {
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 
-// Use the new Firestore cache API with HMR safety
-export const db: Firestore = (() => {
-  try {
-    return initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    });
-  } catch (e) {
-    return getFirestore(app);
-  }
-})();
+// Initialize Firestore
+export const db: Firestore = getFirestore(app);
 
 export const storage = getStorage(app);
 
@@ -114,7 +104,7 @@ export const authService = {
     });
 
     if (userData.ref) {
-      await userService.applyReferralCode(user.uid, userData.ref);
+      await userService.applyReferralCode(user.uid, userData.ref, userData.nom, email);
     }
 
     // --- Custom Email Verification via Google Apps Script ---
@@ -138,6 +128,22 @@ export const authService = {
       console.error('Failed to send verification email via GAS:', error);
       // Fallback: standard firebase (will likely fail on Spark plan if customized)
       // await sendEmailVerification(user);
+    }
+
+    // --- Add Welcome Notification ---
+    try {
+      await addDoc(collection(db, 'notifications', user.uid, 'items'), {
+        title: 'Bienvenue sur Flash Pay !',
+        body: 'Nous sommes ravis de vous compter parmi nous. Commencez dès maintenant à envoyer de l\'argent vers l\'Afrique et la Russie au meilleur prix.',
+        type: 'general',
+        priority: 'high',
+        isRead: false,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        link: '/transfer'
+      });
+    } catch (err) {
+      console.error('Failed to create welcome notification:', err);
     }
 
     return user;
@@ -229,6 +235,39 @@ export const userService = {
       deletionRequested: true,
       deletionRequestedAt: new Date(),
       status: 'inactive',
+    });
+  },
+
+  async deductBonus(userId: string, amount: number, reason: string) {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      solde_bonus: increment(-amount),
+      updatedAt: serverTimestamp()
+    });
+    
+    // Log bonus transaction
+    await addDoc(collection(db, 'bonus_history'), {
+      userId,
+      amount: -amount,
+      type: 'deduction',
+      reason,
+      timestamp: serverTimestamp()
+    });
+  },
+
+  async addBonus(userId: string, amount: number, reason: string) {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      solde_bonus: increment(amount),
+      updatedAt: serverTimestamp()
+    });
+    
+    await addDoc(collection(db, 'bonus_history'), {
+      userId,
+      amount,
+      type: 'earning',
+      reason,
+      timestamp: serverTimestamp()
     });
   },
 
@@ -448,6 +487,35 @@ export const userService = {
         kycId: docRef.id,
       });
 
+      // Real-time notification
+      await addDoc(collection(db, 'notifications', userId, 'items'), {
+        title: 'KYC soumis',
+        body: validation.isRussianCorridor
+          ? 'Votre dossier KYC pour le corridor Russie est en attente de vérification.'
+          : 'Votre dossier KYC est en attente de vérification.',
+        type: 'kyc',
+        priority: 'normal',
+        read: false,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        data: { kycId: docRef.id }
+      });
+
+      // Notify Admin
+      try {
+        await addDoc(collection(db, 'admin_notifications'), {
+          title: 'Nouveau KYC soumis',
+          body: `L'utilisateur ${userData?.email || userId} a soumis ses documents KYC.`,
+          type: 'kyc',
+          priority: 'normal',
+          read: false,
+          createdAt: Timestamp.now(),
+          link: `/admin/kyc` // Note: The admin KYC list handles deep linking via query or search, or we can use /admin/kyc?userId=${userId}
+        });
+      } catch (err) {
+        console.error('Failed to notify admin of KYC submission:', err);
+      }
+
       return urls;
     } catch (error) {
       console.error('KYC upload error:', error);
@@ -552,6 +620,18 @@ export const userService = {
       createdAt: Timestamp.now(),
       kycId,
     });
+
+    // Real-time notification
+    await addDoc(collection(db, 'notifications', userId, 'items'), {
+      title: 'KYC rejeté',
+      body: `Votre dossier KYC a été rejeté : ${rejectionReason}. Veuillez vérifier vos documents et soumettre à nouveau.`,
+      type: 'kyc',
+      priority: 'high',
+      read: false,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      data: { kycId, reason: rejectionReason }
+    });
   },
 
   // ===== NEW: KYC Approval Workflow =====
@@ -607,6 +687,18 @@ export const userService = {
       kycId,
     });
 
+    // Real-time notification
+    await addDoc(collection(db, 'notifications', userId, 'items'), {
+      title: 'KYC approuvé !',
+      body: 'Votre dossier KYC a été approuvé avec succès. Vos limites de transfert ont été augmentées.',
+      type: 'kyc',
+      priority: 'high',
+      read: false,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      data: { kycId }
+    });
+
     // Add bonus to history
     await updateDoc(doc(db, 'users', userId), {
       'bonuses.history': [
@@ -619,6 +711,19 @@ export const userService = {
         }
       ]
     });
+
+    // Handle Referral Reward
+    try {
+      const settingsSnap = await getDocs(query(collection(db, 'settings'), limit(1)));
+      let referralBonus = 500;
+      if (!settingsSnap.empty) {
+        referralBonus = settingsSnap.docs[0].data().referralBonusRUB || 500;
+      }
+      await this.rewardReferralAfterKyc(userId, referralBonus);
+    } catch (error) {
+      console.error('Error rewarding referral:', error);
+      // Don't throw, we don't want to fail the whole KYC approval if referral payout fails
+    }
   },
 
   // ===== LEGACY: uploadKYC (keeping for backward compatibility) =====
@@ -640,8 +745,18 @@ export const userService = {
     const data = userDoc.data();
     const referralQuery = query(collection(db, 'referrals'), where('referrerId', '==', userId));
     const referralSnapshot = await getDocs(referralQuery);
-    const referrals = referralSnapshot.docs.map((item) => ({ id: item.id, ...(item.data() as any) }));
+    const rawReferrals = referralSnapshot.docs.map((item) => ({ id: item.id, ...(item.data() as any) }));
 
+    // Group referrals by email to "merge" duplicates
+    const groupedByEmail: Record<string, any> = {};
+    rawReferrals.forEach(ref => {
+      const email = (ref.referredEmail || ref.id).toLowerCase();
+      if (!groupedByEmail[email] || ref.status === 'rewarded') {
+        groupedByEmail[email] = ref;
+      }
+    });
+
+    const referrals = Object.values(groupedByEmail);
     const rewarded = referrals.filter((referral) => referral.status === 'rewarded');
     const pending = referrals.filter((referral) => referral.status === 'pending');
 
@@ -656,7 +771,7 @@ export const userService = {
     };
   },
 
-  async applyReferralCode(newUserId: string, referralCode: string) {
+  async applyReferralCode(newUserId: string, referralCode: string, referredUserName?: string, referredEmail?: string) {
     const normalizedCode = referralCode.trim().toUpperCase();
     if (!normalizedCode) return { applied: false, reason: 'empty' };
 
@@ -677,6 +792,28 @@ export const userService = {
       throw new Error('Vous ne pouvez pas utiliser votre propre code');
     }
 
+    // Check for duplicate referral by email
+    if (referredEmail) {
+      const emailQuery = query(collection(db, 'referrals'), where('referredEmail', '==', referredEmail.toLowerCase()), limit(1));
+      const emailSnapshot = await getDocs(emailQuery);
+      if (!emailSnapshot.empty) {
+        // If a referral record already exists for this email, we link the UID but don't create a new one
+        const existingRef = emailSnapshot.docs[0];
+        await updateDoc(doc(db, 'referrals', existingRef.id), {
+          referredUserId: newUserId,
+          status: 'pending' // Reset to pending if it was somehow failed
+        });
+        
+        await updateDoc(doc(db, 'users', newUserId), {
+          referredBy: existingRef.data().referrerId,
+          referralCodeUsed: normalizedCode,
+          referralStatus: 'pending',
+          referralAppliedAt: Timestamp.now(),
+        });
+        return { applied: true, reused: true };
+      }
+    }
+
     // Fetch dynamic bonus amount from settings
     const settingsSnap = await getDocs(query(collection(db, 'settings'), limit(1)));
     let bonusAmount = 500; // Fallback
@@ -689,6 +826,8 @@ export const userService = {
       id: referralRecordRef.id,
       referrerId: referrerDoc.id,
       referredUserId: newUserId,
+      referredUserName: referredUserName || 'Nouvel utilisateur',
+      referredEmail: referredEmail?.toLowerCase() || '',
       referralCode: normalizedCode,
       status: 'pending',
       bonusAmount: bonusAmount,
@@ -712,6 +851,21 @@ export const userService = {
       'referralStats.pending': increment(1),
       updatedAt: new Date(),
     });
+
+    // Notify Referrer
+    try {
+      await addDoc(collection(db, 'notifications', referrerDoc.id, 'items'), {
+        title: 'Nouveau parrainage !',
+        body: `Un nouvel utilisateur (${referredUserName || referredEmail || 'Inconnu'}) a utilisé votre code de parrainage. Votre bonus sera validé après son KYC.`,
+        type: 'referral',
+        priority: 'normal',
+        read: false,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    } catch (err) {
+      console.error('Failed to notify referrer:', err);
+    }
 
     return { applied: true, referrerId: referrerDoc.id, referralRecordId: referralRecordRef.id };
   },
@@ -759,6 +913,21 @@ export const userService = {
       referralRewardedAt: Timestamp.now(),
       updatedAt: new Date(),
     });
+
+    // Notify Referrer of Reward
+    try {
+      await addDoc(collection(db, 'notifications', referrerId, 'items'), {
+        title: 'Bonus de parrainage validé !',
+        body: `Votre bonus de ${rewardAmount} RUB pour le parrainage de ${user.nom || 'un utilisateur'} a été ajouté à votre solde.`,
+        type: 'referral_reward',
+        priority: 'high',
+        read: false,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    } catch (err) {
+      console.error('Failed to notify referrer of reward:', err);
+    }
 
     return { rewarded: true, referrerId, referralRecordId: referralDoc.id };
   },
@@ -907,6 +1076,28 @@ export const kycService = {
       rejectionCount,
       timestamp: Timestamp.now(),
       kycId,
+    });
+  },
+
+  async deductBonus(userId: string, amount: number, reason: string = 'Payment for transfer') {
+    const userRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) throw new Error('User not found');
+    
+    const currentBonus = userDoc.data().solde_bonus || 0;
+    if (currentBonus < amount) {
+      throw new Error('Solde bonus insuffisant');
+    }
+
+    await updateDoc(userRef, {
+      solde_bonus: increment(-amount),
+      'bonuses.history': arrayUnion({
+        type: 'usage',
+        amount: -amount,
+        status: 'used',
+        reason,
+        createdAt: Timestamp.now(),
+      })
     });
   },
 };
@@ -1124,6 +1315,23 @@ export const transactionService = {
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
+
+    // Notify Admin
+    try {
+      const isLarge = transactionData.amount >= 100000;
+      await addDoc(collection(db, 'admin_notifications'), {
+        title: isLarge ? '⚠️ GROS TRANSFERT' : 'Nouveau transfert',
+        body: `${isLarge ? 'ALERTE : ' : ''}Un nouveau transfert de ${transactionData.amount} ${transactionData.currency} a été initié.`,
+        type: 'transaction',
+        priority: isLarge ? 'high' : 'normal',
+        read: false,
+        createdAt: Timestamp.now(),
+        link: `/admin/queue/${docRef.id}`
+      });
+    } catch (err) {
+      console.error('Failed to notify admin of transaction:', err);
+    }
+
     return docRef.id;
   },
 
@@ -1212,13 +1420,45 @@ async function generateUniqueReferralCode(): Promise<string> {
 // Support Service
 export const supportService = {
   async submitTicket(userId: string, data: { description: string; type?: string; transactionId?: string }) {
-    return await addDoc(collection(db, 'problem_reports'), {
+    const docRef = await addDoc(collection(db, 'problem_reports'), {
       userId,
       ...data,
       type: data.type || 'Anomalie',
       status: 'pending',
       createdAt: Timestamp.now(),
     });
+
+    // Notify user of ticket submission
+    try {
+      await addDoc(collection(db, 'notifications', userId, 'items'), {
+        title: 'Ticket de support créé',
+        body: `Votre demande concernant "${data.type || 'Anomalie'}" a été enregistrée. Notre équipe vous répondra sous peu.`,
+        type: 'support',
+        priority: 'normal',
+        read: false,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+    } catch (err) {
+      console.error('Failed to notify user of ticket submission:', err);
+    }
+
+    // Notify Admin of new support ticket
+    try {
+      await addDoc(collection(db, 'admin_notifications'), {
+        title: '🎫 Nouveau ticket support',
+        body: `L'utilisateur #${userId.slice(-6)} a soumis un ticket : ${data.type || 'Anomalie'}.`,
+        type: 'support',
+        priority: 'normal',
+        read: false,
+        createdAt: Timestamp.now(),
+        link: `/admin/problems` // Adjust link if needed
+      });
+    } catch (err) {
+      console.error('Failed to notify admin of support ticket:', err);
+    }
+
+    return docRef;
   },
 
   async getUserTickets(userId: string) {

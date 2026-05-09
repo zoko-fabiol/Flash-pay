@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { authService, userService } from '../services/firebase';
+import { onSnapshot, doc } from 'firebase/firestore';
+import { authService, userService, db } from '../services/firebase';
 import type { User } from '../types';
 
 interface AuthContextType {
@@ -26,23 +27,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = authService.onAuthStateChanged(async (fbUser) => {
+    let unsubUser: (() => void) | null = null;
+
+    const unsubscribeAuth = authService.onAuthStateChanged(async (fbUser) => {
       if (fbUser) {
-        try {
-          const userData = await userService.getUserData(fbUser.uid);
-          setUser(userData as User);
-          setFirebaseUser(fbUser);
-        } catch (err) {
-          console.error('Error fetching user data:', err);
-        }
+        setFirebaseUser(fbUser);
+        // Listen to user document in real-time
+        unsubUser = onSnapshot(doc(db, 'users', fbUser.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            setUser({ id: docSnap.id, ...docSnap.data() } as User);
+          }
+          setLoading(false);
+        }, (err) => {
+          console.error('Error listening to user data:', err);
+          setLoading(false);
+        });
       } else {
+        if (unsubUser) unsubUser();
         setUser(null);
         setFirebaseUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      if (unsubUser) unsubUser();
+    };
   }, []);
 
   const signup = async (email: string, password: string, nom: string, tel: string, ref?: string) => {

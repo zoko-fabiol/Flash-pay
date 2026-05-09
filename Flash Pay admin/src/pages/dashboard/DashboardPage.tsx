@@ -35,7 +35,15 @@ const asDate = (value: any): Date | null => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-const StatCard = ({ title, value, change, icon: Icon, trend }: any) => {
+interface StatCardProps {
+  title: string;
+  value: string | number;
+  change?: string;
+  icon: React.ElementType;
+  trend?: 'up' | 'down';
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, trend }) => {
   return (
     <div className="m3-card-elevated group relative overflow-hidden">
       <div className="absolute -right-4 -top-4 opacity-[0.03] group-hover:scale-110 transition-transform duration-700">
@@ -59,7 +67,12 @@ const StatCard = ({ title, value, change, icon: Icon, trend }: any) => {
 };
 
 const DashboardPage: React.FC = () => {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<{
+    todayTransactions: number;
+    totalVolumeEur: number;
+    totalVolumeRub: number;
+    activeUsers: number;
+  }>({
     todayTransactions: 0,
     totalVolumeEur: 0,
     totalVolumeRub: 0,
@@ -293,7 +306,7 @@ const DashboardPage: React.FC = () => {
                 <p className="text-[#49454F] text-[10px] font-bold uppercase mt-1 opacity-60">Aucun litige en attente</p>
               </div>
             ) : (
-              alerts.map(alert => (
+              alerts.map((alert: ProblemReport) => (
                 <div key={alert.id} className="group p-5 bg-[#FEF7FF] border border-[#E7E0EB] rounded-[28px] hover:bg-[#F9DEDC]/20 hover:border-[#F9DEDC] transition-all cursor-pointer relative overflow-hidden shadow-sm">
                   <div className="flex gap-4 relative z-10">
                     <div className="text-[#B3261E] shrink-0 p-2 bg-white rounded-xl shadow-sm"><AlertCircle size={20} /></div>

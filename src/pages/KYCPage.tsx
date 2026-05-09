@@ -77,12 +77,24 @@ export const KYCPage: React.FC = () => {
       }
     });
 
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        firstName: user.firstName || user.nom?.split(' ')[0] || prev.firstName,
+        lastName: user.lastName || user.nom?.split(' ').slice(1).join(' ') || prev.lastName,
+        nationality: user.nationality || prev.nationality,
+        address: user.address || prev.address,
+        city: user.city || prev.city,
+        postalCode: user.postalCode || prev.postalCode,
+      }));
+    }
+
     return () => {
       unsubSettings();
       unsubRates();
       unsubCountries();
     };
-  }, []);
+  }, [user]);
 
   const kycStatus = getKycStatus(user);
 
@@ -307,6 +319,21 @@ export const KYCPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
                    <FileUpload label={t('id_proof')} file={documentFile} onChange={(e) => handleFileChange(e, setDocumentFile)} />
                    <FileUpload label={t('selfie_with_id')} file={selfieFile} onChange={(e) => handleFileChange(e, setSelfieFile)} />
+                   
+                   {/* Missing Fields Added */}
+                   <FileUpload label={t('address_proof')} file={addressProofFile} onChange={(e) => handleFileChange(e, setAddressProofFile)} />
+                   
+                   {/* Dynamic Local Document Field */}
+                   {(() => {
+                     const departure = (formData.countryOfDeparture || '').toLowerCase();
+                     const nationality = (formData.nationality || '').toLowerCase();
+                     const isRussian = ['russie', 'russia', 'ru'].some(n => departure.includes(n)) || 
+                                      ['russe', 'russian'].some(n => nationality.includes(n));
+                     
+                     return !isRussian && (
+                       <FileUpload label={t('local_document')} file={localProofFile} onChange={(e) => handleFileChange(e, setLocalProofFile)} />
+                     );
+                   })()}
                 </div>
               </div>
 

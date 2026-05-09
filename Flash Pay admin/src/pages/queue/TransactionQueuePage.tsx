@@ -92,7 +92,7 @@ const TransactionQueuePage: React.FC = () => {
               type="text"
               placeholder="ID, Client, Téléphone..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
               className="bg-transparent border-none outline-none text-sm font-medium w-full"
             />
           </div>
@@ -155,7 +155,7 @@ const TransactionQueuePage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredTransactions.map((tx) => (
+                filteredTransactions.map((tx: Transaction) => (
                   <tr key={tx.id} className="hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer" onClick={() => navigate(`/admin/queue/${tx.id}`)}>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
@@ -216,7 +216,7 @@ const TransactionQueuePage: React.FC = () => {
                          </div>
                       </div>
                     </td>
-                    <td className="px-8 py-6 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-8 py-6 text-right" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                       <div className="flex justify-end gap-2">
                         <button 
                           onClick={() => navigate(`/admin/queue/${tx.id}`)}

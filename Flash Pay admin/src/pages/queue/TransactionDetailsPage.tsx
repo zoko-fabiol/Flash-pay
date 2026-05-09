@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, onSnapshot, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import type { Transaction, BulkRecipient } from '../../types';
+import type { Transaction, BulkRecipient, TransactionStatus } from '../../types';
 import { adminService } from '../../services/adminService';
 import jsPDF from 'jspdf';
 import { 
@@ -55,7 +55,7 @@ const TransactionDetailsPage: React.FC = () => {
     return () => unsubscribe();
   }, [transactionId]);
 
-  const handleStatusUpdate = async (status: any) => {
+  const handleStatusUpdate = async (status: TransactionStatus) => {
     if (!transaction) return;
     setIsActionLoading(true);
     const t = toast.loading('Mise à jour du statut...');
@@ -540,7 +540,7 @@ const TransactionDetailsPage: React.FC = () => {
                   <div className="relative">
                     <select 
                       value={selectedReason}
-                      onChange={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         setSelectedReason(e.target.value);
                         if (e.target.value !== "Autre (précisez ci-dessous)") {
                           setAdminNote(e.target.value);
@@ -564,7 +564,7 @@ const TransactionDetailsPage: React.FC = () => {
                   <textarea 
                    placeholder="Ex: Précisez le motif du rejet ou ajoutez un message de validation..."
                    value={adminNote}
-                   onChange={(e) => setAdminNote(e.target.value)}
+                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAdminNote(e.target.value)}
                    className="w-full bg-white/10 border border-white/20 rounded-[20px] p-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-4 focus:ring-white/10 transition-all h-24"
                   />
                 </div>

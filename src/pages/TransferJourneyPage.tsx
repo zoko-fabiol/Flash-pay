@@ -79,12 +79,10 @@ async function fileToBase64(file: File | Blob, maxWidth = 1000, quality = 0.72):
   });
 }
 
-const flagEmoji = (value?: string) => {
-  if (!value) return null;
-  const normalized = value.trim().slice(0, 2).toUpperCase();
-  if (normalized.length !== 2) return null;
-
-  return String.fromCodePoint(...normalized.split('').map((char) => 127397 + char.charCodeAt(0)));
+// Prefer flag images from flagcdn when country code is available.
+const flagImageFor = (code?: string) => {
+  if (!code) return undefined;
+  return `https://flagcdn.com/w20/${code.toLowerCase()}.png`;
 };
 
 const bankFallbacks = [
@@ -260,6 +258,22 @@ const TransferJourneyPage: React.FC = () => {
         ],
       });
 
+      // Notify Admin of new transaction
+      try {
+        const isLarge = (transferData.amount || 0) >= 100000;
+        await addDoc(collection(db, 'admin_notifications'), {
+          title: isLarge ? '⚠️ GROS TRANSFERT' : 'Nouveau transfert',
+          body: `${isLarge ? 'ALERTE : ' : ''}Un nouveau transfert de ${transferData.amount} RUB a été initié par ${user?.nom || 'un client'}.`,
+          type: 'transaction',
+          priority: isLarge ? 'high' : 'normal',
+          read: false,
+          createdAt: Timestamp.now(),
+          link: `/admin/queue/${created.id}`
+        });
+      } catch (err) {
+        console.error('Failed to notify admin of transaction:', err);
+      }
+
       setCreatedTransactionId(created.id);
       nextStep();
       toast.success('Transfert initié', { id: loadingToast });
@@ -365,8 +379,12 @@ const TransferJourneyPage: React.FC = () => {
                   <span className="mb-2 block text-sm font-medium text-slate-700">Numéro de téléphone</span>
                   <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm sm:grid-cols-[180px_1fr]">
                     <div className="flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                      {selected?.flag || selected?.emoji ? (
-                        <span className="text-xl">{selected?.flag || selected?.emoji}</span>
+                      {selected?.code ? (
+                        <img
+                          src={flagImageFor(selected.code)}
+                          alt={`${selected.name} flag`}
+                          className="w-5 h-5 rounded-sm object-cover"
+                        />
                       ) : (
                         <Globe size={20} className="text-slate-600" />
                       )}
@@ -434,8 +452,8 @@ const TransferJourneyPage: React.FC = () => {
   }
 
   if (currentStep === 3) {
-    const senderCountry = { name: 'Russie', flag: '🇷🇺' };
-    const recipientFlag = destinationCountry?.flag || destinationCountry?.emoji || flagEmoji(destinationCountry?.code || 'XA');
+    const senderCountry = { name: 'Russie', code: 'ru' };
+    const recipientFlagImg = destinationCountry?.code ? flagImageFor(destinationCountry.code) : undefined;
 
     return (
       <Layout>
@@ -455,9 +473,17 @@ const TransferJourneyPage: React.FC = () => {
 
               <div className="mt-6 overflow-hidden rounded-[28px] border border-slate-100 bg-slate-50 p-5 sm:p-7">
                 <div className="flex items-center justify-center gap-4 text-4xl sm:text-5xl">
-                  <span>{senderCountry.flag}</span>
+                  {senderCountry.code ? (
+                    <img src={flagImageFor(senderCountry.code)} alt="Russia flag" className="w-8 h-8" />
+                  ) : (
+                    <span />
+                  )}
                   <ArrowRight className="text-[#6236CC]" size={28} />
-                  <span>{recipientFlag}</span>
+                  {recipientFlagImg ? (
+                    <img src={recipientFlagImg} alt="Destination flag" className="w-8 h-8" />
+                  ) : (
+                    <Globe size={28} className="text-[#6236CC]" />
+                  )}
                 </div>
                 <p className="mt-4 text-center text-sm text-slate-500">Vous envoyez</p>
                 <h3 className="text-center text-4xl font-black text-slate-900">{(transferData.amount || 0).toLocaleString('fr-FR')} roubles</h3>

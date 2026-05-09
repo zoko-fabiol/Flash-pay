@@ -100,7 +100,7 @@ const LoginPage: React.FC = () => {
                 <input
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
                   className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4] transition-all outline-none"
                   placeholder="admin@flashpay.com"
                   required
@@ -115,7 +115,7 @@ const LoginPage: React.FC = () => {
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#6750A4]/10 focus:border-[#6750A4] transition-all outline-none"
                   placeholder="••••••••"
                   required

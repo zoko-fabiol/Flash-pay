@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { userService, db } from '../services/firebase';
-import { collection, onSnapshot, query, limit } from 'firebase/firestore';
+import { onSnapshot, collection, query, limit, where } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
 import { Copy, Share2, Users, Gift, Clock, TrendingUp, Sparkles } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -13,6 +13,7 @@ export const ReferralPage: React.FC = () => {
   const { t, formatNumber } = useLanguage();
   const [referralCode, setReferralCode] = useState('');
   const [referredUsers, setReferredUsers] = useState<string[]>([]);
+  const [referrals, setReferrals] = useState<any[]>([]);
   const [totalBonus, setTotalBonus] = useState(0);
   const [invitedCount, setInvitedCount] = useState(0);
   const [rewardedCount, setRewardedCount] = useState(0);
@@ -21,22 +22,9 @@ export const ReferralPage: React.FC = () => {
   const [referralBonusRUB, setReferralBonusRUB] = useState(500);
 
   useEffect(() => {
-    const fetchReferralData = async () => {
-      if (!user) return;
-      try {
-        const data = await userService.getReferralData(user.id);
-        setReferralCode(data.referralCode);
-        setReferredUsers(data.referredUsers);
-        setTotalBonus(data.totalBonus);
-        setInvitedCount(data.invitedCount || data.referredUsers.length);
-        setRewardedCount(data.rewardedCount || 0);
-        setPendingCount(data.pendingCount || 0);
-      } catch (err) {
-        console.error('Error fetching referral data:', err);
-      }
-    };
-    fetchReferralData();
+    if (!user) return;
 
+    // Listen to settings for bonus amount
     const qSettings = query(collection(db, 'settings'), limit(1));
     const unsubscribeSettings = onSnapshot(qSettings, (snapshot) => {
       if (!snapshot.empty) {
@@ -44,7 +32,38 @@ export const ReferralPage: React.FC = () => {
         if (settings.referralBonusRUB) setReferralBonusRUB(settings.referralBonusRUB);
       }
     });
-    return () => unsubscribeSettings();
+
+    // Listen to referrals in real-time
+    const qReferrals = query(collection(db, 'referrals'), where('referrerId', '==', user.id));
+    const unsubscribeReferrals = onSnapshot(qReferrals, (snapshot) => {
+      const rawRefs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+      
+      // Group by email to merge duplicates
+      const groupedByEmail: Record<string, any> = {};
+      rawRefs.forEach(ref => {
+        const email = (ref.referredEmail || ref.id).toLowerCase();
+        if (!groupedByEmail[email] || ref.status === 'rewarded') {
+          groupedByEmail[email] = ref;
+        }
+      });
+
+      const processedRefs = Object.values(groupedByEmail);
+      const rewarded = processedRefs.filter((r: any) => r.status === 'rewarded');
+      const pending = processedRefs.filter((r: any) => r.status === 'pending');
+
+      setReferralCode(user.referralCode || '');
+      setReferredUsers(user.referredUsers || []);
+      setReferrals(processedRefs);
+      setTotalBonus(user.solde_bonus || 0);
+      setInvitedCount(processedRefs.length);
+      setRewardedCount(rewarded.length);
+      setPendingCount(pending.length);
+    });
+
+    return () => {
+      unsubscribeSettings();
+      unsubscribeReferrals();
+    };
   }, [user]);
 
   const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
@@ -104,16 +123,18 @@ export const ReferralPage: React.FC = () => {
         </section>
 
         {/* Stats Grid - Premium Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {stats.map(({ icon: Icon, label, value, color, bg }) => (
-            <div key={label} className="premium-card p-4 flex flex-col gap-3 group">
-              <div className="flex items-center gap-2">
-                <div className={`p-2 rounded-lg bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors`}>
-                   <Icon size={14} />
+            <div key={label} className="premium-card p-3.5 flex flex-col justify-between gap-3 group min-h-[110px]">
+              <div className="space-y-2">
+                <div className={`p-1.5 w-fit rounded-lg bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors`}>
+                   <Icon size={12} />
                 </div>
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{label}</span>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-tight block">
+                  {label}
+                </span>
               </div>
-              <p className={`text-lg font-bold tracking-tight text-slate-900`}>{value}</p>
+              <p className={`text-base font-black tracking-tight text-slate-900 truncate`}>{value}</p>
             </div>
           ))}
         </div>
@@ -130,7 +151,7 @@ export const ReferralPage: React.FC = () => {
               onClick={handleCopyCode}
               className="bg-white border border-slate-100 rounded-2xl p-6 text-center cursor-pointer hover:shadow-lg active:scale-[0.98] transition-all group/code relative overflow-hidden"
             >
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">{t('votre_code_unique') || 'CODE UNIQUE'}</p>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">{t('unique_code')}</p>
               <p className="text-3xl font-bold text-primary tracking-tight break-all">{referralCode || '...'}</p>
             </div>
           </div>
@@ -180,19 +201,24 @@ export const ReferralPage: React.FC = () => {
         </div>
 
         {/* Referred users list */}
-        {referredUsers.length > 0 && (
+        {referrals.length > 0 && (
           <div className="premium-card overflow-hidden">
             <div className="px-5 pt-5 pb-3 border-b border-slate-50">
               <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('referred_users')}</h2>
             </div>
             <div className="divide-y divide-slate-50">
-              {referredUsers.map((userId, idx) => (
-                <div key={userId} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors">
+              {referrals.map((referral, idx) => (
+                <div key={referral.id} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 font-bold text-[10px] border border-slate-100">{idx + 1}</div>
-                    <span className="text-slate-900 font-bold text-xs tracking-tight">{t('user')} {idx + 1}</span>
+                    <span className="text-slate-900 font-bold text-xs tracking-tight">{referral.referredUserName || `${t('user')} ${idx + 1}`}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">+{formatNumber(referralBonusRUB, 'RUB')}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-100">+{formatNumber(referral.bonusAmount || referralBonusRUB, 'RUB')}</span>
+                    <span className={`text-[8px] font-bold uppercase tracking-widest ${referral.status === 'rewarded' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {referral.status === 'rewarded' ? t('validated') : t('pending')}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

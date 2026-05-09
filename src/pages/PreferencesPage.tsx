@@ -3,14 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Bell, Mail, Save, Loader, CheckCircle2 } from 'lucide-react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
-import { useNotifications } from '../context/NotificationContext';
 
 interface UserPreferences {
   language: string;
-  pushNotifications: boolean;
   promotionalEmails: boolean;
   updatedAt?: Date;
 }
@@ -18,11 +16,9 @@ interface UserPreferences {
 export const PreferencesPage: React.FC = () => {
   const { user } = useAuth();
   const { t, language: currentLang, setLanguage } = useLanguage();
-  const { enablePushNotifications } = useNotifications();
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: currentLang || 'fr',
-    pushNotifications: true,
     promotionalEmails: false,
   });
   const [loading, setLoading] = useState(true);
@@ -30,21 +26,23 @@ export const PreferencesPage: React.FC = () => {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const loadPreferences = async () => {
-      if (!user?.id) return;
-      try {
-        const userRef = doc(db, 'users', user.id);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists() && userDoc.data()?.preferences) {
-          setPreferences(userDoc.data().preferences);
+    if (!user?.id) return;
+
+    // Set up real-time listener for user document (including preferences)
+    const unsubscribe = onSnapshot(doc(db, 'users', user.id), (snapshot) => {
+      if (snapshot.exists()) {
+        const userData = snapshot.data();
+        if (userData.preferences) {
+          setPreferences(userData.preferences);
         }
-      } catch (error) {
-        console.error('Error loading preferences:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-    loadPreferences();
+      setLoading(false);
+    }, (error) => {
+      console.error('Error listening to preferences:', error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [user?.id]);
 
   const handleSavePreferences = async () => {
@@ -53,10 +51,6 @@ export const PreferencesPage: React.FC = () => {
     try {
       const userRef = doc(db, 'users', user.id);
       await setDoc(userRef, { preferences: { ...preferences, updatedAt: new Date() } }, { merge: true });
-
-      if (preferences.pushNotifications) {
-        await enablePushNotifications();
-      }
 
       setLanguage(preferences.language as any);
       setSuccess(true);
@@ -107,30 +101,13 @@ export const PreferencesPage: React.FC = () => {
           </div>
         )}
 
-        {/* Notifications Card */}
+        {/* Communication Card */}
         <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-slate-100">
-            <h2 className="font-black text-slate-900">{t('push_notifications')}</h2>
+            <h2 className="font-black text-slate-900">{t('communication')}</h2>
           </div>
 
           <div className="divide-y divide-slate-50">
-            {/* Push notifications */}
-            <div className="flex items-center justify-between px-6 py-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#f7f3ff] flex items-center justify-center shrink-0">
-                  <Bell size={18} className="text-[#6236CC]" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 text-sm">{t('push_notifications')}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{t('push_notif_desc')}</p>
-                </div>
-              </div>
-              <Toggle
-                value={preferences.pushNotifications}
-                onChange={() => setPreferences({ ...preferences, pushNotifications: !preferences.pushNotifications })}
-              />
-            </div>
-
             {/* Promotional emails */}
             <div className="flex items-center justify-between px-6 py-5">
               <div className="flex items-center gap-4">

@@ -5,10 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { useTransferWizard } from '../context/TransferWizardContext';
 import { Layout } from '../components/Layout';
 import { ChevronLeft, ChevronRight, Globe, CreditCard, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send, X, Pencil } from 'lucide-react';
-import { collection, onSnapshot, addDoc, Timestamp, query, where, orderBy, limit } from 'firebase/firestore';
-import { db, auth, calculateTransactionRecap } from '../services/firebase';
+import { collection, onSnapshot, addDoc, Timestamp, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { db, auth, calculateTransactionRecap, userService } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { emailService } from '../services/emailService';
+import { notificationService } from '../services/notificationService';
 
 async function fileToBase64(file: File | Blob, maxWidth = 800, quality = 0.65): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -31,6 +32,12 @@ async function fileToBase64(file: File | Blob, maxWidth = 800, quality = 0.65): 
     reader.onerror = reject;
   });
 }
+
+// Helper to get small flag image from flagcdn
+const flagImageFor = (code?: string) => {
+  if (!code) return undefined;
+  return `https://flagcdn.com/w20/${code.toLowerCase()}.png`;
+};
 
 // --- Helper Components for Steps ---
 
@@ -82,7 +89,7 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
     const op = selectedCountry?.operators?.find((o: any) => o.prefixes?.some((p: string) => contact.phone.replace(/\D/g, '').startsWith(p)));
     setDetectedOperator(op?.name || '');
     setIsContactModalOpen(false);
-    toast.success("Contact sélectionné. Entrez maintenant le montant.");
+    toast.success(t('contact_selected_enter_amount'));
   };
 
   const startEdit = (r: any) => {
@@ -93,12 +100,12 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
     const digits = r.phone.replace(/\D/g, '');
     const op = selectedCountry?.operators?.find((o: any) => o.prefixes?.some((p: string) => digits.startsWith(p)));
     setDetectedOperator(op?.name || '');
-    toast.success("Mode modification activé");
+    toast.success(t('edit_mode_active'));
   };
 
   const addRecipient = () => {
     if (!newName || !newPhone || !newAmount) {
-      toast.error("Veuillez remplir toutes les informations");
+      toast.error(t('fill_all_info'));
       return;
     }
     
@@ -110,13 +117,13 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
       name: newName,
       phone: newPhone,
       amount: parseFloat(newAmount),
-      operator: detectedOperator || 'Inconnu'
+      operator: detectedOperator || t('unknown')
     };
     
     if (editingId) {
       setRecipients(recipients.map(r => r.id === editingId ? newR : r));
       setEditingId(null);
-      toast.success("Destinataire mis à jour");
+      toast.success(t('recipient_updated'));
     } else {
       setRecipients([...recipients, newR]);
     }
@@ -133,7 +140,7 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
 
   const handleNext = () => {
     if (recipients.length === 0) {
-      toast.error("Ajoutez au moins un destinataire");
+      toast.error(t('add_at_least_one'));
       return;
     }
     updateTransferData({ bulkRecipients: recipients });
@@ -145,8 +152,8 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
   return (
     <div className="max-w-xl mx-auto py-12 px-4 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="mb-10 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">Liste des destinataires</h2>
-        <p className="text-[#49454F] mt-3 font-medium text-lg">Ajoutez les personnes une par une à votre envoi groupé</p>
+        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{t('list_recipients')}</h2>
+        <p className="text-[#49454F] mt-3 font-medium text-lg">{t('add_bulk_desc')}</p>
       </div>
 
       <div className="bg-white rounded-[32px] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-6 mb-8">
@@ -156,13 +163,13 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
             <div className="w-10 h-10 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4]">
               <User size={20} />
             </div>
-            <span className="font-semibold text-slate-900">Nom du bénéficiaire</span>
+            <span className="font-semibold text-slate-900">{t('beneficiary_name_label')}</span>
           </div>
           <input
             type="text"
             value={newName}
             onChange={e => setNewName(e.target.value)}
-            placeholder="Entrez le nom complet"
+            placeholder={t('enter_full_name')}
             className="w-full p-4 rounded-2xl border-2 border-slate-400 focus:ring-2 focus:ring-[#6750A4] focus:border-[#6750A4] outline-none text-slate-900 font-bold bg-white"
           />
         </div>
@@ -173,11 +180,15 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
             <div className="w-10 h-10 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4]">
               <Phone size={20} />
             </div>
-            <span className="font-semibold text-slate-900">Numéro de mobile</span>
+            <span className="font-semibold text-slate-900">{t('mobile_number_label')}</span>
           </div>
           <div className="flex border-2 border-slate-400 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-[#6750A4] focus-within:border-[#6750A4]">
             <div className="flex items-center gap-2 bg-slate-50 px-4 border-r border-slate-200 font-semibold text-slate-900">
-              <span className="text-xl">🇨🇲</span>
+              {selectedCountry?.code ? (
+                <img src={flagImageFor(selectedCountry.code)} alt={`${selectedCountry.name} flag`} className="w-5 h-5 rounded-sm object-cover" />
+              ) : (
+                <Globe size={16} className="text-slate-600" />
+              )}
               <span>{selectedCountry?.dialCode || '+237'}</span>
             </div>
             <input
@@ -190,12 +201,12 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
                 const op = selectedCountry?.operators?.find((o: any) => o.prefixes?.some((p: string) => digits.startsWith(p)));
                 setDetectedOperator(op?.name || '');
               }}
-              placeholder="Numéro sans le code"
+              placeholder={t('number_without_code')}
               className="flex-1 p-4 outline-none text-slate-900 font-bold bg-white"
             />
           </div>
           {detectedOperator && (
-            <p className="text-xs text-emerald-600 font-semibold mt-2 ml-1">Opérateur détecté: {detectedOperator}</p>
+            <p className="text-xs text-emerald-600 font-semibold mt-2 ml-1">{t('detected_operator')}: {detectedOperator}</p>
           )}
         </div>
 
@@ -205,7 +216,7 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
             <div className="w-10 h-10 rounded-full bg-[#6750A4]/10 flex items-center justify-center text-[#6750A4]">
               <Banknote size={20} />
             </div>
-            <span className="font-semibold text-slate-900">Montant (RUB)</span>
+            <span className="font-semibold text-slate-900">{t('amount_rub_label')}</span>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
@@ -219,28 +230,28 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
               onClick={() => addRecipient()}
               className="px-8 py-4 sm:py-0 bg-[#6750A4] text-white font-black rounded-2xl hover:scale-[1.02] sm:hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#6750A4]/20 shrink-0"
             >
-              {editingId ? "Mettre à jour" : "Ajouter"}
+              {editingId ? t('update') : t('add')}
             </button>
           </div>
         </div>
 
         <div className="text-center relative my-2">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
-          <span className="relative bg-white px-4 text-[10px] text-slate-400 uppercase font-black tracking-[0.2em]">ou</span>
+          <span className="relative bg-white px-4 text-[10px] text-slate-400 uppercase font-black tracking-[0.2em]">{t('or_separator')}</span>
         </div>
 
         <button 
           onClick={() => setIsContactModalOpen(true)}
           className="w-full p-4 rounded-2xl border-2 border-[#6750A4] text-[#6750A4] font-black flex items-center justify-center gap-3 hover:bg-[#6750A4]/5 transition-all"
         >
-          <BookUser size={20} /> Utiliser un contact récent
+          <BookUser size={20} /> {t('use_recent_contact')}
         </button>
       </div>
 
       {/* Recipient List Display */}
       {recipients.length > 0 && (
         <div className="mb-10 space-y-3">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2 mb-4">Groupe constitué ({recipients.length})</h3>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2 mb-4">{t('group_constituted')} ({recipients.length})</h3>
           <div className="grid gap-3">
             {recipients.map((r) => (
               <div key={r.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-5 bg-[#F7F3FF] rounded-[24px] border border-[#E7E0EB] group hover:border-[#6750A4]/30 transition-all gap-4 sm:gap-2">
@@ -270,13 +281,13 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
           
           <div className="p-8 mt-6 bg-slate-900 rounded-[32px] text-white flex justify-between items-center shadow-2xl">
             <div>
-              <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em]">Total du groupe</p>
+              <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em]">{t('group_total')}</p>
               <p className="text-3xl font-black">{formatNumber(total, 'RUB')}</p>
             </div>
             <div className="h-12 w-px bg-white/10" />
             <div className="text-right">
-              <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em]">Commission totale</p>
-              <p className="text-xl font-bold">Inclus</p>
+              <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em]">{t('commission_total')}</p>
+              <p className="text-xl font-bold">{t('included')}</p>
             </div>
           </div>
         </div>
@@ -292,7 +303,7 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
           disabled={recipients.length === 0}
           className="w-full sm:flex-[2] px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#6750A4] text-white shadow-xl hover:shadow-[#6750A4]/30 disabled:bg-[#E7E0EB] disabled:text-[#49454F]/40"
         >
-          Valider l'envoi groupé <ChevronRight size={24} />
+          {t('validate_bulk_transfer')} <ChevronRight size={24} />
         </button>
       </div>
 
@@ -301,14 +312,14 @@ const BulkRecipientStep = ({ countries, t, previousStep, nextStep, updateTransfe
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-xl font-black text-slate-900">Choisir un contact</h3>
+              <h3 className="text-xl font-black text-slate-900">{t('use_recent_contact')}</h3>
               <button onClick={() => setIsContactModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3">
               {savedContacts.length === 0 ? (
                 <div className="text-center py-12">
                   <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
-                  <p className="text-slate-500 font-medium">Aucun contact récent</p>
+                  <p className="text-slate-500 font-medium">{t('no_recent_contact')}</p>
                 </div>
               ) : (
                 savedContacts.map((contact: any) => (
@@ -379,6 +390,7 @@ export const TransferWizardPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [settings, setSettings] = useState({ dailyLimitRUB: 150000, standardLimitRUB: 20000, expertLimitRUB: 150000, notificationEmails: [] as string[] });
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [payWithBonus, setPayWithBonus] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(20 * 60); // 20 minutes
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -409,7 +421,7 @@ export const TransferWizardPage: React.FC = () => {
         setTimerSeconds(prev => {
           if (prev <= 1) {
             if (timerRef.current) clearInterval(timerRef.current);
-            toast.error('Le délai de paiement a expiré. Veuillez recommencer.');
+            toast.error(t('payment_timeout_msg'));
             return 0;
           }
           return prev - 1;
@@ -465,6 +477,7 @@ export const TransferWizardPage: React.FC = () => {
 
     const unsub = onSnapshot(qTransactions, (snapshot) => {
       const contactsMap = new Map();
+      console.log(`[Contacts] Found ${snapshot.docs.length} transactions for user ${uid}`);
       
       snapshot.docs.forEach(doc => {
         const d = doc.data();
@@ -492,6 +505,29 @@ export const TransferWizardPage: React.FC = () => {
         }
       });
       setSavedContacts(Array.from(contactsMap.values()));
+    }, (err) => {
+      console.error('Error fetching recent contacts:', err);
+      // Fallback: try without orderBy if index is missing
+      const fallbackQuery = query(collection(db, 'transactions'), where('userId', '==', uid), limit(100));
+      getDocs(fallbackQuery).then(snapshot => {
+        const contactsMap = new Map();
+        snapshot.docs.forEach(doc => {
+          const d = doc.data();
+          const addToMap = (name: string, phone: string, operator: string, country: string) => {
+            const key = (name || '').toLowerCase().trim();
+            if (key && !contactsMap.has(key)) {
+              contactsMap.set(key, { id: Math.random().toString(), name, phone, operator, countryCode: country });
+            }
+          };
+          if (d.recipientName) addToMap(d.recipientName, d.recipientPhone || d.beneficiaryAccount, d.operator || d.recipientOperator, d.destinationCountry || d.toCountry);
+          if (d.isBulk && Array.isArray(d.bulkRecipients)) {
+            d.bulkRecipients.forEach((r: any) => {
+              if (r.name) addToMap(r.name, r.phone, r.operator, d.destinationCountry);
+            });
+          }
+        });
+        setSavedContacts(Array.from(contactsMap.values()));
+      }).catch(e => console.error('Fallback query failed:', e));
     });
     return unsub;
   }, [user]);
@@ -547,16 +583,17 @@ export const TransferWizardPage: React.FC = () => {
   const isKycExpert = user?.statut_kyc === 'Expert' || user?.kyc?.status === 'approved';
 
   const handleSubmit = async () => {
-    if (!proofFile) {
-      toast.error(t('upload_proof_error'));
-      return;
-    }
-    setIsSubmitting(true);
-    toast.dismiss();
     const t_toast = toast.loading(t('sending_transaction'));
     try {
-      // 1. Convert the proof file to base64
-      const proofUrl = await fileToBase64(proofFile);
+      // 1. Handle Proof (Base64) or Bonus Payment
+      let proofUrl = '';
+      if (payWithBonus) {
+        proofUrl = 'PAID_WITH_BONUS';
+      } else if (proofFile) {
+        proofUrl = await fileToBase64(proofFile);
+      } else {
+        throw new Error(t('payment_proof_missing'));
+      }
 
       // 2. Determine input and output currencies based on transfer type
       let inputCurrency = transferData.currency || 'RUB';
@@ -594,7 +631,7 @@ export const TransferWizardPage: React.FC = () => {
       }
 
       // 4. Create transaction in Firestore
-      await addDoc(collection(db, 'transactions'), {
+      const txDocRef = await addDoc(collection(db, 'transactions'), {
         ...transferData,
         userId: auth.currentUser?.uid,
         clientName: user?.nom || '',
@@ -602,7 +639,8 @@ export const TransferWizardPage: React.FC = () => {
         clientEmail: user?.email || auth.currentUser?.email || '',
         type: transferData.transferType,
         proofUrl,
-        status: 'pending',
+        paymentMethod: payWithBonus ? 'bonus' : 'external',
+        status: payWithBonus ? 'pending' : 'pending', // Both pending, but admin sees bonus
         isBulk: transferData.isBulk || false,
         bulkRecipients: transferData.isBulk ? transferData.bulkRecipients : null,
         // Currency fields
@@ -623,11 +661,62 @@ export const TransferWizardPage: React.FC = () => {
         statusHistory: [{
           status: 'pending',
           timestamp: Timestamp.now(),
-          notes: transferData.isBulk ? 'Commande multiple initiée' : 'Commande initiée par le client'
+          notes: transferData.isBulk ? t('bulk_order_initiated') : t('order_initiated_by_client')
         }]
       });
 
+      // 4.0 Notify Admin of new transaction
+      try {
+        const isLarge = finalAmount >= 100000;
+        await addDoc(collection(db, 'admin_notifications'), {
+          title: isLarge ? '⚠️ GROS TRANSFERT' : 'Nouveau transfert',
+          body: `${isLarge ? 'ALERTE : ' : ''}Un nouveau transfert de ${finalAmount} ${inputCurrency} a été initié par ${user?.nom || 'un client'}.`,
+          type: 'transaction',
+          priority: isLarge ? 'high' : 'normal',
+          read: false,
+          createdAt: Timestamp.now(),
+          link: `/admin/queue/${txDocRef.id}`
+        });
+      } catch (err) {
+        console.error('Failed to notify admin of transaction:', err);
+      }
+
+      // 4.1 Trigger user notification
+      await notificationService.sendNotification({
+        userId: auth.currentUser?.uid || '',
+        title: t('transfer_initiated_title'),
+        body: t('transfer_initiated_body', { 
+          amount: finalAmount.toLocaleString(), 
+          currency: inputCurrency, 
+          recipient: transferData.isBulk ? t('multi_recipients') : transferData.recipientName 
+        }),
+        type: 'in_app',
+        priority: 'normal',
+        data: {
+          transferType: transferData.transferType,
+          amount: finalAmount,
+          currency: inputCurrency
+        }
+      });
+
       toast.success(t('transfer_validated'), { id: t_toast });
+
+      // 4.5 Deduct bonus if applicable (Hybrid support)
+      if (payWithBonus) {
+        let bonusCost = calculation.totalToPay;
+        if (inputCurrency === 'XAF') {
+          const rateObj = rates.find(r => r.from === 'XAF' && r.to === 'RUB');
+          const rate = rateObj?.rate || 0.1385;
+          bonusCost = calculation.totalToPay * rate;
+        }
+        
+        // Only deduct what the user actually has (the rest was paid via proof)
+        const actualDeduction = Math.min(user?.solde_bonus || 0, bonusCost);
+        
+        await userService.deductBonus(user?.id || auth.currentUser?.uid || '', actualDeduction, t('transfer_to_recipient', { 
+          recipient: (transferData.recipientName || t('recipient')) + (actualDeduction < bonusCost ? ' ' + t('partial') : '') 
+        }));
+      }
 
       // 5. Notify Admins via Google Apps Script
       if (settings.notificationEmails && settings.notificationEmails.length > 0) {
@@ -751,8 +840,8 @@ export const TransferWizardPage: React.FC = () => {
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
               <div className="mb-10 text-center">
-                <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">Mode d'envoi</h2>
-                <p className="text-[#49454F] mt-3 font-medium text-lg">Souhaitez-vous envoyer à une seule personne ou à un groupe ?</p>
+                <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{t('transfer_mode')}</h2>
+                <p className="text-[#49454F] mt-3 font-medium text-lg">{t('transfer_mode_desc')}</p>
               </div>
               
               <div className="grid gap-4">
@@ -764,8 +853,8 @@ export const TransferWizardPage: React.FC = () => {
                     <User size={28} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-[#1D1B20]">Un seul destinataire</h3>
-                    <p className="text-sm font-bold text-[#49454F]">Envoi classique vers une personne</p>
+                    <h3 className="text-xl font-black text-[#1D1B20]">{t('single_recipient')}</h3>
+                    <p className="text-sm font-bold text-[#49454F]">{t('single_recipient_desc')}</p>
                   </div>
                 </button>
 
@@ -777,8 +866,8 @@ export const TransferWizardPage: React.FC = () => {
                     <BookUser size={28} />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-[#1D1B20]">Plusieurs destinataires</h3>
-                    <p className="text-sm font-bold text-[#49454F]">Partagez un montant entre plusieurs personnes</p>
+                    <h3 className="text-xl font-black text-[#1D1B20]">{t('bulk_recipients_list')}</h3>
+                    <p className="text-sm font-bold text-[#49454F]">{t('bulk_recipients_desc')}</p>
                   </div>
                 </button>
               </div>
@@ -909,7 +998,7 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 5: // Montant & Bilan
+      case 5: { // Montant & Bilan
         const targetCurrency = transferData.currency || 'XAF';
         const foundRate = rates.find(r => 
           r.from?.toString().toUpperCase().trim() === 'RUB' && 
@@ -1041,8 +1130,20 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 6: // Dépôt Info
+      }
+      case 6: { // Dépôt Info
+        const displayAmount = transferData.isBulk 
+          ? (transferData.bulkRecipients?.reduce((acc: any, r: any) => acc + r.amount, 0) || 0)
+          : (transferData.amount || 0);
+
         const adminBank = banks.find(b => b.type === 'phone' || b.type === 'card');
+        const bonusAvailableRA = user?.solde_bonus || 0;
+        const commissionRA = getCommission(displayAmount, 'russia-africa', transferData.destinationCountry, transferData.recipientOperator);
+        const totalToPayRA = displayAmount + commissionRA;
+        const bonusFullyCoversRA = bonusAvailableRA >= totalToPayRA;
+        const remainderRA = Math.max(0, totalToPayRA - bonusAvailableRA);
+        const needsProofRA = !payWithBonus || !bonusFullyCoversRA;
+
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
@@ -1051,7 +1152,7 @@ export const TransferWizardPage: React.FC = () => {
                 onBack={previousStep} 
                 onNext={handleSubmit}
                 nextLabel={isSubmitting ? "Traitement..." : "Continuer"}
-                isValid={!!proofFile && !isSubmitting}
+                isValid={((payWithBonus && bonusFullyCoversRA) || (needsProofRA && !!proofFile)) && !isSubmitting}
               >
                 
                 {/* Timer Alert */}
@@ -1133,49 +1234,95 @@ export const TransferWizardPage: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Proof Section */}
-                <div>
-                  <p className="text-brand font-black text-sm mb-4">Après le paiement</p>
-                  <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-4 mb-4">
-                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-brand shrink-0">
-                        <Upload size={20} />
-                     </div>
-                     <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                        Effectuez le paiement sur l'un des numéros ci-dessus, puis téléchargez la preuve (capture d'écran du reçu).
-                     </p>
-                  </div>
-                  
-                  <label className="block w-full cursor-pointer group">
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                      accept="image/*"
-                    />
-                    <div className={`w-full py-6 rounded-[24px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-brand/40 hover:bg-brand/5'}`}>
-                      {proofFile ? (
-                        <>
-                          <CheckCircle2 className="text-emerald-500" size={32} />
-                          <p className="text-emerald-700 font-bold">{proofFile.name}</p>
-                          <p className="text-xs text-emerald-600">Cliquer pour changer</p>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-3 text-brand">
-                             <CloudUpload size={28} />
-                             <p className="font-black">Télécharger la preuve de paiement</p>
-                          </div>
-                          <p className="text-xs text-slate-400 font-medium">Formats acceptés : JPG, PNG • Taille max : 5 Mo</p>
-                        </>
-                      )}
+                {/* Bonus Payment Option */}
+                {bonusAvailableRA > 0 && (
+                  <div className={`p-6 rounded-[24px] border-2 transition-all mb-8 ${payWithBonus ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-primary/30'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                          <Gift size={24} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Utiliser mon solde bonus</p>
+                          <p className="text-xs text-slate-500 font-medium">Solde actuel: {formatNumber(bonusAvailableRA, 'RUB')}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setPayWithBonus(!payWithBonus)}
+                        className={`w-12 h-6 rounded-full relative transition-all ${payWithBonus ? 'bg-primary' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${payWithBonus ? 'left-7' : 'left-1'}`} />
+                      </button>
                     </div>
-                  </label>
-                </div>
+                    {payWithBonus && (
+                      <div className="space-y-2">
+                        {bonusFullyCoversRA ? (
+                          <p className="text-[10px] text-primary font-black uppercase tracking-wider">
+                             ✨ Le bonus couvre la totalité du transfert. Aucune preuve requise.
+                          </p>
+                        ) : (
+                          <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                             <p className="text-[11px] text-amber-700 font-black uppercase tracking-wider">
+                                ⚠️ Solde bonus insuffisant pour couvrir le total ({formatNumber(totalToPayRA, 'RUB')})
+                             </p>
+                             <p className="text-lg font-black text-amber-800 mt-1">
+                                Reste à payer : {formatNumber(remainderRA, 'RUB')}
+                             </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Proof Section */}
+                {needsProofRA && (
+                  <div>
+                    <p className="text-brand font-black text-sm mb-4">{payWithBonus ? "Après le paiement du reste" : "Après le paiement"}</p>
+                    <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-4 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-brand shrink-0">
+                          <Upload size={20} />
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                          {payWithBonus 
+                            ? `Effectuez le paiement du complément de ${formatNumber(remainderRA, 'RUB')} sur l'un des numéros ci-dessus, puis téléchargez la preuve.`
+                            : "Effectuez le paiement sur l'un des numéros ci-dessus, puis téléchargez la preuve (capture d'écran du reçu)."}
+                      </p>
+                    </div>
+                    
+                    <label className="block w-full cursor-pointer group">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        accept="image/*"
+                      />
+                      <div className={`w-full py-6 rounded-[24px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-brand/40 hover:bg-brand/5'}`}>
+                        {proofFile ? (
+                          <>
+                            <CheckCircle2 className="text-emerald-500" size={32} />
+                            <p className="text-emerald-700 font-bold">{proofFile.name}</p>
+                            <p className="text-xs text-emerald-600">Cliquer pour changer</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-3 text-brand">
+                               <CloudUpload size={28} />
+                               <p className="font-black">Télécharger la preuve de paiement</p>
+                            </div>
+                            <p className="text-xs text-slate-400 font-medium">Formats acceptés : JPG, PNG • Taille max : 5 Mo</p>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                )}
               </StepWrapper>
             </div>
           </Layout>
         );
-      case 7: // Success (Paiement initié)
+      }
+      case 7: { // Success (Paiement initié)
         const successBaseAmount = transferData.isBulk 
           ? (transferData.bulkRecipients?.reduce((acc: number, r: any) => acc + r.amount, 0) || 0)
           : (transferData.amount || 0);
@@ -1189,15 +1336,15 @@ export const TransferWizardPage: React.FC = () => {
                 <div className="w-24 h-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-emerald-500/20">
                   <CheckCircle2 size={48} />
                 </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-2">Transfert Initié !</h2>
-                <p className="text-slate-500 font-medium">Votre demande est en cours de traitement par nos agents.</p>
+                <h2 className="text-3xl font-black text-slate-900 mb-2">{t('transfer_initiated')}</h2>
+                <p className="text-slate-500 font-medium">{t('transfer_initiated_desc')}</p>
               </div>
 
               <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-slate-100 mb-8 animate-in slide-in-from-bottom-4 duration-700 delay-150">
                 <div className="p-6 sm:p-8 space-y-6">
                   <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                    <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Récapitulatif du Paiement</span>
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded-md">PREUVE REÇUE</span>
+                    <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">{t('payment_summary')}</span>
+                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded-md">{t('proof_received_label')}</span>
                   </div>
 
                   <div className="space-y-4">
@@ -1210,7 +1357,7 @@ export const TransferWizardPage: React.FC = () => {
                       <span className="font-bold text-slate-900">+{formatNumber(getCommission(successBaseAmount, 'russia-africa', transferData.destinationCountry, transferData.recipientOperator), 'RUB')}</span>
                     </div>
                     <div className="flex justify-between items-center pt-2 border-t border-slate-50">
-                      <span className="text-slate-900 font-black uppercase text-xs">Total Payé</span>
+                      <span className="text-slate-900 font-black uppercase text-xs">{t('total_paid')}</span>
                       <span className="text-2xl font-black text-brand">{formatNumber(successTotal, 'RUB')}</span>
                     </div>
                   </div>
@@ -1222,8 +1369,8 @@ export const TransferWizardPage: React.FC = () => {
                     </div>
                     <div className="text-[11px] text-brand/50 font-medium">
                       {transferData.isBulk 
-                        ? `Distribué parmi ${transferData.bulkRecipients?.length} bénéficiaires` 
-                        : `Sera crédité sur le compte de ${transferData.recipientName}`}
+                        ? t('recipient_receives_note_bulk', { count: transferData.bulkRecipients?.length }) 
+                        : t('recipient_receives_note_single', { name: transferData.recipientName })}
                     </div>
                   </div>
                 </div>
@@ -1243,18 +1390,19 @@ export const TransferWizardPage: React.FC = () => {
                   onClick={() => { resetWizard(); navigate('/transactions'); }}
                   className="w-full py-5 bg-slate-900 text-white font-black rounded-[24px] shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3"
                 >
-                  Suivre mon transfert <ArrowRight size={18} />
+                  {t('follow_transfer')} <ArrowRight size={18} />
                 </button>
                 <button 
                   onClick={() => { resetWizard(); navigate('/'); }}
                   className="w-full py-5 bg-white text-slate-900 font-black rounded-[24px] border-2 border-slate-100 hover:bg-slate-50 transition-all"
                 >
-                  Retour à l'accueil
+                  {t('back_to_home')}
                 </button>
               </div>
             </div>
           </Layout>
         );
+      }
     }
   }
 
@@ -1265,7 +1413,7 @@ export const TransferWizardPage: React.FC = () => {
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12">
-              <StepWrapper title="Origine" description="Depuis quel pays envoyez-vous l'argent ?" onBack={previousStep} onNext={nextStep} isValid={!!transferData.originCountry}>
+              <StepWrapper title={t('origin_label')} description={t('origin_desc')} onBack={previousStep} onNext={nextStep} isValid={!!transferData.originCountry}>
                 <div className="grid grid-cols-2 gap-4">
                   {sortedCountries.filter(c => c.canSendToRussia !== false).map((c: any) => (
                     <button
@@ -1296,13 +1444,13 @@ export const TransferWizardPage: React.FC = () => {
                     <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
                       <User size={20} />
                     </div>
-                    <span className="font-semibold text-slate-900">Nom du bénéficiaire</span>
+                    <span className="font-semibold text-slate-900">{t('beneficiary_label')}</span>
                   </div>
                   <input
                     type="text"
                     value={transferData.recipientName || ''}
                     onChange={e => updateTransferData({ recipientName: e.target.value })}
-                    placeholder="Exemple: Ivan Ivanov"
+                    placeholder={t('beneficiary_name_example')}
                     className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand outline-none text-slate-900 font-bold"
                     autoFocus
                   />
@@ -1327,7 +1475,7 @@ export const TransferWizardPage: React.FC = () => {
                       <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
                         <CreditCard size={20} />
                       </div>
-                      <span className="font-semibold text-slate-900">Compte ou Téléphone SBP</span>
+                      <span className="font-semibold text-slate-900">{t('account_sbp_label')}</span>
                     </div>
                     <input
                       type="text"
@@ -1337,12 +1485,12 @@ export const TransferWizardPage: React.FC = () => {
                       className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand outline-none text-slate-900 font-bold"
                       autoFocus
                     />
-                    <p className="text-xs text-slate-400 mt-3 font-medium">Numéro SBP ou compte bancaire</p>
+                    <p className="text-xs text-slate-400 mt-3 font-medium">{t('account_sbp_desc')}</p>
                   </div>
 
                   <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
                      <ShieldCheck className="text-emerald-500" size={20} />
-                     <p className="text-xs text-emerald-700 font-bold">Transfert sécurisé via le système SBP</p>
+                     <p className="text-xs text-emerald-700 font-bold">{t('secure_transfer_sbp')}</p>
                   </div>
                 </div>
 
@@ -1355,21 +1503,21 @@ export const TransferWizardPage: React.FC = () => {
                   onClick={() => setIsContactModalOpen(true)}
                   className="w-full p-4 rounded-2xl border border-brand text-brand font-bold flex items-center justify-center gap-3 hover:bg-brand/5 transition-colors"
                 >
-                  <BookUser size={20} /> Choisir parmi les contacts enregistrés
+                  <BookUser size={20} /> {t('choose_saved_contact')}
                 </button>
 
                 {isContactModalOpen && (
                   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
                     <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
                       <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                        <h3 className="text-xl font-black text-slate-900">Mes contacts</h3>
+                        <h3 className="text-xl font-black text-slate-900">{t('my_contacts')}</h3>
                         <button onClick={() => setIsContactModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
                       </div>
                       <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3">
                         {savedContacts.length === 0 ? (
                           <div className="text-center py-12">
                             <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
-                            <p className="text-slate-500 font-medium">Aucun contact enregistré</p>
+                            <p className="text-slate-500 font-medium">{t('no_saved_contacts')}</p>
                           </div>
                         ) : (
                           savedContacts.map(contact => (
@@ -1398,40 +1546,24 @@ export const TransferWizardPage: React.FC = () => {
           </Layout>
         );
       
-      case 5: { // Montant & Bilan
-        const sourceCurrency = transferData.currency || 'XAF';
-        // Get the RUB to XAF rate first
-        const rubToXafRateObj = rates.find(r => 
-          r.from?.toString().toUpperCase().trim() === 'RUB' && 
-          r.to?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim()
-        );
-        const rubToXafRate = rubToXafRateObj?.rate || rubToXafRateObj?.rateFixed || 7.22;
+      case 5: { // Montant & Bilan / Récapitulatif
+        const commissionAfRuRecap = getCommission(transferData.amount || 0, 'africa-russia', transferData.originCountry, transferData.selectedOperator);
+        const totalXafToPay = (transferData.amount || 0) + commissionAfRuRecap;
+        const bonusPointsAfRu = Math.floor((transferData.amount || 0) / 6.55);
         
-        // Calculate inverse rate for XAF -> RUB
-        const rateAfRu = parseFloat((1 / rubToXafRate).toFixed(2));
-        const commissionFeeAfRu = getCommission(
-          transferData.amount || 0, 
-          'africa-russia', 
-          transferData.originCountry, 
-          transferData.selectedOperator
-        );
-        const totalAfRuToPay = (transferData.amount || 0) + commissionFeeAfRu;
+        const rateAfRu = rates.find(r => r.from === 'XAF' && r.to === 'RUB')?.rate || 0.1385;
         const convertedAmountAfRu = (transferData.amount || 0) * rateAfRu;
         
-        // Check limit against RUB equivalent
-        const amountInRUB = convertedAmountAfRu;
         const currentLimitAfRu = isKycExpert
           ? (settings.expertLimitRUB || 150000)
           : (settings.standardLimitRUB || 20000);
-        const requiresKYCAfRu = amountInRUB > currentLimitAfRu && !isKycExpert;
-        
+        const requiresKYCAfRu = convertedAmountAfRu > currentLimitAfRu && !isKycExpert;
         const isAmountValidAfRu = (transferData.amount || 0) > 0 && !requiresKYCAfRu;
-        const bonusPointsAfRu = Math.floor((transferData.amount || 0) / 6.55);
 
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
-              <StepWrapper title="Vérifier les détails" onBack={previousStep} onNext={nextStep} isValid={isAmountValidAfRu}>
+              <StepWrapper title={t('verify_details_title')} onBack={previousStep} onNext={nextStep} isValid={isAmountValidAfRu}>
                 <div className="bg-white rounded-[32px] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-6 sm:p-8 space-y-8">
                   
                   {/* Flags & Summary */}
@@ -1445,7 +1577,7 @@ export const TransferWizardPage: React.FC = () => {
                         <img src="https://flagcdn.com/ru.svg" alt="Russia" className="w-full h-full object-cover" />
                       </div>
                     </div>
-                    <p className="text-slate-500 font-medium">Vous envoyez</p>
+                    <p className="text-slate-500 font-medium">{t('you_send')}</p>
                     <div className="relative mt-2 mb-2">
                        <input
                         type="number"
@@ -1455,22 +1587,22 @@ export const TransferWizardPage: React.FC = () => {
                         className="text-4xl font-black text-slate-900 text-center w-full py-6 px-4 rounded-[32px] border-2 border-slate-400 focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none bg-white transition-all shadow-sm"
                       />
                     </div>
-                    <p className="text-3xl font-black text-slate-900 mb-2">{transferData.currency === 'XAF' ? 'francs CFA' : transferData.currency}</p>
-                    <p className="text-slate-500 font-bold">vers la Russie</p>
+                    <p className="text-3xl font-black text-slate-900 mb-2">{transferData.currency === 'XAF' ? t('francs_cfa') : transferData.currency}</p>
+                    <p className="text-slate-500 font-bold">{t('to')} {t('to_russia')}</p>
                   </div>
 
                   {/* Detailed Table */}
                   <div className="space-y-4 pt-4 border-t border-slate-100">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Origine</span>
+                      <span className="text-slate-500 font-medium">{t('origin_label')}</span>
                       <span className="font-bold text-slate-900">{transferData.originCountry}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Destination</span>
+                      <span className="text-slate-500 font-medium">{t('destination')}</span>
                       <span className="font-bold text-slate-900">Russie (SBP)</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Compte Bénéficiaire</span>
+                      <span className="text-slate-500 font-medium">{t('beneficiary_account')}</span>
                       <span className="font-bold text-slate-900">{transferData.beneficiaryAccount}</span>
                     </div>
                     
@@ -1482,27 +1614,26 @@ export const TransferWizardPage: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Frais de transfert</span>
-                      <span className="font-bold text-slate-900">{commissionFeeAfRu} {transferData.currency}</span>
+                      <span className="font-bold text-slate-900">{commissionAfRuRecap} {transferData.currency}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-900 font-bold uppercase text-xs">Total à Payer</span>
-                      <span className="text-xl font-black text-slate-900">{totalAfRuToPay.toLocaleString()} {transferData.currency}</span>
+                      <span className="text-slate-900 font-bold uppercase text-xs">{t('total_to_pay')}</span>
+                      <span className="text-xl font-black text-slate-900">{totalXafToPay.toLocaleString()} {transferData.currency}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-brand font-bold uppercase tracking-wider text-xs">Bonus</span>
+                      <span className="text-brand font-bold uppercase tracking-wider text-xs">{t('bonus')}</span>
                       <span className="font-bold text-brand">{bonusPointsAfRu.toLocaleString()} points</span>
                     </div>
                   </div>
 
                   <div className="p-6 bg-slate-50 rounded-3xl border border-slate-200 flex justify-between items-center">
-                    <span className="text-slate-500 font-bold uppercase text-xs">Le destinataire reçoit</span>
+                    <span className="text-slate-500 font-bold uppercase text-xs">{t('recipient_receives')}</span>
                     <span className="text-2xl font-black text-brand">{convertedAmountAfRu.toLocaleString()} RUB</span>
                   </div>
 
                   {/* Narration Block */}
                   <div className="pt-6 border-t border-slate-100">
-                    <label className="block text-brand font-bold text-sm mb-2">Narration (facultatif)</label>
-                    <p className="text-xs text-slate-400 mb-3 font-medium">Ajoutez une note pour le destinataire (cadeau, scolarité, anniversaire, etc.)</p>
+                    <p className="text-xs text-slate-400 mb-3 font-medium">{t('add_note_recipient')}</p>
                     <input 
                       type="text"
                       value={transferData.notes || ''}
@@ -1516,13 +1647,13 @@ export const TransferWizardPage: React.FC = () => {
                   {/* Delivery Note */}
                   <div className="flex items-center justify-center gap-2 py-3 bg-[#f7f3ff] rounded-2xl text-brand">
                     <Zap size={18} fill="currentColor" />
-                    <span className="text-sm font-bold">Généralement livré en moins de 10 minutes</span>
+                    <span className="text-sm font-bold">{t('delivery_10_min')}</span>
                   </div>
 
                   {requiresKYCAfRu && (
                      <div className="p-4 bg-red-50 text-red-700 rounded-2xl flex gap-3 text-sm font-semibold border border-red-200">
                        <Info size={20} className="shrink-0" />
-                       Limite de transfert quotidienne dépassée ({currentLimitAfRu.toLocaleString()} RUB équivalent). {isKycExpert ? "Plafond maximum atteint." : "Passez au statut Expert pour augmenter votre limite."}
+                       {t('daily_limit_exceeded')} ({currentLimitAfRu.toLocaleString()} RUB équivalent). {isKycExpert ? t('plafond_reached') : t('upgrade_to_expert')}
                      </div>
                   )}
                 </div>
@@ -1531,12 +1662,12 @@ export const TransferWizardPage: React.FC = () => {
           </Layout>
         );
       }
-      case 6: // Choix opérateur dépôt
+      case 6: { // Choix opérateur dépôt
         const sourceCountry = countries.find(c => c.code === transferData.originCountry);
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12">
-              <StepWrapper title="Moyen de dépôt" description="Par quel opérateur allez-vous payer ?" onBack={previousStep} onNext={nextStep} isValid={!!transferData.selectedOperator}>
+              <StepWrapper title={t('deposit_method')} description={t('deposit_method_desc')} onBack={previousStep} onNext={nextStep} isValid={!!transferData.selectedOperator}>
                 <div className="grid gap-3">
                   {sourceCountry?.operators?.map((op: any) => (
                     <button
@@ -1562,18 +1693,33 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 7: // Dépôt Info + Proof (Integrated)
+      }
+      case 7: { // Dépôt Info + Proof (Integrated)
         const countryDataAfRu = countries.find(c => c.code === transferData.originCountry);
         const depAccountAfRu = countryDataAfRu?.operators?.find((a: any) => a.name === transferData.selectedOperator);
+        const bonusAvailableAfRu = user?.solde_bonus || 0;
+        const rateObjAfRu = rates.find(r => r.from === 'XAF' && r.to === 'RUB');
+        const xafToRubRate = rateObjAfRu?.rate || 0.1385;
+        const rubToXafRate = 1 / xafToRubRate;
+        
+        const totalXafToPay = (transferData.amount || 0) + getCommission(transferData.amount || 0, 'africa-russia', transferData.originCountry, transferData.selectedOperator);
+        const totalRubEquivalent = totalXafToPay * xafToRubRate;
+        
+        const bonusFullyCoversAfRu = bonusAvailableAfRu >= totalRubEquivalent;
+        const rubRemainder = Math.max(0, totalRubEquivalent - bonusAvailableAfRu);
+        const xafRemainder = rubRemainder * rubToXafRate;
+        
+        const needsProofAfRu = !payWithBonus || !bonusFullyCoversAfRu;
+
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
               <StepWrapper 
-                title="Effectuer le paiement" 
+                title={t('make_payment_title')} 
                 onBack={previousStep} 
                 onNext={handleSubmit}
-                nextLabel={isSubmitting ? "Traitement..." : "Continuer"}
-                isValid={!!proofFile && !isSubmitting}
+                nextLabel={isSubmitting ? t('processing') : t('next')}
+                isValid={((payWithBonus && bonusFullyCoversAfRu) || (needsProofAfRu && !!proofFile)) && !isSubmitting}
               >
                 
                 {/* Timer Alert */}
@@ -1583,9 +1729,9 @@ export const TransferWizardPage: React.FC = () => {
                   </div>
                   <div className="flex-1">
                     <p className="text-brand font-bold text-sm leading-tight mb-1">
-                      Effectuez le paiement vers ce compte {transferData.selectedOperator} et envoyez le reçu.
+                      {t('payment_timer_msg', { operator: transferData.selectedOperator })}
                     </p>
-                    <p className="text-xs text-brand/70 font-semibold italic">Vous avez 20 minutes pour effectuer le paiement.</p>
+                    <p className="text-xs text-brand/70 font-semibold italic">{t('timer_20_min')}</p>
                   </div>
                   <div className="flex items-center gap-2 text-brand font-black">
                     <Clock size={18} />
@@ -1604,14 +1750,14 @@ export const TransferWizardPage: React.FC = () => {
                        )}
                       </div>
                       <div>
-                         <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Compte de dépôt</p>
-                         <p className="text-lg font-black text-slate-900">{depAccountAfRu?.depositNumber || depAccountAfRu?.number || 'Numéro non configuré'}</p>
+                         <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('account_details')}</p>
+                         <p className="text-lg font-black text-slate-900">{depAccountAfRu?.depositNumber || depAccountAfRu?.number || t('account_not_configured')}</p>
                       </div>
                    </div>
 
                    {/* Account Holder Name */}
                    <div className="pb-4 mb-4 border-b border-slate-50">
-                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Titulaire du compte</p>
+                     <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">{t('account_holder')}</p>
                      <p className="text-sm font-bold text-slate-900">{depAccountAfRu?.depositHolder || depAccountAfRu?.holder || 'FLASH PAY'}</p>
                    </div>
                    
@@ -1621,10 +1767,10 @@ export const TransferWizardPage: React.FC = () => {
                          <p className="text-sm font-bold text-slate-900">{transferData.selectedOperator}</p>
                       </div>
                       <button 
-                        onClick={() => { navigator.clipboard.writeText(depAccountAfRu?.depositNumber || depAccountAfRu?.number || ''); toast.success('Copié !'); }}
+                        onClick={() => { navigator.clipboard.writeText(depAccountAfRu?.depositNumber || depAccountAfRu?.number || ''); toast.success(t('copied')); }}
                         className="px-4 py-2 rounded-xl bg-brand/5 text-brand font-bold text-xs"
                       >
-                         Copier
+                         {t('copy')}
                       </button>
                    </div>
                 </div>
@@ -1633,42 +1779,96 @@ export const TransferWizardPage: React.FC = () => {
                 <div className="bg-slate-50 rounded-2xl p-4 flex items-center gap-3 mb-8 border border-slate-100">
                   <ShieldCheck className="text-brand shrink-0" size={20} />
                   <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wide leading-tight">
-                    Utilisez uniquement le numéro affiché ci-dessus. Les comptes sont mis à jour régulièrement.
+                    {t('security_note_msg')}
                   </p>
                 </div>
 
-                {/* Proof Section */}
-                <div>
-                  <p className="text-brand font-black text-sm mb-4">Preuve de paiement</p>
-                  <label className="block w-full cursor-pointer">
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                      accept="image/*"
-                    />
-                    <div className={`w-full py-6 rounded-[24px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-brand/40 hover:bg-brand/5'}`}>
-                      {proofFile ? (
-                        <>
-                          <CheckCircle2 className="text-emerald-500" size={32} />
-                          <p className="text-emerald-700 font-bold text-sm">{proofFile.name}</p>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-3 text-brand">
-                             <CloudUpload size={28} />
-                             <p className="font-black">Télécharger le reçu</p>
-                          </div>
-                          <p className="text-xs text-slate-400">JPG ou PNG (Max 5Mo)</p>
-                        </>
-                      )}
+                {/* Bonus Payment Option */}
+                {bonusAvailableAfRu > 0 && (
+                  <div className={`p-6 rounded-[24px] border-2 transition-all mb-8 ${payWithBonus ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-primary/30'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                          <Gift size={24} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Utiliser mon solde bonus</p>
+                          <p className="text-xs text-slate-500 font-medium">Solde actuel: {formatNumber(bonusAvailableAfRu, 'RUB')}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setPayWithBonus(!payWithBonus)}
+                        className={`w-12 h-6 rounded-full relative transition-all ${payWithBonus ? 'bg-primary' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${payWithBonus ? 'left-7' : 'left-1'}`} />
+                      </button>
                     </div>
-                  </label>
-                </div>
+                    {payWithBonus && (
+                      <div className="space-y-2">
+                        {bonusFullyCoversAfRu ? (
+                          <p className="text-[10px] text-primary font-black uppercase tracking-wider">
+                             {t('bonus_covers_all')}
+                          </p>
+                        ) : (
+                          <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                             <p className="text-[11px] text-amber-700 font-black uppercase tracking-wider">
+                                {t('bonus_insufficient', { amount: formatNumber(totalXafToPay, 'XAF') })}
+                             </p>
+                             <p className="text-lg font-black text-amber-800 mt-1">
+                                {t('remaining_to_pay')} : {formatNumber(xafRemainder, 'XAF')}
+                             </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Proof Section */}
+                {needsProofAfRu && (
+                  <div>
+                    <p className="text-brand font-black text-sm mb-4">{payWithBonus ? t('after_paying_remainder') : t('proof_label')}</p>
+                    <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-4 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-brand shrink-0">
+                          <Upload size={20} />
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                          {payWithBonus 
+                            ? t('pay_remainder_and_upload', { amount: formatNumber(xafRemainder, 'XAF'), operator: transferData.selectedOperator })
+                            : t('pay_amount_and_upload', { amount: formatNumber(totalXafToPay, 'XAF'), operator: transferData.selectedOperator })}
+                      </p>
+                    </div>
+                    <label className="block w-full cursor-pointer">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        accept="image/*"
+                      />
+                      <div className={`w-full py-6 rounded-[24px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-brand/40 hover:bg-brand/5'}`}>
+                        {proofFile ? (
+                          <>
+                            <CheckCircle2 className="text-emerald-500" size={32} />
+                            <p className="text-emerald-700 font-bold text-sm">{proofFile.name}</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-3 text-brand">
+                               <CloudUpload size={28} />
+                               <p className="font-black">{t('download_receipt')}</p>
+                            </div>
+                            <p className="text-xs text-slate-400">{t('max_5mo')}</p>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                )}
               </StepWrapper>
             </div>
           </Layout>
         );
+      }
       case 8: { // Success (Paiement initié)
         const successBaseAmount = transferData.isBulk 
           ? (transferData.bulkRecipients?.reduce((acc: number, r: any) => acc + r.amount, 0) || 0)
@@ -1687,39 +1887,38 @@ export const TransferWizardPage: React.FC = () => {
                 <div className="w-24 h-24 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-emerald-500/20">
                   <CheckCircle2 size={48} />
                 </div>
-                <h2 className="text-3xl font-black text-slate-900 mb-2">Paiement Envoyé !</h2>
-                <p className="text-slate-500 font-medium">Votre transfert vers la Russie est en cours de validation.</p>
+                <h2 className="text-3xl font-black text-slate-900 mb-2">{t('payment_sent')}</h2>
+                <p className="text-slate-500 font-medium">{t('payment_sent_desc')}</p>
               </div>
 
               <div className="bg-white rounded-[32px] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-slate-100 mb-8 animate-in slide-in-from-bottom-4 duration-700 delay-150">
                 <div className="p-6 sm:p-8 space-y-6">
                   <div className="flex justify-between items-center pb-4 border-b border-slate-50">
-                    <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">Détails du Transfert</span>
-                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2 py-1 rounded-md">EN ATTENTE</span>
+                    <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">{t('transactions')}</span>
+                    <span className="bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold">{formatNumber(successTotalToPay, transferData.currency || 'XAF')}</span>
                   </div>
-
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Montant envoyé</span>
+                      <span className="text-slate-500 font-medium">{t('amount_sent_label')}</span>
                       <span className="font-bold text-slate-900">{formatNumber(successBaseAmount, transferData.currency || 'XAF')}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 font-medium">Frais de transfert</span>
+                      <span className="text-slate-500 font-medium">{t('commission_total')}</span>
                       <span className="font-bold text-slate-900">+{formatNumber(successCommissionFee, transferData.currency || 'XAF')}</span>
                     </div>
                     <div className="flex justify-between items-center pt-2 border-t border-slate-50">
-                      <span className="text-slate-900 font-black uppercase text-xs">Total à Payer</span>
+                      <span className="text-slate-900 font-black uppercase text-xs">{t('total_to_pay_label')}</span>
                       <span className="text-2xl font-black text-slate-900">{formatNumber(successTotalToPay, transferData.currency || 'XAF')}</span>
                     </div>
                   </div>
 
                   <div className="bg-emerald-50 rounded-2xl p-5 space-y-3">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-emerald-600 font-bold text-xs uppercase">Le destinataire reçoit (RUB)</span>
+                      <span className="text-emerald-600 font-bold text-xs uppercase">{t('recipient_receives_rub')}</span>
                       <span className="font-black text-emerald-700 text-lg">{formatNumber(successConvertedRu, 'RUB')}</span>
                     </div>
                     <div className="text-[11px] text-emerald-600/70 font-medium">
-                      Compte SBP : <span className="font-bold">{transferData.beneficiaryAccount}</span>
+                      {t('sbp_account_label')} : <span className="font-bold">{transferData.beneficiaryAccount}</span>
                     </div>
                   </div>
                 </div>
@@ -1729,7 +1928,7 @@ export const TransferWizardPage: React.FC = () => {
                     <Zap size={20} />
                   </div>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                    Le transfert vers la Russie via <span className="text-slate-900 font-bold">SBP</span> est extrêmement rapide dès validation de votre dépôt local.
+                    {t('sbp_fast_note')}
                   </p>
                 </div>
               </div>
@@ -1739,13 +1938,13 @@ export const TransferWizardPage: React.FC = () => {
                   onClick={() => { resetWizard(); navigate('/transactions'); }}
                   className="w-full py-5 bg-slate-900 text-white font-black rounded-[24px] shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3"
                 >
-                  Mes Transactions <ArrowRight size={18} />
+                  {t('my_transactions')} <ArrowRight size={18} />
                 </button>
                 <button 
                   onClick={() => { resetWizard(); navigate('/'); }}
                   className="w-full py-5 bg-white text-slate-900 font-black rounded-[24px] border-2 border-slate-100 hover:bg-slate-50 transition-all"
                 >
-                  Page d'accueil
+                  {t('back_to_home')}
                 </button>
               </div>
             </div>
@@ -1763,13 +1962,13 @@ export const TransferWizardPage: React.FC = () => {
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12">
-              <StepWrapper title="Type de destination" description="Où voulez-vous envoyer les RUB ?" onBack={previousStep} onNext={nextStep} isValid={!!transferData.recipientType}>
+              <StepWrapper title={t('transfer_type_label')} description={t('transfer_type_desc')} onBack={previousStep} onNext={nextStep} isValid={!!transferData.recipientType}>
                 <div className="grid grid-cols-2 gap-4">
                   <button onClick={() => updateTransferData({ recipientType: 'bank' })} className={`p-8 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all ${transferData.recipientType === 'bank' ? 'border-brand bg-brand/5' : 'border-slate-100 hover:border-slate-300'}`}>
-                    <Banknote size={32} /><span className="font-bold">Banque / Carte</span>
+                    <Banknote size={32} /><span className="font-bold">{t('bank_card_label')}</span>
                   </button>
                   <button onClick={() => updateTransferData({ recipientType: 'operator' })} className={`p-8 rounded-3xl border-2 flex flex-col items-center gap-4 transition-all ${transferData.recipientType === 'operator' ? 'border-brand bg-brand/5' : 'border-slate-100 hover:border-slate-300'}`}>
-                    <Smartphone size={32} /><span className="font-bold">Mobile / SBP</span>
+                    <Smartphone size={32} /><span className="font-bold">{t('mobile_sbp_label')}</span>
                   </button>
                 </div>
               </StepWrapper>
@@ -1780,8 +1979,8 @@ export const TransferWizardPage: React.FC = () => {
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12">
-              <StepWrapper title="Bénéficiaire" description="Nom complet de la personne" onBack={previousStep} onNext={nextStep} isValid={transferData.recipientName?.length > 3}>
-                <input type="text" value={transferData.recipientName || ''} onChange={e => updateTransferData({ recipientName: e.target.value })} placeholder="Ex: Ivan Ivanov" className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-medium" autoComplete="off" />
+              <StepWrapper title={t('beneficiary_label')} description={t('beneficiary_desc')} onBack={previousStep} onNext={nextStep} isValid={transferData.recipientName?.length > 3}>
+                <input type="text" value={transferData.recipientName || ''} onChange={e => updateTransferData({ recipientName: e.target.value })} placeholder={t('beneficiary_name_example')} className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-medium" autoComplete="off" />
               </StepWrapper>
             </div>
           </Layout>
@@ -1795,15 +1994,15 @@ export const TransferWizardPage: React.FC = () => {
           <Layout>
             <div className="max-w-xl mx-auto py-12">
               <StepWrapper 
-                title={transferData.recipientType === 'bank' ? "Numéro de Compte" : "Numéro SBP"} 
-                description="Où les fonds seront crédités" 
+                title={transferData.recipientType === 'bank' ? t('account_number_label') : t('sbp_number_label')} 
+                description={t('account_sbp_desc')} 
                 onBack={previousStep} 
                 onNext={nextStep} 
                 isValid={isStep4Valid}
               >
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">Compte / Téléphone</label>
+                    <label className="block text-sm font-bold text-slate-500 mb-2 uppercase tracking-wider">{t('account_or_phone')}</label>
                     <input 
                       type="text" 
                       value={transferData.recipientAccount || ''} 
@@ -1811,7 +2010,7 @@ export const TransferWizardPage: React.FC = () => {
                         const numericValue = e.target.value.replace(/[^\d\s+]/g, '');
                         updateTransferData({ recipientAccount: numericValue });
                       }} 
-                      placeholder={transferData.recipientType === 'bank' ? "2200 XXXX XXXX XXXX" : "+7 900 XXX XX XX"} 
+                      placeholder={transferData.recipientType === 'bank' ? t('account_number_placeholder') : t('sbp_number_placeholder')} 
                       className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-2 focus:ring-brand focus:outline-none text-lg font-bold" 
                       autoComplete="off" 
                     />
@@ -1821,7 +2020,7 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 5: // Récapitulatif
+      case 5: { // Récapitulatif
         const commissionRuRuRecap = getCommission(transferData.amount || 0, 'russia-russia');
         const totalRuRu = (transferData.amount || 0) + commissionRuRuRecap;
         const bonusPointsRuRu = Math.floor((transferData.amount || 0) / 6.55);
@@ -1927,7 +2126,15 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
-      case 6: // Dépôt + Preuve (Combined)
+      }
+      case 6: { // Dépôt + Preuve (Combined)
+        const commissionRuRuRecap = getCommission(transferData.amount || 0, 'russia-russia');
+        const totalRuRu = (transferData.amount || 0) + commissionRuRuRecap;
+        const bonusAvailableRuRu = user?.solde_bonus || 0;
+        const bonusFullyCoversRuRu = bonusAvailableRuRu >= totalRuRu;
+        const remainderRuRu = Math.max(0, totalRuRu - bonusAvailableRuRu);
+        const needsProofRuRu = !payWithBonus || !bonusFullyCoversRuRu;
+
         return (
           <Layout>
             <div className="max-w-xl mx-auto py-12 px-4">
@@ -1936,7 +2143,7 @@ export const TransferWizardPage: React.FC = () => {
                 onBack={previousStep} 
                 onNext={handleSubmit}
                 nextLabel={isSubmitting ? "Traitement..." : "Continuer"}
-                isValid={!!proofFile && !isSubmitting}
+                isValid={((payWithBonus && bonusFullyCoversRuRu) || (needsProofRuRu && !!proofFile)) && !isSubmitting}
               >
                 
                 {/* Timer Alert */}
@@ -2010,49 +2217,95 @@ export const TransferWizardPage: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Proof Section */}
-                <div>
-                  <p className="text-brand font-black text-sm mb-4">Après le paiement</p>
-                  <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-4 mb-4">
-                     <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-brand shrink-0">
-                        <Upload size={20} />
-                     </div>
-                     <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                        Effectuez le paiement sur l'un des numéros ci-dessus, puis téléchargez la preuve (capture d'écran du reçu).
-                     </p>
-                  </div>
-                  
-                  <label className="block w-full cursor-pointer group">
-                    <input
-                      type="file"
-                      className="hidden"
-                      onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                      accept="image/*"
-                    />
-                    <div className={`w-full py-6 rounded-[24px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-brand/40 hover:bg-brand/5'}`}>
-                      {proofFile ? (
-                        <>
-                          <CheckCircle2 className="text-emerald-500" size={32} />
-                          <p className="text-emerald-700 font-bold">{proofFile.name}</p>
-                          <p className="text-xs text-emerald-600">Cliquer pour changer</p>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex items-center gap-3 text-brand">
-                             <CloudUpload size={28} />
-                             <p className="font-black">Télécharger la preuve de paiement</p>
-                          </div>
-                          <p className="text-xs text-slate-400 font-medium">Formats acceptés : JPG, PNG • Taille max : 5 Mo</p>
-                        </>
-                      )}
+                {/* Bonus Payment Option */}
+                {bonusAvailableRuRu > 0 && (
+                  <div className={`p-6 rounded-[24px] border-2 transition-all mb-8 ${payWithBonus ? 'border-primary bg-primary/5' : 'border-slate-100 hover:border-primary/30'}`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                          <Gift size={24} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">Utiliser mon solde bonus</p>
+                          <p className="text-xs text-slate-500 font-medium">Solde actuel: {formatNumber(bonusAvailableRuRu, 'RUB')}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => setPayWithBonus(!payWithBonus)}
+                        className={`w-12 h-6 rounded-full relative transition-all ${payWithBonus ? 'bg-primary' : 'bg-slate-200'}`}
+                      >
+                        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${payWithBonus ? 'left-7' : 'left-1'}`} />
+                      </button>
                     </div>
-                  </label>
-                </div>
+                    {payWithBonus && (
+                      <div className="space-y-2">
+                        {bonusFullyCoversRuRu ? (
+                          <p className="text-[10px] text-primary font-black uppercase tracking-wider">
+                             ✨ Le bonus couvre la totalité du transfert. Aucune preuve requise.
+                          </p>
+                        ) : (
+                          <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                             <p className="text-[11px] text-amber-700 font-black uppercase tracking-wider">
+                                ⚠️ Solde bonus insuffisant pour couvrir le total ({formatNumber(totalRuRu, 'RUB')})
+                             </p>
+                             <p className="text-lg font-black text-amber-800 mt-1">
+                                Reste à payer : {formatNumber(remainderRuRu, 'RUB')}
+                             </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Proof Section */}
+                {needsProofRuRu && (
+                  <div>
+                    <p className="text-brand font-black text-sm mb-4">{payWithBonus ? "Après le paiement du reste" : "Après le paiement"}</p>
+                    <div className="bg-slate-50 rounded-2xl p-4 flex items-start gap-4 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm text-brand shrink-0">
+                          <Upload size={20} />
+                      </div>
+                      <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                          {payWithBonus 
+                            ? `Effectuez le paiement du complément de ${formatNumber(remainderRuRu, 'RUB')} sur l'un des numéros ci-dessus, puis téléchargez la preuve.`
+                            : "Effectuez le paiement sur l'un des numéros ci-dessus, puis téléchargez la preuve (capture d'écran du reçu)."}
+                      </p>
+                    </div>
+                    
+                    <label className="block w-full cursor-pointer group">
+                      <input
+                        type="file"
+                        className="hidden"
+                        onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                        accept="image/*"
+                      />
+                      <div className={`w-full py-6 rounded-[24px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 hover:border-brand/40 hover:bg-brand/5'}`}>
+                        {proofFile ? (
+                          <>
+                            <CheckCircle2 className="text-emerald-500" size={32} />
+                            <p className="text-emerald-700 font-bold">{proofFile.name}</p>
+                            <p className="text-xs text-emerald-600">Cliquer pour changer</p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-3 text-brand">
+                               <CloudUpload size={28} />
+                               <p className="font-black">Télécharger la preuve de paiement</p>
+                            </div>
+                            <p className="text-xs text-slate-400 font-medium">Formats acceptés : JPG, PNG • Taille max : 5 Mo</p>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                  </div>
+                )}
               </StepWrapper>
             </div>
           </Layout>
         );
-      case 7: // Success
+      }
+      case 7: { // Success
         const commissionRuRu = getCommission(transferData.amount || 0, 'russia-russia');
         const totalRuRuPaid = (transferData.amount || 0) + commissionRuRu;
 
@@ -2128,6 +2381,7 @@ export const TransferWizardPage: React.FC = () => {
             </div>
           </Layout>
         );
+      }
       default: return null;
     }
   }

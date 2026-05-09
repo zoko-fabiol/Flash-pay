@@ -203,7 +203,7 @@ export const DashboardPage: React.FC = () => {
 
             <div className="rounded-3xl bg-slate-50 p-6 space-y-3 border border-slate-100">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('available_bonus')}</p>
-              <p className="text-4xl font-bold text-primary tracking-tight">{formatNumber(user?.solde_bonus || 0, 'XAF')}</p>
+              <p className="text-4xl font-bold text-primary tracking-tight">{formatNumber(user?.solde_bonus || 0, 'RUB')}</p>
               <p className="text-[11px] font-medium text-slate-400 leading-relaxed">{t('use_on_transfers')}</p>
             </div>
           </div>

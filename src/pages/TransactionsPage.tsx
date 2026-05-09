@@ -148,12 +148,12 @@ export const TransactionsPage: React.FC = () => {
               const isBulk = tx.isBulk || (tx.bulkRecipients && tx.bulkRecipients.length > 0);
               const displayName = isBulk 
                 ? (tx.bulkRecipients && tx.bulkRecipients.length > 0 
-                    ? `${tx.bulkRecipients[0].name.split(' ')[0]} et d'autres`
-                    : "Transfert Multiple")
+                    ? `${tx.bulkRecipients[0].name.split(' ')[0]} ${t('and_others', { count: tx.bulkRecipients.length - 1 })}`
+                    : t('multiple_transfer'))
                 : (tx.recipientName || t('unknown_recipient'));
               
               const displayPhone = isBulk 
-                ? `${tx.bulkRecipients?.length || 0} bénéficiaires`
+                ? t('beneficiaries_count', { count: tx.bulkRecipients?.length || 0 })
                 : (tx.recipientPhone || tx.recipientAccount || tx.beneficiaryAccount || t('unknown_number'));
 
               return (

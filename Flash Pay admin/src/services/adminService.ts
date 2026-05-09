@@ -54,7 +54,27 @@ export const adminService = {
       const txData = txDoc.data();
       const userId = txData.userId;
       if (userId) {
-        // Send notification
+        // Send notification to sub-collection for real-time updates
+        await addDoc(collection(db, 'notifications', userId, 'items'), {
+          title: newStatus === 'completed' 
+            ? 'Transfert terminé' 
+            : newStatus === 'failed' 
+            ? 'Échec du transfert'
+            : 'Mise à jour de votre transfert',
+          body: newStatus === 'completed' 
+            ? `Votre transfert #${transactionId.slice(-6)} a été traité avec succès. Merci de votre confiance.` 
+            : newStatus === 'failed'
+            ? `Désolé, votre transfert #${transactionId.slice(-6)} a échoué. ${notes || 'Veuillez contacter le support pour plus d\'informations.'}`
+            : `Votre transfert #${transactionId.slice(-6)} est passé au statut : ${newStatus}. ${notes || ''}`,
+          type: 'transaction_update',
+          priority: (newStatus === 'completed' || newStatus === 'failed') ? 'high' : 'normal',
+          read: false,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+          link: '/transactions'
+        });
+
+        // Maintain broadcast/flat collection for history/compatibility if needed
         await addDoc(collection(db, 'notifications'), {
           userId,
           title: `Mise à jour de votre transfert`,
@@ -132,6 +152,18 @@ export const adminService = {
                   createdAt: Timestamp.now(),
                   link: '/partners'
                 });
+
+                // Real-time sub-collection notification
+                await addDoc(collection(db, 'notifications', referrerId, 'items'), {
+                  title: `Bonus de parrainage reçu !`,
+                  body: `Vous avez reçu un bonus de ${bonusAmount} RUB car votre filleul ${userData.nom || 'un utilisateur'} a effectué son premier transfert.`,
+                  type: 'referral_bonus',
+                  priority: 'high',
+                  read: false,
+                  createdAt: Timestamp.now(),
+                  updatedAt: Timestamp.now(),
+                  link: '/partners'
+                });
               }
             }
           }
@@ -165,6 +197,28 @@ export const adminService = {
         resolved: false
       })
     });
+
+    // Notify user of flagged problem
+    try {
+      const txDoc = await getDoc(txRef);
+      if (txDoc.exists()) {
+        const userId = txDoc.data().userId;
+        if (userId) {
+          await addDoc(collection(db, 'notifications', userId, 'items'), {
+            title: 'Problème sur votre transfert',
+            body: `Un problème a été signalé sur votre transfert #${transactionId.slice(-6)} : ${problem.description}. Veuillez consulter les détails.`,
+            type: 'transaction_problem',
+            priority: 'high',
+            read: false,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+            link: '/transactions'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to notify user of flagged problem:', err);
+    }
   },
 
   /**
@@ -352,6 +406,28 @@ export const adminService = {
       resolvedAt: Timestamp.now(),
       resolvedBy: auth.currentUser?.uid
     });
+
+    // Notify user of resolution
+    try {
+      const reportDoc = await getDoc(reportRef);
+      if (reportDoc.exists()) {
+        const userId = reportDoc.data().userId;
+        if (userId) {
+          await addDoc(collection(db, 'notifications', userId, 'items'), {
+            title: 'Ticket résolu',
+            body: `Votre demande de support #${reportId.slice(-4)} a été traitée. Résolution : ${resolution}`,
+            type: 'support_resolution',
+            priority: 'normal',
+            read: false,
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+            link: '/support'
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to notify user of ticket resolution:', err);
+    }
   },
 
   /**

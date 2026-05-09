@@ -3,10 +3,7 @@ import {
   collection, 
   onSnapshot, 
   query, 
-  orderBy,
-  doc,
-  updateDoc,
-  Timestamp
+  orderBy
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { ProblemReport } from '../../types';
@@ -19,6 +16,8 @@ import {
   Activity
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+import { adminService } from '../../services/adminService';
 
 const ProblemsPage: React.FC = () => {
   const [problems, setProblems] = useState<ProblemReport[]>([]);
@@ -35,12 +34,12 @@ const ProblemsPage: React.FC = () => {
   }, []);
 
   const handleResolve = async (id: string) => {
+    const resolution = prompt('Détails de la résolution (facultatif) :', 'Incident résolu et traité par l\'administration.');
+    if (resolution === null) return; // Cancelled
+
     const t = toast.loading('Mise à jour...');
     try {
-      await updateDoc(doc(db, 'problem_reports', id), {
-        status: 'resolved',
-        resolvedAt: Timestamp.now()
-      });
+      await adminService.resolveProblemReport(id, resolution);
       toast.success('Incident résolu', { id: t });
     } catch (err) {
       console.error(err);

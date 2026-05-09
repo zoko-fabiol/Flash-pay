@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, type ComponentType } from 'react';
 import { NavLink, useLocation, Outlet } from 'react-router-dom';
 import {
   DashboardProIcon,
@@ -22,14 +22,18 @@ import { useAuth } from '../../context/AuthContext';
 import { canAccessAdminSection, mergeAdminPermissions } from '../../lib/adminAccess';
 import type { AdminSectionKey } from '../../types';
 import toast from 'react-hot-toast';
+import { useAdminNotifications } from '../../context/AdminNotificationContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminLayout: React.FC = () => {
   const { logout, user: currentUser, profile } = useAuth();
+  const { unreadCount } = useAdminNotifications();
+  const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const permissions = mergeAdminPermissions(profile?.adminPermissions);
 
-  const menuItems: Array<{ path: string; icon: React.ComponentType<any>; label: string; desc: string; section: AdminSectionKey }> = [
+  const menuItems: Array<{ path: string; icon: ComponentType<any>; label: string; desc: string; section: AdminSectionKey }> = [
     { path: '/admin/dashboard', icon: DashboardProIcon, label: 'Dashboard', desc: 'Vue d\'ensemble', section: 'dashboard' as AdminSectionKey },
     { path: '/admin/queue', icon: HistoryProIcon, label: 'Transactions', desc: 'Flux financier', section: 'queue' as AdminSectionKey },
     { path: '/admin/users', icon: UsersProIcon, label: 'Clients', desc: 'Base de données', section: 'users' as AdminSectionKey },
@@ -62,12 +66,23 @@ const AdminLayout: React.FC = () => {
             FLASH PAY <span className="text-[#6750A4]">AD</span>
           </span>
         </div>
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-3 bg-[#F3EDF7] text-[#1D1B20] rounded-full active:scale-90 transition-all"
-        >
-          {isSidebarOpen ? <CloseProIcon size={20} /> : <MenuProIcon size={20} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate('/admin/notifications')}
+            className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full active:scale-90 transition-all relative"
+          >
+            <BellProIcon size={20} />
+            {unreadCount > 0 && (
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#B3261E] rounded-full border-2 border-white animate-pulse"></span>
+            )}
+          </button>
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-3 bg-[#F3EDF7] text-[#1D1B20] rounded-full active:scale-90 transition-all"
+          >
+            {isSidebarOpen ? <CloseProIcon size={20} /> : <MenuProIcon size={20} />}
+          </button>
+        </div>
       </div>
 
       {isSidebarOpen && (
@@ -98,7 +113,7 @@ const AdminLayout: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setIsSidebarOpen(false)}
-                className={({ isActive }) => `
+                className={({ isActive }: { isActive: boolean }) => `
                   group flex items-center gap-4 px-4 py-3.5 rounded-[20px] transition-all relative overflow-hidden
                   ${isActive
                     ? 'bg-[#EADDFF] text-[#21005D]'
@@ -149,9 +164,15 @@ const AdminLayout: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <button className="p-3 bg-white text-[#49454F] rounded-full hover:bg-[#F3EDF7] transition-all relative shadow-sm border border-[#E7E0EB]">
+            <button 
+              onClick={() => navigate('/admin/notifications')}
+              className="p-3 bg-white text-[#49454F] rounded-full hover:bg-[#F3EDF7] transition-all relative shadow-sm border border-[#E7E0EB]"
+              title={`${unreadCount} notifications non lues`}
+            >
               <BellProIcon size={20} />
-              <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#B3261E] rounded-full border-2 border-white"></span>
+              {unreadCount > 0 && (
+                <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-[#B3261E] rounded-full border-2 border-white animate-pulse"></span>
+              )}
             </button>
             <div className="h-8 w-px bg-[#E7E0EB]"></div>
             <div className="flex items-center gap-3 pl-2">

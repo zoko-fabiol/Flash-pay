@@ -90,10 +90,10 @@ export const SignupPage: React.FC = () => {
 
           <div className="mt-8 text-center px-4">
             <p className="text-[10px] text-slate-400 leading-relaxed font-medium uppercase tracking-widest">
-              En vous inscrivant, vous acceptez nos{' '}
-              <button onClick={() => navigate('/terms')} type="button" className="text-primary font-bold hover:underline">Conditions</button>
-              {' '}et notre{' '}
-              <button onClick={() => navigate('/privacy-policy')} type="button" className="text-primary font-bold hover:underline">Politique</button>.
+              {t('by_signing_up')}{' '}
+              <button onClick={() => navigate('/terms')} type="button" className="text-primary font-bold hover:underline">{t('terms_of_use')}</button>
+              {' '}{t('legal_and')}{' '}
+              <button onClick={() => navigate('/privacy-policy')} type="button" className="text-primary font-bold hover:underline">{t('privacy_policy')}</button>.
             </p>
           </div>
 

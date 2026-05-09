@@ -6,6 +6,7 @@ import { Layout } from '../components/Layout';
 import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
+import { notificationService } from '../services/notificationService';
 
 
 export const ProfilePage: React.FC = () => {
@@ -70,6 +71,18 @@ export const ProfilePage: React.FC = () => {
     try {
       await authService.updatePasswordWithReauth(currentPassword, newPassword);
       setSuccess(t('password_updated_success'));
+      
+      // Trigger notification
+      if (user) {
+        await notificationService.sendNotification({
+          userId: user.id,
+          title: 'Sécurité : Mot de passe modifié',
+          body: 'Votre mot de passe a été mis à jour avec succès.',
+          type: 'in_app',
+          priority: 'high'
+        });
+      }
+
       setShowPasswordForm(false);
       setCurrentPassword('');
       setNewPassword('');
@@ -251,45 +264,45 @@ export const ProfilePage: React.FC = () => {
         {/* ── Security / Password ── */}
         <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-6 pt-5 pb-3 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="font-black text-slate-900">Sécurité</h2>
+            <h2 className="font-black text-slate-900">{t('security')}</h2>
             <button 
               onClick={() => setShowPasswordForm(!showPasswordForm)}
               className="text-xs font-bold text-[#6236CC] hover:underline"
             >
-              {showPasswordForm ? t('cancel') : 'Modifier le mot de passe'}
+              {showPasswordForm ? t('cancel') : t('change_password')}
             </button>
           </div>
           
           {showPasswordForm ? (
             <div className="p-6 space-y-4 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mot de passe actuel</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('current_password_label')}</label>
                 <input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
-                  placeholder="Entrez votre mot de passe actuel"
+                  placeholder={t('placeholder_current_password')}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nouveau mot de passe</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('new_password_label')}</label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
-                  placeholder="Minimum 6 caractères"
+                  placeholder={t('placeholder_new_password')}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirmer le mot de passe</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('confirm_password_label')}</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6236CC]/40"
-                  placeholder="Répétez le mot de passe"
+                  placeholder={t('placeholder_confirm_password')}
                 />
               </div>
               <button
@@ -297,7 +310,7 @@ export const ProfilePage: React.FC = () => {
                 disabled={loading || !currentPassword || !newPassword || newPassword !== confirmPassword}
                 className="w-full py-4 rounded-2xl bg-[#6236CC] text-white font-bold text-sm shadow-lg shadow-[#6236CC]/20 hover:bg-[#4A1FA0] transition disabled:opacity-50"
               >
-                {loading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
+                {loading ? t('updating_password') : t('update_password_btn')}
               </button>
             </div>
           ) : (
@@ -306,8 +319,8 @@ export const ProfilePage: React.FC = () => {
                 <Shield size={16} className="text-emerald-500" />
               </div>
               <div className="flex-1">
-                <p className="text-sm font-semibold text-slate-900">Mot de passe</p>
-                <p className="text-xs text-slate-400">Dernière modification : Récemment</p>
+                <p className="text-sm font-semibold text-slate-900">{t('password_display_label')}</p>
+                <p className="text-xs text-slate-400">{t('last_modification_label')} : {t('recently_label')}</p>
               </div>
             </div>
           )}
