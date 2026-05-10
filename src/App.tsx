@@ -1,6 +1,6 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 import { TransferWizardProvider } from './context/TransferWizardContext';
