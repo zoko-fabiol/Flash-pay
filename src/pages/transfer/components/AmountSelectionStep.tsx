@@ -157,7 +157,7 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
                 onFocus={() => setIsSendMode(true)}
                 onChange={(e) => handleSendChange(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-transparent border-none outline-none text-4xl font-black text-slate-900 placeholder:text-slate-300"
+                className="w-full bg-transparent border-none outline-none text-[34px] font-black text-slate-900 placeholder:text-slate-300"
               />
               <span className="text-xl font-black text-slate-400">{fromCurrency}</span>
             </div>
@@ -213,7 +213,7 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
                 onFocus={() => setIsSendMode(false)}
                 onChange={(e) => handleReceiveChange(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-transparent border-none outline-none text-4xl font-black text-slate-900 placeholder:text-slate-300"
+                className="w-full bg-transparent border-none outline-none text-[34px] font-black text-slate-900 placeholder:text-slate-300"
               />
               <span className="text-xl font-black text-slate-400">{toCurrency}</span>
             </div>
