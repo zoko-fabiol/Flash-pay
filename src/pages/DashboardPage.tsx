@@ -99,14 +99,29 @@ export const DashboardPage: React.FC = () => {
       <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Banner Section - Matching Screenshot */}
-        <section className="relative mx-2 min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#470B37] via-[#2D0723] to-[#1A0414] p-7 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)] sm:p-8">
+        <section className="relative mx-2 min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#661489] via-[#4D0F67] to-[#2A083B] p-7 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)] sm:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_26%)]" />
           <div className="absolute inset-y-0 right-0 w-[85%] opacity-30 pointer-events-none overflow-hidden">
-            <img 
-              src="/5a9401e8-52c4-49da-99e5-37c28cb5e69c.jpg" 
-              alt="Map Background"
-              className="h-full w-full object-contain translate-x-8 mix-blend-screen invert opacity-60"
-            />
+            <svg className="h-full w-full translate-x-[25%]" preserveAspectRatio="xMidYMid meet">
+              <defs>
+                <filter id="invert-mask">
+                  <feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1 
+                                                                          0 -1 0 0 1 
+                                                                          0 0 -1 0 1 
+                                                                          0 0 0 1 0" />
+                </filter>
+                <mask id="map-mask">
+                  <image 
+                    href="/map-bg.jpg" 
+                    width="100%" 
+                    height="100%" 
+                    preserveAspectRatio="xMidYMid meet"
+                    style={{ filter: 'url(#invert-mask)' }}
+                  />
+                </mask>
+              </defs>
+              <rect width="100%" height="100%" fill="white" mask="url(#map-mask)" />
+            </svg>
           </div>
 
           <div className="relative z-10 flex h-full flex-col justify-between gap-6">
@@ -125,7 +140,7 @@ export const DashboardPage: React.FC = () => {
             <div>
               <button 
                 onClick={() => navigate('/transfer')} 
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#470B37] shadow-[0_10px_24px_rgba(42,8,59,0.2)] transition-transform active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#661489] shadow-[0_10px_24px_rgba(42,8,59,0.2)] transition-transform active:scale-95"
               >
                 {t('start_transfer')} 
                 <ArrowRight size={16} />
@@ -135,7 +150,7 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* Referral Card - Matching Screenshot */}
-        <section className="relative mx-2 overflow-hidden rounded-[32px] bg-[#FDF2F7] p-6 shadow-sm border border-[#F5E6F0]">
+        <section className="relative mx-2 overflow-hidden rounded-[32px] bg-[#FDF7FF] p-6 shadow-sm border border-[#F3E8FF]">
           <div className="flex justify-between items-start">
             <div className="space-y-6 flex-1 pr-4">
               <h3 className="text-lg font-bold text-slate-800 leading-snug">
@@ -145,7 +160,7 @@ export const DashboardPage: React.FC = () => {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => navigate('/referral')} 
-                  className="rounded-xl bg-[#470B37] px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 transition-all"
+                  className="rounded-xl bg-[#661489] px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 transition-all"
                 >
                   {t('refer_now')}
                 </button>
@@ -153,12 +168,12 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-end gap-2 shrink-0">
-               <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[10px] font-bold text-[#470B37] shadow-sm border border-[#F5E6F0]">
+               <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[10px] font-bold text-[#661489] shadow-sm border border-[#F3E8FF]">
                  <Gift size={12} /> {t('special_offer')}
                </div>
                <div className="mt-2 scale-110">
                  {/* Placeholder for gift box illustration */}
-                 <Gift size={80} className="text-[#6D1154]" />
+                 <Gift size={80} className="text-[#D8B4FE]" />
                </div>
             </div>
           </div>

@@ -2,21 +2,21 @@
 @import "tailwindcss";
 
 @theme {
-  /* Premium Deep Wine Palette */
-  --color-primary: #470B37;
-  --color-primary-dark: #2D0723;
-  --color-primary-light: #6D1154;
+  /* Vibrant Fintech Palette */
+  --color-primary: #661489;
+  --color-primary-dark: #4D0F67;
+  --color-primary-light: #8E3DA8;
   
-  --color-accent: #00D1FF;
-  --color-flash: #470B37;
-  --color-brand: #470B37;
+  --color-accent: #00D1FF; /* Cyan accent for contrast */
+  --color-flash: #c084fc;
+  --color-brand: #661489;
   --color-ink: #1f2937;
   
   --color-background: #F8F9FF;
   --color-surface: #FFFFFF;
   
-  --shadow-premium: 0 10px 40px -10px rgba(71, 11, 55, 0.15);
-  --shadow-glass: 0 8px 32px 0 rgba(71, 11, 55, 0.08);
+  --shadow-premium: 0 10px 40px -10px rgba(102, 20, 137, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(102, 20, 137, 0.07);
 
   --font-sans: "Outfit", sans-serif;
 }
