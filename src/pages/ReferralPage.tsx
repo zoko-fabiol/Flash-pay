@@ -66,7 +66,7 @@ export const ReferralPage: React.FC = () => {
     };
   }, [user]);
 
-  const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
+  const referralLink = `https://flash-pay.site/signup?ref=${referralCode}`;
 
   const handleCopy = async () => {
     if (!referralCode) return;
@@ -105,19 +105,32 @@ export const ReferralPage: React.FC = () => {
     <Layout>
       <div className="max-w-xl mx-auto space-y-6 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-        {/* Hero Section - Premium Glass Card */}
-        <section className="relative overflow-hidden rounded-2xl bg-gradient-primary p-6 text-white shadow-xl">
-          <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-[60px] animate-pulse"></div>
-          
-          <div className="relative z-10 space-y-4">
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/20 shadow-xl">
-              <Gift size={24} className="text-white" />
+        {/* Hero Section - Premium Design Matching Dashboard */}
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#661489] via-[#4D0F67] to-[#2A083B] p-8 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)]">
+          {/* Background Decorative Elements */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_30%)]" />
+          <div className="absolute -right-6 -bottom-6 opacity-10 rotate-12">
+            <Gift size={160} strokeWidth={1} />
+          </div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col gap-5">
+            <div className="w-14 h-14 bg-white/15 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl">
+              <Gift size={28} className="text-white animate-bounce-slow" />
             </div>
-            <div className="space-y-1.5">
-              <h1 className="text-2xl font-bold tracking-tight">{t('referral_title')}</h1>
-              <p className="text-white/70 text-sm font-medium leading-relaxed max-w-xs">
+            
+            <div className="space-y-2">
+              <h1 className="text-3xl font-black tracking-tight">{t('referral_title')}</h1>
+              <p className="text-white/80 text-sm font-medium leading-relaxed max-w-xs">
                 {t('referral_desc_bonus') || `Gagnez ${formatNumber(referralBonusRUB, 'RUB')} par ami parrainé.`}
               </p>
+            </div>
+
+            <div className="pt-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-[10px] font-bold uppercase tracking-wider text-white/90">
+                <Sparkles size={12} className="text-amber-300" />
+                {t('special_offer')}
+              </div>
             </div>
           </div>
         </section>

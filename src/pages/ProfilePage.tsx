@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { userService, authService } from '../services/firebase';
 import { Layout } from '../components/Layout';
-import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star } from 'lucide-react';
+import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
@@ -211,6 +211,26 @@ export const ProfilePage: React.FC = () => {
           </div>
 
           <div className="divide-y divide-slate-50">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                <User size={16} className="text-slate-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('full_name')}</p>
+                {editing ? (
+                  <input
+                    type="text"
+                    name="nom"
+                    value={formData.nom}
+                    onChange={handleInputChange}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  />
+                ) : (
+                  <p className="text-sm font-semibold text-slate-900">{user?.nom || '—'}</p>
+                )}
+              </div>
+            </div>
+
             <div className="flex items-center gap-4 px-6 py-4">
               <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
                 <Mail size={16} className="text-slate-400" />

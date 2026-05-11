@@ -106,7 +106,7 @@ export const emailService = {
           
           <div style="text-align: center;">
             <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">Merci d'avoir choisi Flash Pay pour vos transferts.</p>
-            <a href="https://flash-pay-937d7.web.app" style="background-color: #661489; color: white; padding: 14px 28px; border-radius: 14px; text-decoration: none; font-weight: bold; display: inline-block;">Voir mes transactions</a>
+            <a href="https://flash-pay.site" style="background-color: #661489; color: white; padding: 14px 28px; border-radius: 14px; text-decoration: none; font-weight: bold; display: inline-block;">Voir mes transactions</a>
           </div>
         </div>
       </div>

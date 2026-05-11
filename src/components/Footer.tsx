@@ -22,7 +22,7 @@ const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = (
                   >
                     <Icon size={24} />
                   </Link>
-                  <span className={`text-[10px] mt-1 font-bold ${active ? 'text-primary' : 'text-slate-400'}`}>{tab.label}</span>
+
                 </div>
               );
             }
