@@ -84,19 +84,19 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 text-center">
-            <p className="text-[10px] text-slate-400 leading-relaxed font-medium uppercase tracking-widest">
-              <button onClick={() => navigate('/terms')} type="button" className="hover:text-primary transition">{t('terms_of_use')}</button>
-              {' • '}
-              <button onClick={() => navigate('/privacy-policy')} type="button" className="hover:text-primary transition">{t('privacy_policy')}</button>
-            </p>
-          </div>
-
           <div className="text-center mt-8 pt-8 border-t border-slate-50 text-sm text-slate-500 font-medium">
             {t('no_account')}{' '}
             <button onClick={() => navigate('/signup')} className="text-primary font-bold hover:underline underline-offset-4">
               {t('signup')}
             </button>
+          </div>
+
+          <div className="mt-8 text-center opacity-60">
+            <p className="text-[10px] text-slate-400 leading-relaxed font-medium uppercase tracking-widest">
+              <button onClick={() => navigate('/terms')} type="button" className="hover:text-primary transition">{t('terms_of_use')}</button>
+              {' • '}
+              <button onClick={() => navigate('/privacy-policy')} type="button" className="hover:text-primary transition">{t('privacy_policy')}</button>
+            </p>
           </div>
         </div>
       </div>
