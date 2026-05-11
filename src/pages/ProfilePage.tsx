@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { userService, authService } from '../services/firebase';
+import { userService, authService, db } from '../services/firebase';
+import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
 import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star, User } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
@@ -128,6 +129,62 @@ export const ProfilePage: React.FC = () => {
 
   const kycColor = getKycColor();
   const initials = (user?.nom || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  
+  const [settings, setSettings] = useState({ standardLimitRUB: 20000, expertLimitRUB: 150000 });
+  const [spentToday, setSpentToday] = useState(0);
+
+  useEffect(() => {
+    const unsubS = onSnapshot(collection(db, 'settings'), (s) => {
+      if (!s.empty) {
+        const data = s.docs[0].data();
+        setSettings({
+          standardLimitRUB: data.standardLimitRUB || 20000,
+          expertLimitRUB: data.expertLimitRUB || 150000,
+        });
+      }
+    });
+
+    if (user) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const q = query(
+        collection(db, 'transactions'),
+        where('userId', '==', user.id),
+        where('createdAt', '>=', Timestamp.fromDate(today))
+      );
+
+      const unsubT = onSnapshot(q, (snapshot) => {
+        let total = 0;
+        snapshot.docs.forEach(doc => {
+          const d = doc.data();
+          if (d.status !== 'failed' && d.status !== 'cancelled') {
+             let amountRUB = 0;
+             if (d.type === 'russia-africa') {
+               amountRUB = d.amount || 0;
+             } else if (d.type === 'africa-russia') {
+               amountRUB = d.receivedAmount || 0;
+             } else {
+               // Default fallback or for africa-africa (might need conversion but usually limits are RUB based)
+               amountRUB = d.amountRUB || d.amount || 0;
+             }
+             total += amountRUB;
+          }
+        });
+        setSpentToday(total);
+      });
+
+      return () => { unsubS(); unsubT(); };
+    }
+
+    return () => unsubS();
+  }, [user]);
+
+  const totalLimit = getRawKycStatus() === 'approved' || getRawKycStatus() === 'expert'
+    ? settings.expertLimitRUB
+    : settings.standardLimitRUB;
+  
+  const remainingLimit = Math.max(0, totalLimit - spentToday);
 
   return (
     <Layout>
@@ -165,9 +222,19 @@ export const ProfilePage: React.FC = () => {
             )}
           </div>
 
-          <div className="relative mt-4 flex items-center gap-2 text-xs text-white/60">
-            <Calendar size={13} />
-            <span>{t('created_at')} : {user?.createdAt ? formatDate(user.createdAt) : '—'}</span>
+          <div className="relative mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-white/60">
+              <Calendar size={13} />
+              <span>{t('created_at')} : {user?.createdAt ? formatDate(user.createdAt) : '—'}</span>
+            </div>
+
+            <div className="bg-white/15 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/10 flex flex-col items-end">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/50 mb-0.5">{t('daily_limit') || 'Limite Journalière'}</p>
+              <p className="text-sm font-black flex items-baseline gap-1">
+                {remainingLimit.toLocaleString()} 
+                <span className="text-[10px] opacity-60">RUB</span>
+              </p>
+            </div>
           </div>
         </div>
 
