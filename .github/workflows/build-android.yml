@@ -53,7 +53,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flash-pay-platform-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/debug/*.apk
           retention-days: 7
 
   build-admin:
@@ -106,5 +106,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: flash-pay-admin-debug
-          path: Flash Pay admin/android/app/build/outputs/apk/debug/app-debug.apk
+          path: Flash Pay admin/android/app/build/outputs/apk/debug/*.apk
           retention-days: 7
