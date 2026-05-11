@@ -23,7 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     { path: '/kyc', label: t('menu_profile_kyc'), icon: Lock },
     { path: '/referral', label: t('menu_referral'), icon: Share2 },
     { path: '/profile', label: t('menu_profile'), icon: User },
-    { path: '/notifications', label: t('notifications'), icon: Bell },
+
     { path: '/preferences', label: t('menu_preferences'), icon: Settings },
 
   ];
