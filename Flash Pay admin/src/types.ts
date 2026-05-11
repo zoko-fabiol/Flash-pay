@@ -49,7 +49,7 @@ export interface Transaction {
   clientName?: string;
   clientPhone?: string;
   clientEmail?: string;
-  type: 'russia-africa' | 'africa-russia' | 'russia-russia';
+  type: 'russia-africa' | 'africa-russia' | 'africa-africa' | 'russia-russia';
   status: TransactionStatus;
   isBulk?: boolean;
   bulkRecipients?: BulkRecipient[];
@@ -102,7 +102,7 @@ export interface ExchangeRate {
 
 export interface Commission {
   id: string;
-  transferType: 'russia-russia' | 'russia-africa' | 'africa-russia';
+  transferType: 'africa-africa' | 'russia-africa' | 'africa-russia';
   destinationCountry?: string; // e.g. 'CM'
   destinationOperator?: string; // e.g. 'Orange Money'
   feeType: 'percentage' | 'fixed';
@@ -134,6 +134,7 @@ export interface Country {
   banks: string[];
   depositAccounts: DepositAccount[];
   enabled: boolean;
+  allowedDestinations?: string[];
   updatedAt: Timestamp;
   updatedBy: string;
 }
@@ -239,7 +240,7 @@ export interface TransactionRecap {
   commissionAmount: number;
   amountAfterCommission: number;
   receivedAmount: number;
-  route: 'russia-russia' | 'russia-africa' | 'africa-russia';
+  route: 'africa-africa' | 'russia-africa' | 'africa-russia';
   isValid: boolean;
   errors?: string[];
 }

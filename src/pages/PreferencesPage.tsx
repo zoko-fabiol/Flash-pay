@@ -2,23 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
-import { Bell, Mail, Save, Loader, CheckCircle2 } from 'lucide-react';
+import { Loading } from '../components/UI';
+import { Bell, Mail, Save, Loader, CheckCircle2, Type } from 'lucide-react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
 
 interface UserPreferences {
   language: string;
+  fontSize: 'small' | 'normal' | 'large' | 'huge';
   promotionalEmails: boolean;
   updatedAt?: Date;
 }
 
 export const PreferencesPage: React.FC = () => {
   const { user } = useAuth();
-  const { t, language: currentLang, setLanguage } = useLanguage();
+  const { t, language: currentLang, setLanguage, fontSize: currentFontSize, setFontSize } = useLanguage();
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: currentLang || 'fr',
+    fontSize: currentFontSize || 'normal',
     promotionalEmails: false,
   });
   const [loading, setLoading] = useState(true);
@@ -33,7 +36,12 @@ export const PreferencesPage: React.FC = () => {
       if (snapshot.exists()) {
         const userData = snapshot.data();
         if (userData.preferences) {
-          setPreferences(userData.preferences);
+          setPreferences(prev => ({
+            ...prev,
+            ...userData.preferences,
+            // Ensure values are defaults if missing
+            fontSize: userData.preferences.fontSize || prev.fontSize,
+          }));
         }
       }
       setLoading(false);
@@ -53,6 +61,7 @@ export const PreferencesPage: React.FC = () => {
       await setDoc(userRef, { preferences: { ...preferences, updatedAt: new Date() } }, { merge: true });
 
       setLanguage(preferences.language as any);
+      setFontSize(preferences.fontSize);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -65,31 +74,22 @@ export const PreferencesPage: React.FC = () => {
   const Toggle = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
     <button
       onClick={onChange}
-      className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${value ? 'bg-[#6236CC]' : 'bg-slate-200'}`}
+      className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${value ? 'bg-[#661489]' : 'bg-slate-200'}`}
     >
       <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${value ? 'translate-x-6' : 'translate-x-0'}`} />
     </button>
   );
 
   if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="flex flex-col items-center gap-4">
-            <Loader className="animate-spin text-[#6236CC]" size={32} />
-            <span className="font-bold text-slate-500">{t('loading')}</span>
-          </div>
-        </div>
-      </Layout>
-    );
+    return <Loading fullScreen />;
   }
 
   return (
     <Layout>
-      <div className="max-w-2xl mx-auto space-y-5 pb-10 px-4">
+      <div className="max-w-2xl mx-auto space-y-6 pb-10 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
         {/* Header */}
-        <div>
+        <div className="pt-4">
           <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('preferences')}</h1>
           <p className="text-slate-500 mt-1 font-medium">{t('preferences_desc')}</p>
         </div>
@@ -101,18 +101,45 @@ export const PreferencesPage: React.FC = () => {
           </div>
         )}
 
+        {/* Font Size Card */}
+        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-6 pb-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#661489]/10 flex items-center justify-center text-[#661489]">
+              <Type size={18} />
+            </div>
+            <h2 className="font-black text-slate-900">{t('font_size')}</h2>
+          </div>
+          <div className="p-6">
+            <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-1">
+              {(['small', 'normal', 'large', 'huge'] as const).map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setPreferences({ ...preferences, fontSize: size })}
+                  className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    preferences.fontSize === size 
+                      ? 'bg-white text-[#661489] shadow-md ring-1 ring-slate-100 scale-[1.02]' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {t(`font_${size}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Communication Card */}
-        <div className="rounded-[24px] bg-white border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-6 pt-5 pb-3 border-b border-slate-100">
+        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-6 pb-3 border-b border-slate-100">
             <h2 className="font-black text-slate-900">{t('communication')}</h2>
           </div>
 
           <div className="divide-y divide-slate-50">
             {/* Promotional emails */}
-            <div className="flex items-center justify-between px-6 py-5">
+            <div className="flex items-center justify-between px-6 py-6">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-[#f7f3ff] flex items-center justify-center shrink-0">
-                  <Mail size={18} className="text-[#6236CC]" />
+                  <Mail size={18} className="text-[#661489]" />
                 </div>
                 <div>
                   <p className="font-bold text-slate-900 text-sm">{t('promo_emails')}</p>
@@ -128,11 +155,11 @@ export const PreferencesPage: React.FC = () => {
         </div>
 
         {/* Save */}
-        <div className="flex gap-4">
+        <div className="flex gap-4 pt-4">
           <button
             onClick={handleSavePreferences}
             disabled={saving}
-            className="flex-[2] flex items-center justify-center gap-2 py-4 bg-gradient-to-br from-[#6236CC] to-[#4A1FA0] text-white font-black rounded-2xl shadow-[0_8px_24px_rgba(98,54,204,0.25)] hover:shadow-[0_12px_32px_rgba(98,54,204,0.35)] transition disabled:opacity-50 active:scale-95"
+            className="flex-[2] flex items-center justify-center gap-2 py-4 bg-[#661489] text-white font-black rounded-2xl shadow-xl shadow-[#661489]/20 hover:shadow-2xl hover:shadow-[#661489]/30 transition disabled:opacity-50 active:scale-95"
           >
             {saving ? <><Loader size={18} className="animate-spin" /> {t('saving')}</> : <><Save size={18} /> {t('save')}</>}
           </button>

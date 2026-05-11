@@ -64,6 +64,16 @@ async function initializeNativePushNotifications(userId: string) {
     // Method called when tapping on a notification
     PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
       console.log('🔔 Push action performed (native):', JSON.stringify(notification));
+      
+      const data = notification.notification.data;
+      const targetPath = data?.deeplink || data?.actionUrl || data?.link;
+      
+      if (targetPath) {
+        const cleanPath = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
+        window.location.hash = `#${cleanPath}`;
+      } else if (data?.transactionId || data?.transferId) {
+        window.location.hash = `#/transactions/${data.transactionId || data.transferId}`;
+      }
     });
   } catch (error) {
     console.error('❌ Error initializing native push notifications:', error);
@@ -105,8 +115,13 @@ async function initializeWebPushNotifications(userId: string) {
         console.log('🔔 Notification clicked (web):', event.data.notification);
         
         const { data } = event.data.notification;
-        if (data?.deeplink) {
-          window.location.href = data.deeplink;
+        const targetPath = data?.deeplink || data?.actionUrl || data?.link;
+        
+        if (targetPath) {
+          const cleanPath = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
+          window.location.hash = `#${cleanPath}`;
+        } else if (data?.transactionId || data?.transferId) {
+          window.location.hash = `#/transactions/${data.transactionId || data.transferId}`;
         }
       } else if (event.data.type === 'NOTIFICATION_CLOSED') {
         console.log('❌ Notification closed (web):', event.data.notification);

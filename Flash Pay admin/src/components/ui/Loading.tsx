@@ -10,14 +10,14 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
     <div className="relative flex flex-col items-center">
       {/* Animated Rings Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none scale-150">
-        <div className="w-48 h-48 rounded-full border border-[#6750A4]/10 animate-[spin_6s_linear_infinite]" />
-        <div className="absolute w-32 h-32 rounded-full border-t border-[#6750A4] animate-spin" />
+        <div className="w-48 h-48 rounded-full border border-[#661489]/10 animate-[spin_6s_linear_infinite]" />
+        <div className="absolute w-32 h-32 rounded-full border-t border-[#661489] animate-spin" />
       </div>
 
       {/* Branded Logo with Pulse Effect */}
       <div className="relative w-24 h-24 mb-10 flex items-center justify-center">
         <div className="absolute inset-0 bg-[#EADDFF] rounded-[32px] animate-pulse opacity-50"></div>
-        <div className="relative w-16 h-16 bg-[#6750A4] rounded-[24px] flex items-center justify-center shadow-2xl shadow-[#6750A4]/20 animate-bounce">
+        <div className="relative w-16 h-16 bg-[#661489] rounded-[24px] flex items-center justify-center shadow-2xl shadow-[#661489]/20 animate-bounce">
            <CreditCard className="text-white" size={32} />
         </div>
       </div>
@@ -26,10 +26,10 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
       <div className="flex flex-col items-center gap-4 relative z-10">
         <div className="flex flex-col items-center">
            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1D1B20]">Flash Pay</span>
-           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#6750A4] opacity-60 mt-1">Initialisation...</span>
+           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#661489] opacity-60 mt-1">Initialisation...</span>
         </div>
         <div className="w-24 h-1 bg-[#F3EDF7] rounded-full overflow-hidden shadow-inner">
-          <div className="h-full bg-[#6750A4] w-full animate-[shimmer_1.5s_infinite] origin-left" />
+          <div className="h-full bg-[#661489] w-full animate-[shimmer_1.5s_infinite] origin-left" />
         </div>
       </div>
 

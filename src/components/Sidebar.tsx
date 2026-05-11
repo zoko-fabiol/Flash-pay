@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Send, History, Lock, Share2, User, Settings, LogOut, X } from 'lucide-react';
+import { LayoutDashboard, Send, History, Lock, Share2, User, Settings, LogOut, X, Bell } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -23,6 +23,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     { path: '/kyc', label: t('menu_profile_kyc'), icon: Lock },
     { path: '/referral', label: t('menu_referral'), icon: Share2 },
     { path: '/profile', label: t('menu_profile'), icon: User },
+    { path: '/notifications', label: t('notifications'), icon: Bell },
     { path: '/preferences', label: t('menu_preferences'), icon: Settings },
 
   ];
@@ -41,13 +42,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-[60] lg:hidden" onClick={onClose} />
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-300" onClick={onClose} />
       )}
       
       <aside className={`
-        fixed lg:static inset-y-0 left-0 w-72 glass-effect border-r border-white/20
-        transform transition-transform z-[70] overflow-y-auto
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        fixed lg:static inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r border-slate-200/60 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.05)]
+        transform transition-all duration-300 z-[70] overflow-y-auto
+        ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full lg:translate-x-0 opacity-0 lg:opacity-100'}
       `}>
         <div className="p-6 flex justify-between items-center lg:hidden">
           <span className="font-bold text-primary text-xl">Flash Pay</span>

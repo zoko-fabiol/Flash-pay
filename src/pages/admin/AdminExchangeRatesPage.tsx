@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, doc, getDoc, getDocs, setDoc, onSnapshot, query, limit } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { Layout } from '../../components/Layout';
+import { Loading } from '../../components/UI';
 import { useLanguage } from '../../context/LanguageContext';
 import { Save, TrendingUp, Gift, Percent } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -57,7 +58,7 @@ export const AdminExchangeRatesPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">{t('loading')}</div>;
+    return <Loading fullScreen />;
   }
 
   return (
@@ -71,7 +72,7 @@ export const AdminExchangeRatesPage: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-[#6750A4] text-white px-6 py-3 rounded-full font-black shadow-lg hover:scale-105 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 bg-[#661489] text-white px-6 py-3 rounded-full font-black shadow-lg hover:scale-105 transition-all disabled:opacity-50"
           >
             <Save size={20} />
             {saving ? t('saving') : t('save_settings')}
@@ -95,7 +96,7 @@ export const AdminExchangeRatesPage: React.FC = () => {
                   type="number"
                   value={settings.rate_eur_xaf}
                   onChange={e => setSettings({ ...settings, rate_eur_xaf: Number(e.target.value) })}
-                  className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6750A4] outline-none font-bold"
+                  className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold"
                 />
               </div>
               <div>
@@ -104,7 +105,7 @@ export const AdminExchangeRatesPage: React.FC = () => {
                   type="number"
                   value={settings.rate_rub_xaf}
                   onChange={e => setSettings({ ...settings, rate_rub_xaf: Number(e.target.value) })}
-                  className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6750A4] outline-none font-bold"
+                  className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold"
                 />
               </div>
             </div>
@@ -126,7 +127,7 @@ export const AdminExchangeRatesPage: React.FC = () => {
                   type="number"
                   value={settings.referralBonus}
                   onChange={e => setSettings({ ...settings, referralBonus: Number(e.target.value) })}
-                  className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6750A4] outline-none font-bold"
+                  className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold"
                 />
               </div>
               <div>
@@ -136,7 +137,7 @@ export const AdminExchangeRatesPage: React.FC = () => {
                     type="number"
                     value={settings.feePercentage}
                     onChange={e => setSettings({ ...settings, feePercentage: Number(e.target.value) })}
-                    className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6750A4] outline-none font-bold pr-12"
+                    className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold pr-12"
                   />
                   <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
                     <Percent size={20} />
