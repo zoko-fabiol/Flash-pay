@@ -16,7 +16,7 @@ export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { signup } = useAuth();
-  const { t } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
 
   React.useEffect(() => {
     const ref = searchParams.get('ref');
@@ -46,7 +46,23 @@ export const SignupPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-mesh px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-mesh px-4 py-12 relative">
+      {/* Language Selector */}
+      <div className="absolute top-6 right-6 flex items-center gap-1 bg-white/30 backdrop-blur-md p-1 rounded-2xl border border-white/50 shadow-sm z-10">
+        <button 
+          onClick={() => setLanguage('fr')}
+          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'fr' ? 'bg-[#661489] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
+        >
+          FR
+        </button>
+        <button 
+          onClick={() => setLanguage('en')}
+          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'en' ? 'bg-[#661489] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
+        >
+          EN
+        </button>
+      </div>
+
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
