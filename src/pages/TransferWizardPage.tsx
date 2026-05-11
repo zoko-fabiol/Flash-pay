@@ -25,7 +25,7 @@ import {
   updateDoc, 
   doc 
 } from 'firebase/firestore';
-import { db, auth, calculateTransactionRecap, userService } from '../services/firebase';
+import { db, auth, calculateTransactionRecap, userService, contactService } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
 import { emailService } from '../services/emailService';
 import { notificationService } from '../services/notificationService';
@@ -126,7 +126,11 @@ export const TransferWizardPage: React.FC = () => {
   const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [savedContacts, setSavedContacts] = useState<any[]>([]);
+  const [personalContacts, setPersonalContacts] = useState<any[]>([]);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [newContact, setNewContact] = useState({ name: '', phone: '', operator: '' });
+  const [contactTab, setContactTab] = useState<'recent' | 'personal'>('recent');
 
   const sortedCountries = useMemo(
     () => [...countries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
@@ -243,6 +247,22 @@ export const TransferWizardPage: React.FC = () => {
 
   useEffect(() => {
     if (!user) return;
+    const uid = user.id || auth.currentUser?.uid;
+    if (!uid) return;
+
+    const loadPersonalContacts = async () => {
+      try {
+        const contacts = await contactService.getUserContacts(uid);
+        setPersonalContacts(contacts);
+      } catch (err) {
+        console.error('Failed to load personal contacts:', err);
+      }
+    };
+    loadPersonalContacts();
+  }, [user, isContactModalOpen]);
+
+  useEffect(() => {
+    if (!user) return;
     
     const uid = user.id || auth.currentUser?.uid;
     if (!uid) return;
@@ -344,7 +364,39 @@ export const TransferWizardPage: React.FC = () => {
       });
     }
     setIsContactModalOpen(false);
+    setIsAddingContact(false);
     toast.success(t('contact_selected'));
+  };
+
+  const handleAddManualContact = async () => {
+    if (!newContact.name || !newContact.phone) {
+      toast.error(t('fill_all_fields'));
+      return;
+    }
+
+    const uid = user?.id || auth.currentUser?.uid;
+    if (!uid) return;
+
+    const t_toast = toast.loading(t('saving_contact'));
+    try {
+      await contactService.addContact(uid, {
+        ...newContact,
+        countryCode: transferData.destinationCountry || 'CM'
+      });
+      
+      // Also update the current transfer data
+      handleSelectContact({
+        ...newContact,
+        countryCode: transferData.destinationCountry || 'CM'
+      });
+
+      setIsAddingContact(false);
+      setNewContact({ name: '', phone: '', operator: '' });
+      toast.success(t('contact_saved'), { id: t_toast });
+    } catch (err) {
+      console.error(err);
+      toast.error(t('save_failed'), { id: t_toast });
+    }
   };
 
   const getCommission = (amount: number, type: string, destinationCountry?: string, operator?: string, currency?: string) => {
@@ -721,45 +773,129 @@ export const TransferWizardPage: React.FC = () => {
 
                 {isContactModalOpen && (
                   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
-                      <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                        <h3 className="text-xl font-black text-slate-900">{t('recent_recipients')}</h3>
-                        <button onClick={() => setIsContactModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+                    <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
+                      <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-3">
+                          <BookUser className="text-[#661489]" size={24} />
+                          <h3 className="text-xl font-black text-slate-900">{t('my_contacts')}</h3>
+                        </div>
+                        <button onClick={() => { setIsContactModalOpen(false); setIsAddingContact(false); }} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
                       </div>
-                      <div className="max-h-[60vh] overflow-y-auto p-4 space-y-3">
-                        {(() => {
-                          const allowedPrefixes = selectedCountry?.operators?.flatMap((o: any) => o.prefixes || []) || [];
-                          const filtered = savedContacts.filter(c => {
-                            const phone = (c.phone || c.recipientPhone || '').toString();
-                            return allowedPrefixes.some((p: string) => phone.startsWith(p));
-                          });
 
-                          if (filtered.length === 0) {
-                            return (
-                              <div className="text-center py-12">
-                                <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
-                                <p className="text-slate-500 font-medium">{t('no_recent_recipients')}</p>
+                      {/* Tabs */}
+                      {!isAddingContact && (
+                        <div className="flex p-1 bg-slate-50 mx-6 mt-6 rounded-2xl border border-slate-100 shrink-0">
+                          <button 
+                            onClick={() => setContactTab('recent')}
+                            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${contactTab === 'recent' ? 'bg-white shadow-sm text-[#661489]' : 'text-slate-400'}`}
+                          >
+                            {t('recent')}
+                          </button>
+                          <button 
+                            onClick={() => setContactTab('personal')}
+                            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${contactTab === 'personal' ? 'bg-white shadow-sm text-[#661489]' : 'text-slate-400'}`}
+                          >
+                            {t('saved')}
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="overflow-y-auto p-6 space-y-4">
+                        {isAddingContact ? (
+                          <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('recipient_name')}</label>
+                              <input 
+                                type="text"
+                                value={newContact.name}
+                                onChange={e => setNewContact({...newContact, name: e.target.value})}
+                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold text-slate-900 bg-slate-50"
+                                placeholder={t('recipient_name_placeholder')}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('phone_number')}</label>
+                              <input 
+                                type="tel"
+                                value={newContact.phone}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  const op = selectedCountry?.operators?.find((o: any) => o.prefixes?.some((p: string) => val.startsWith(p)));
+                                  setNewContact({...newContact, phone: val, operator: op?.name || ''});
+                                }}
+                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold text-slate-900 bg-slate-50"
+                                placeholder="+237 ..."
+                              />
+                            </div>
+                            {newContact.operator && (
+                              <div className="mt-1 flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl w-fit">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                <span className="text-[9px] font-black uppercase">{newContact.operator}</span>
                               </div>
-                            );
-                          }
-
-                          return filtered.map(contact => (
+                            )}
+                            <div className="flex gap-3 pt-4">
+                              <button onClick={() => setIsAddingContact(false)} className="flex-1 py-4 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest">
+                                {t('cancel')}
+                              </button>
+                              <button onClick={handleAddManualContact} className="flex-1 py-4 rounded-2xl bg-[#661489] text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-[#661489]/20">
+                                {t('save_and_select')}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Action Button */}
                             <button 
-                              key={contact.id} 
-                              onClick={() => handleSelectContact(contact)}
-                              className="w-full p-4 rounded-2xl border border-slate-100 hover:border-brand hover:bg-brand/5 flex items-center gap-4 transition-all text-left group"
+                              onClick={() => setIsAddingContact(true)}
+                              className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold flex items-center justify-center gap-2 hover:border-[#661489]/30 hover:text-[#661489] hover:bg-[#661489]/5 transition-all mb-4"
                             >
-                              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-brand/10 group-hover:text-brand transition-colors font-bold">
-                                {(contact.name || contact.recipientName || '?').charAt(0).toUpperCase()}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-bold text-slate-900 truncate">{contact.name || contact.recipientName}</p>
-                                <p className="text-xs text-slate-500 font-medium">{contact.phone || contact.beneficiaryAccount || contact.recipientPhone}</p>
-                              </div>
-                              <ChevronRight size={18} className="text-slate-300 group-hover:text-brand transition-colors" />
+                              <Plus size={18} /> {t('add_new_contact')}
                             </button>
-                          ));
-                        })()}
+
+                            {(() => {
+                              const list = contactTab === 'recent' ? savedContacts : personalContacts;
+                              const allowedPrefixes = selectedCountry?.operators?.flatMap((o: any) => o.prefixes || []) || [];
+                              const filtered = list.filter(c => {
+                                const phone = (c.phone || c.recipientPhone || '').toString();
+                                // Filter by country prefix if in recent, or by explicit countryCode in personal
+                                if (contactTab === 'recent') {
+                                  return allowedPrefixes.some((p: string) => phone.startsWith(p));
+                                }
+                                return c.countryCode === transferData.destinationCountry;
+                              });
+
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="text-center py-12">
+                                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                      <BookUser className="text-slate-200" size={40} />
+                                    </div>
+                                    <p className="text-slate-500 font-black uppercase text-[10px] tracking-widest">{t('no_contacts_found')}</p>
+                                  </div>
+                                );
+                              }
+
+                              return filtered.map(contact => (
+                                <button 
+                                  key={contact.id} 
+                                  onClick={() => handleSelectContact(contact)}
+                                  className="w-full p-4 rounded-2xl border border-slate-100 hover:border-[#661489] hover:bg-[#661489]/5 flex items-center gap-4 transition-all text-left group"
+                                >
+                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-[#661489]/10 group-hover:text-[#661489] transition-colors font-bold text-lg">
+                                    {(contact.name || contact.recipientName || '?').charAt(0).toUpperCase()}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-black text-slate-900 truncate">{contact.name || contact.recipientName}</p>
+                                    <p className="text-xs text-slate-500 font-bold">{contact.phone || contact.beneficiaryAccount || contact.recipientPhone}</p>
+                                  </div>
+                                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[#661489] group-hover:text-white transition-all">
+                                    <ChevronRight size={18} />
+                                  </div>
+                                </button>
+                              ));
+                            })()}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

@@ -1531,3 +1531,21 @@ export const supportService = {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 };
+
+// Contact Service
+export const contactService = {
+  async getUserContacts(userId: string) {
+    const q = query(collection(db, 'contacts'), where('userId', '==', userId), orderBy('name', 'asc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+  },
+
+  async addContact(userId: string, contactData: { name: string; phone: string; operator: string; countryCode: string }) {
+    return await addDoc(collection(db, 'contacts'), {
+      userId,
+      ...contactData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  }
+};
