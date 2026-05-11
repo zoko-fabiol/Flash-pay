@@ -95,7 +95,7 @@ export const ReferralPage: React.FC = () => {
   };
 
   const stats = [
-    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#661489]',   bg: 'bg-[#f7f3ff]' },
+    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#470B37]',   bg: 'bg-[#F9EEF5]' },
     { icon: Gift,      label: t('total_bonus'),       value: formatNumber(totalBonus, 'RUB'), color: 'text-emerald-700', bg: 'bg-emerald-50' },
     { icon: Clock,     label: t('pending_validated'), value: `${pendingCount} / ${rewardedCount}`, color: 'text-amber-700', bg: 'bg-amber-50' },
     { icon: TrendingUp,label: t('signup_commission'), value: formatNumber(referralBonusRUB, 'RUB'), color: 'text-blue-700', bg: 'bg-blue-50' },
@@ -122,24 +122,7 @@ export const ReferralPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Stats Grid - Premium Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {stats.map(({ icon: Icon, label, value, color, bg }) => (
-            <div key={label} className="premium-card p-3.5 flex flex-col justify-between gap-3 group min-h-[110px]">
-              <div className="space-y-2">
-                <div className={`p-1.5 w-fit rounded-lg bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors`}>
-                   <Icon size={12} />
-                </div>
-                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-tight block">
-                  {label}
-                </span>
-              </div>
-              <p className={`text-base font-black tracking-tight text-slate-900 truncate`}>{value}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Referral Code + Link Card */}
+        {/* Referral Code + Link Card - Moved to Top */}
         <div className="premium-card overflow-hidden">
           <div className="px-5 pt-5 pb-3 flex items-center justify-between">
             <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('referral_code')}</h2>
@@ -174,6 +157,23 @@ export const ReferralPage: React.FC = () => {
               <Share2 size={16} /> {t('share')}
             </button>
           </div>
+        </div>
+
+        {/* Stats Grid - Moved to Bottom */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {stats.map(({ icon: Icon, label, value, color, bg }) => (
+            <div key={label} className="premium-card p-3.5 flex flex-col justify-between gap-3 group min-h-[110px]">
+              <div className="space-y-2">
+                <div className={`p-1.5 w-fit rounded-lg bg-slate-50 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors`}>
+                   <Icon size={12} />
+                </div>
+                <span className="text-[8px] font-black text-slate-400 uppercase tracking-wider leading-tight block">
+                  {label}
+                </span>
+              </div>
+              <p className={`text-base font-black tracking-tight text-slate-900 truncate`}>{value}</p>
+            </div>
+          ))}
         </div>
 
         {/* How it works */}

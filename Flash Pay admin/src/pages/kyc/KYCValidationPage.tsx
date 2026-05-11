@@ -145,7 +145,7 @@ const KYCValidationPage: React.FC = () => {
             className={`
               px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm
               ${statusFilter === status 
-                ? 'bg-[#661489] text-white shadow-lg shadow-[#661489]/20' 
+                ? 'bg-[#470B37] text-white shadow-lg shadow-[#470B37]/20' 
                 : 'bg-white text-[#49454F] border border-[#E7E0EB] hover:bg-[#F3EDF7]'}
             `}
           >
@@ -158,20 +158,20 @@ const KYCValidationPage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {loading ? (
           <div className="col-span-full py-32 flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#470B37] border-t-transparent rounded-full animate-spin"></div>
             <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Chargement de la base KYC...</p>
           </div>
         ) : filteredRequests.length === 0 ? (
           <div className="col-span-full m3-card-elevated p-20 text-center bg-[#F3EDF7]/30 border-dashed border-2">
-            <ShieldCheck className="mx-auto text-[#661489]/20 mb-6" size={64} />
+            <ShieldCheck className="mx-auto text-[#470B37]/20 mb-6" size={64} />
             <p className="text-[#49454F] font-black uppercase text-[10px] tracking-widest">Aucun dossier trouvé</p>
           </div>
         ) : (
           filteredRequests.map((req) => (
-            <div key={req.id} className="m3-card-elevated group hover:border-[#661489]/30">
+            <div key={req.id} className="m3-card-elevated group hover:border-[#470B37]/30">
               <div className="flex justify-between items-start mb-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-[#EADDFF] text-[#21005D] rounded-[20px] flex items-center justify-center font-black text-xl shadow-sm border border-[#661489]/10 group-hover:scale-110 transition-transform">
+                  <div className="w-14 h-14 bg-[#EADDFF] text-[#21005D] rounded-[20px] flex items-center justify-center font-black text-xl shadow-sm border border-[#470B37]/10 group-hover:scale-110 transition-transform">
                     {req.fullName?.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -195,13 +195,13 @@ const KYCValidationPage: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-[#49454F]">
                   <span className="flex items-center gap-2 opacity-50"><User size={14} /> ID Système</span>
-                  <span className="text-[#661489] font-mono">#{req.userId.substring(0, 8).toUpperCase()}</span>
+                  <span className="text-[#470B37] font-mono">#{req.userId.substring(0, 8).toUpperCase()}</span>
                 </div>
               </div>
 
               <button 
                 onClick={() => setSelectedRequest(req)}
-                className="w-full m3-btn-tonal !rounded-[20px] group-hover:bg-[#661489] group-hover:text-white transition-all shadow-sm"
+                className="w-full m3-btn-tonal !rounded-[20px] group-hover:bg-[#470B37] group-hover:text-white transition-all shadow-sm"
               >
                 <Eye size={18} /> Examiner le dossier
               </button>
@@ -217,7 +217,7 @@ const KYCValidationPage: React.FC = () => {
           <div className="relative bg-[#FEF7FF] w-full max-w-5xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-full border border-[#E7E0EB]">
             <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg">
+                <div className="w-12 h-12 bg-[#470B37] text-white rounded-[16px] flex items-center justify-center shadow-lg">
                   <ShieldCheck size={24} />
                 </div>
                 <div>
@@ -245,7 +245,7 @@ const KYCValidationPage: React.FC = () => {
                     <div key={docType.key} className="space-y-4">
                       <div className="flex justify-between items-center px-1">
                         <span className="text-[10px] font-black text-[#1D1B20] uppercase tracking-widest">{docType.label}</span>
-                        <span className="text-[9px] font-bold text-[#661489] uppercase opacity-40">{docData?.type || 'Image'}</span>
+                        <span className="text-[9px] font-bold text-[#470B37] uppercase opacity-40">{docData?.type || 'Image'}</span>
                       </div>
                       <div className="relative group rounded-[32px] overflow-hidden border border-[#E7E0EB] bg-[#F3EDF7] shadow-inner">
                         {docData?.url ? (
@@ -257,7 +257,7 @@ const KYCValidationPage: React.FC = () => {
                                 className="w-full aspect-video bg-white"
                               />
                               <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                 <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#661489] hover:scale-110 transition-transform">
+                                 <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#470B37] hover:scale-110 transition-transform">
                                        <ExternalLink size={24} />
                                  </button>
                               </div>
@@ -266,7 +266,7 @@ const KYCValidationPage: React.FC = () => {
                             <>
                               <img onClick={() => handleOpenDocument(docData.url)} src={docData.url} alt={docType.label} className="w-full aspect-video object-contain bg-black/5 cursor-pointer" />
                               <div className="absolute inset-0 bg-[#1D1B20]/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                 <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#661489] hover:scale-110 transition-transform">
+                                 <button onClick={() => handleOpenDocument(docData.url)} className="p-4 bg-white rounded-full shadow-2xl text-[#470B37] hover:scale-110 transition-transform">
                                    <ExternalLink size={24} />
                                  </button>
                               </div>
@@ -285,7 +285,7 @@ const KYCValidationPage: React.FC = () => {
               <div className="space-y-8">
                 <div className="bg-[#F3EDF7] p-8 rounded-[32px] border border-[#E7E0EB] space-y-6">
                    <div className="flex items-center gap-3 border-b border-[#E7E0EB] pb-4">
-                     <FileText size={20} className="text-[#661489]" />
+                     <FileText size={20} className="text-[#470B37]" />
                      <h3 className="font-black text-[#1D1B20] text-sm uppercase tracking-widest">Informations Dossier</h3>
                    </div>
                    <div className="grid grid-cols-2 gap-6">
@@ -295,7 +295,7 @@ const KYCValidationPage: React.FC = () => {
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">ID Utilisateur</p>
-                        <p className="text-xs font-mono font-black text-[#661489]">#{selectedRequest.userId.substring(0, 10).toUpperCase()}</p>
+                        <p className="text-xs font-mono font-black text-[#470B37]">#{selectedRequest.userId.substring(0, 10).toUpperCase()}</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">Type de Document</p>
@@ -303,7 +303,7 @@ const KYCValidationPage: React.FC = () => {
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">Statut Actuel</p>
-                        <p className="text-xs font-black text-[#661489] uppercase">{selectedRequest.status}</p>
+                        <p className="text-xs font-black text-[#470B37] uppercase">{selectedRequest.status}</p>
                       </div>
                    </div>
                 </div>
@@ -316,7 +316,7 @@ const KYCValidationPage: React.FC = () => {
                         placeholder="Ex: La pièce d'identité est floue ou expirée..."
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
-                        className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] p-5 text-sm font-medium text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all h-32"
+                        className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] p-5 text-sm font-medium text-[#1D1B20] focus:ring-4 focus:ring-[#470B37]/10 transition-all h-32"
                        />
                     </div>
 
@@ -339,7 +339,7 @@ const KYCValidationPage: React.FC = () => {
                   </div>
                 ) : (
                   <div className={`p-8 rounded-[32px] border flex flex-col items-center text-center gap-4 ${
-                    selectedRequest.status === 'approved' ? 'bg-[#E8DEF8] border-[#661489]/20' : 'bg-[#F9DEDC] border-[#B3261E]/20'
+                    selectedRequest.status === 'approved' ? 'bg-[#E8DEF8] border-[#470B37]/20' : 'bg-[#F9DEDC] border-[#B3261E]/20'
                   }`}>
                     <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sm ${
                        selectedRequest.status === 'approved' ? 'bg-white text-emerald-500' : 'bg-white text-[#B3261E]'

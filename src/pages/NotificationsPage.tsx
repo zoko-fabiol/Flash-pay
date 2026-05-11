@@ -116,9 +116,9 @@ export const NotificationsPage: React.FC = () => {
         <div className="flex flex-col gap-6 pt-4">
           <button 
             onClick={() => navigate('/')} 
-            className="w-fit inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-[#661489] hover:opacity-70 transition-all group px-2"
+            className="w-fit inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-[#470B37] hover:opacity-70 transition-all group px-2"
           >
-            <div className="p-2 bg-[#661489]/10 rounded-full group-hover:-translate-x-1 transition-transform">
+            <div className="p-2 bg-[#470B37]/10 rounded-full group-hover:-translate-x-1 transition-transform">
               <ArrowLeft size={16} />
             </div>
             {t('back')}
@@ -132,7 +132,7 @@ export const NotificationsPage: React.FC = () => {
               </p>
             </div>
             {unreadCount > 0 && (
-              <div className="px-4 py-1.5 bg-[#661489] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-[#661489]/30">
+              <div className="px-4 py-1.5 bg-[#470B37] text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-[#470B37]/30">
                 {unreadCount} {t('unread')}
               </div>
             )}
@@ -142,7 +142,7 @@ export const NotificationsPage: React.FC = () => {
         {/* Action Bar - Glassmorphism */}
         <div className="sticky top-4 z-20 rounded-[28px] bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-xl shadow-slate-200/40 p-4 flex items-center justify-between gap-3 mx-1">
           <div className="flex items-center gap-2 pl-2">
-            <Bell className={unreadCount > 0 ? "text-[#661489] animate-bounce" : "text-slate-400"} size={20} />
+            <Bell className={unreadCount > 0 ? "text-[#470B37] animate-bounce" : "text-slate-400"} size={20} />
             <span className="text-sm font-bold text-slate-700">
               {notifications.length} total
             </span>
@@ -172,9 +172,9 @@ export const NotificationsPage: React.FC = () => {
             <Loading />
           ) : notifications.length === 0 ? (
             <div className="py-24 flex flex-col items-center text-center gap-6 bg-white rounded-[40px] border border-slate-100 shadow-sm px-10">
-              <div className="w-24 h-24 rounded-[36px] bg-[#f7f3ff] flex items-center justify-center shadow-inner relative">
-                <div className="absolute inset-0 bg-[#661489]/5 rounded-[36px] animate-ping duration-[3000ms]"></div>
-                <Bell size={40} className="text-[#661489] relative z-10" />
+              <div className="w-24 h-24 rounded-[36px] bg-[#F9EEF5] flex items-center justify-center shadow-inner relative">
+                <div className="absolute inset-0 bg-[#470B37]/5 rounded-[36px] animate-ping duration-[3000ms]"></div>
+                <Bell size={40} className="text-[#470B37] relative z-10" />
               </div>
               <div className="space-y-2">
                 <p className="text-2xl font-black text-slate-900 tracking-tight">{t('no_notifications')}</p>
@@ -182,7 +182,7 @@ export const NotificationsPage: React.FC = () => {
               </div>
               <button 
                 onClick={() => navigate('/')}
-                className="mt-2 px-8 py-4 bg-[#661489] text-white font-black uppercase text-xs tracking-widest rounded-full shadow-2xl shadow-[#661489]/30 hover:scale-105 active:scale-95 transition-all"
+                className="mt-2 px-8 py-4 bg-[#470B37] text-white font-black uppercase text-xs tracking-widest rounded-full shadow-2xl shadow-[#470B37]/30 hover:scale-105 active:scale-95 transition-all"
               >
                 {t('back_to_home')}
               </button>
@@ -193,10 +193,10 @@ export const NotificationsPage: React.FC = () => {
                 <div 
                   key={item.id} 
                   onClick={() => handleNotificationClick(item)}
-                  className={`group relative overflow-hidden rounded-[32px] border transition-all duration-300 hover:shadow-2xl hover:shadow-[#661489]/10 hover:-translate-y-1 cursor-pointer ${
+                  className={`group relative overflow-hidden rounded-[32px] border transition-all duration-300 hover:shadow-2xl hover:shadow-[#470B37]/10 hover:-translate-y-1 cursor-pointer ${
                     item.read 
                       ? 'bg-white border-slate-100 opacity-90' 
-                      : 'bg-gradient-to-br from-white to-[#f9f7ff] border-[#eadfff] shadow-lg shadow-[#661489]/5'
+                      : 'bg-gradient-to-br from-white to-[#f9f7ff] border-[#eadfff] shadow-lg shadow-[#470B37]/5'
                   }`}
                 >
                   <div className="p-6 flex gap-5">
@@ -204,7 +204,7 @@ export const NotificationsPage: React.FC = () => {
                     <div className="relative">
                       <NotificationIcon notification={item} />
                       {!item.read && (
-                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#661489] rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                        <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-[#470B37] rounded-full border-2 border-white shadow-sm animate-pulse"></div>
                       )}
                     </div>
 
@@ -212,7 +212,7 @@ export const NotificationsPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3 mb-1">
                         <div className="space-y-1">
-                          <p className={`font-black text-lg tracking-tight transition-colors ${item.read ? 'text-slate-800' : 'text-slate-900 group-hover:text-[#661489]'}`}>
+                          <p className={`font-black text-lg tracking-tight transition-colors ${item.read ? 'text-slate-800' : 'text-slate-900 group-hover:text-[#470B37]'}`}>
                             {item.title}
                           </p>
                           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -220,7 +220,7 @@ export const NotificationsPage: React.FC = () => {
                             {!item.read && (
                               <>
                                 <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                <span className="text-[#661489]">{t('new')}</span>
+                                <span className="text-[#470B37]">{t('new')}</span>
                               </>
                             )}
                           </div>
@@ -231,7 +231,7 @@ export const NotificationsPage: React.FC = () => {
                           {!item.read && (
                             <button
                               onClick={() => markAsRead(item.id)}
-                              className="p-2.5 rounded-xl hover:bg-[#661489]/10 text-[#661489] transition-colors"
+                              className="p-2.5 rounded-xl hover:bg-[#470B37]/10 text-[#470B37] transition-colors"
                               title={t('mark_read')}
                             >
                               <Check size={18} />
@@ -251,7 +251,7 @@ export const NotificationsPage: React.FC = () => {
                         {item.body}
                       </p>
                       
-                      <div className="mt-4 flex items-center text-[11px] font-black uppercase tracking-[0.15em] text-[#661489] transition-all group-hover:translate-x-1 w-fit bg-[#661489]/5 px-4 py-2 rounded-xl">
+                      <div className="mt-4 flex items-center text-[11px] font-black uppercase tracking-[0.15em] text-[#470B37] transition-all group-hover:translate-x-1 w-fit bg-[#470B37]/5 px-4 py-2 rounded-xl">
                         Voir les détails <ChevronRight size={14} className="ml-1" />
                       </div>
                       </div>

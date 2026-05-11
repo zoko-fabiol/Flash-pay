@@ -34,7 +34,7 @@ import { collection, query, onSnapshot, Timestamp, where } from 'firebase/firest
 import { db } from '../../lib/firebase';
 import type { Transaction, ExchangeRate } from '../../types';
 
-const COLORS = ['#661489', '#9B89C9', '#EADDFF', '#21005D', '#49454F', '#79747E'];
+const COLORS = ['#470B37', '#9B89C9', '#EADDFF', '#21005D', '#49454F', '#79747E'];
 
 const AnalyticsPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -150,7 +150,7 @@ const AnalyticsPage: React.FC = () => {
       const pageWidth = pdf.internal.pageSize.getWidth();
       
       // Header
-      pdf.setFillColor(103, 80, 164); // #661489
+      pdf.setFillColor(103, 80, 164); // #470B37
       pdf.rect(0, 0, pageWidth, 40, 'F');
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(22);
@@ -251,7 +251,7 @@ const AnalyticsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#470B37] border-t-transparent rounded-full animate-spin"></div>
         <p className="mt-6 text-[#49454F] font-black uppercase text-[10px] tracking-widest">Calcul des indicateurs...</p>
       </div>
     );
@@ -275,7 +275,7 @@ const AnalyticsPage: React.FC = () => {
              <button 
               key={range.id}
               onClick={() => setTimeRange(range.id as any)}
-              className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range.id ? 'bg-[#661489] text-white shadow-md' : 'text-[#49454F] hover:bg-white'}`}
+              className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range.id ? 'bg-[#470B37] text-white shadow-md' : 'text-[#49454F] hover:bg-white'}`}
              >
                {range.label}
              </button>
@@ -284,7 +284,7 @@ const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* Global All-Time Totals Banner */}
-      <div className="bg-gradient-to-r from-[#661489] to-[#21005D] rounded-[32px] p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#470B37] to-[#21005D] rounded-[32px] p-8 text-white shadow-xl relative overflow-hidden">
         <div className="absolute right-0 top-0 opacity-10 pointer-events-none">
           <Globe size={300} strokeWidth={1} />
         </div>
@@ -330,7 +330,7 @@ const AnalyticsPage: React.FC = () => {
 
          <div className="m3-card-elevated group">
             <div className="flex justify-between items-start mb-4">
-               <div className="p-3 bg-[#F3EDF7] text-[#661489] rounded-2xl group-hover:scale-110 transition-transform shadow-sm"><Activity size={20} /></div>
+               <div className="p-3 bg-[#F3EDF7] text-[#470B37] rounded-2xl group-hover:scale-110 transition-transform shadow-sm"><Activity size={20} /></div>
                <div className="flex items-center gap-1 text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full"><CheckCircle2 size={12} /> {stats.successRate.toFixed(1)}%</div>
             </div>
             <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest">Taux de Succès</p>
@@ -370,8 +370,8 @@ const AnalyticsPage: React.FC = () => {
                 <AreaChart data={stats.chartData}>
                   <defs>
                     <linearGradient id="colorRub" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#661489" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#661489" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#470B37" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#470B37" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#E7E0EB" />
@@ -382,7 +382,7 @@ const AnalyticsPage: React.FC = () => {
                     labelStyle={{ fontWeight: 900, color: '#1D1B20', marginBottom: '10px' }}
                   />
                   <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }} />
-                  <Area name="Volume RUB" type="monotone" dataKey="rub" stroke="#661489" strokeWidth={4} fillOpacity={1} fill="url(#colorRub)" animationDuration={2000} />
+                  <Area name="Volume RUB" type="monotone" dataKey="rub" stroke="#470B37" strokeWidth={4} fillOpacity={1} fill="url(#colorRub)" animationDuration={2000} />
                 </AreaChart>
               </ResponsiveContainer>
            </div>
@@ -391,7 +391,7 @@ const AnalyticsPage: React.FC = () => {
         {/* Operator Distribution */}
         <div className="m3-card-elevated !p-8">
            <div className="flex items-center gap-3 mb-10">
-              <div className="p-2 bg-[#F3EDF7] text-[#661489] rounded-lg shadow-sm"><Activity size={18} /></div>
+              <div className="p-2 bg-[#F3EDF7] text-[#470B37] rounded-lg shadow-sm"><Activity size={18} /></div>
               <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Répartition Opérateurs</h3>
            </div>
            
@@ -423,7 +423,7 @@ const AnalyticsPage: React.FC = () => {
                       <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: COLORS[i % COLORS.length]}}></div>
                       <span className="text-[11px] font-bold text-[#1D1B20] uppercase tracking-tight">{op.name}</span>
                    </div>
-                   <span className="text-[11px] font-black text-[#661489]">{op.value} tx</span>
+                   <span className="text-[11px] font-black text-[#470B37]">{op.value} tx</span>
                 </div>
               ))}
            </div>
@@ -455,14 +455,14 @@ const AnalyticsPage: React.FC = () => {
                     cursor={{fill: '#F3EDF7'}}
                     contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.1)' }}
                    />
-                   <Bar dataKey="value" fill="#661489" radius={[0, 10, 10, 0]} barSize={20} animationDuration={1500} />
+                   <Bar dataKey="value" fill="#470B37" radius={[0, 10, 10, 0]} barSize={20} animationDuration={1500} />
                  </BarChart>
                </ResponsiveContainer>
             </div>
          </div>
 
          {/* Health Check / Quick Insights */}
-         <div className="m3-card-elevated !p-8 bg-gradient-to-br from-[#661489] to-[#21005D] text-white">
+         <div className="m3-card-elevated !p-8 bg-gradient-to-br from-[#470B37] to-[#21005D] text-white">
             <h3 className="text-2xl font-black tracking-tight mb-8">Résumé Stratégique</h3>
             
             <div className="space-y-8">
@@ -492,7 +492,7 @@ const AnalyticsPage: React.FC = () => {
             </div>
 
             <div className="mt-12 pt-12 border-t border-white/10">
-               <button onClick={generatePDF} className="w-full py-4 bg-white text-[#661489] rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all">Générer Rapport PDF</button>
+               <button onClick={generatePDF} className="w-full py-4 bg-white text-[#470B37] rounded-full font-black uppercase text-[10px] tracking-widest shadow-xl hover:scale-105 active:scale-95 transition-all">Générer Rapport PDF</button>
             </div>
          </div>
       </div>

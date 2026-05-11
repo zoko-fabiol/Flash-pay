@@ -76,7 +76,7 @@ const PartnersPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Award size={24} /></div>
+            <div className="w-12 h-12 bg-[#470B37] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Award size={24} /></div>
             Gestion des Partenaires
           </h2>
           <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Suivi des parrainages et reversements de commissions</p>
@@ -99,7 +99,7 @@ const PartnersPage: React.FC = () => {
       {/* Stats Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="m3-card-elevated bg-[#F3EDF7]/50 flex items-center gap-5 border-[#E7E0EB]">
-           <div className="w-14 h-14 bg-white text-[#661489] rounded-2xl flex items-center justify-center shadow-sm"><Gift size={28} /></div>
+           <div className="w-14 h-14 bg-white text-[#470B37] rounded-2xl flex items-center justify-center shadow-sm"><Gift size={28} /></div>
            <div>
               <p className="text-[#49454F] text-[9px] font-black uppercase tracking-[0.2em] mb-1">Partenaires Actifs</p>
               <p className="text-2xl font-black text-[#1D1B20]">{partners.length}</p>
@@ -112,7 +112,7 @@ const PartnersPage: React.FC = () => {
               <p className="text-2xl font-black text-[#1D1B20]">{partners.reduce((acc, p) => acc + (p.earnings || 0), 0).toLocaleString()} <span className="text-[10px] opacity-40">RUB</span></p>
            </div>
         </div>
-        <div className="m3-card-elevated bg-[#661489] text-white flex items-center gap-5 shadow-xl shadow-[#661489]/20">
+        <div className="m3-card-elevated bg-[#470B37] text-white flex items-center gap-5 shadow-xl shadow-[#470B37]/20">
            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center"><Users size={28} /></div>
            <div>
               <p className="text-white/60 text-[9px] font-black uppercase tracking-[0.2em] mb-1">Filleuls Totaux</p>
@@ -147,13 +147,13 @@ const PartnersPage: React.FC = () => {
                   <tr key={partner.id} className="hover:bg-[#F3EDF7]/30 transition-all group">
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[18px] flex items-center justify-center font-black text-lg border border-[#661489]/10 shadow-sm group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 bg-[#EADDFF] text-[#21005D] rounded-[18px] flex items-center justify-center font-black text-lg border border-[#470B37]/10 shadow-sm group-hover:scale-110 transition-transform">
                           {partner.displayName?.charAt(0) || <Users size={20} />}
                         </div>
                         <div>
                           <p className="text-[#1D1B20] font-black tracking-tight">{partner.displayName || 'Ambassadeur'}</p>
                           <div className="flex items-center gap-2 mt-1 text-[#49454F] opacity-60">
-                             <Mail size={12} className="text-[#661489]" />
+                             <Mail size={12} className="text-[#470B37]" />
                              <span className="text-[10px] font-bold">{partner.email}</span>
                           </div>
                         </div>
@@ -161,7 +161,7 @@ const PartnersPage: React.FC = () => {
                     </td>
                     <td className="px-8 py-6">
                        <div className="flex flex-col gap-2">
-                          <span className="inline-flex items-center bg-[#F3EDF7] text-[#661489] px-3 py-1 rounded-full text-[10px] font-mono font-black tracking-widest border border-[#E7E0EB] shadow-sm w-fit">
+                          <span className="inline-flex items-center bg-[#F3EDF7] text-[#470B37] px-3 py-1 rounded-full text-[10px] font-mono font-black tracking-widest border border-[#E7E0EB] shadow-sm w-fit">
                             {partner.referralCode || 'N/A'}
                           </span>
                           <p className="text-[9px] font-black text-[#49454F] uppercase tracking-[0.2em] opacity-40 ml-1">{partner.referralCount || 0} Clients recrutés</p>

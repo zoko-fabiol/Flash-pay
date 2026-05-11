@@ -137,7 +137,7 @@ export const ProfilePage: React.FC = () => {
         {success && <Success message={success} />}
 
         {/* ── Hero Card ── */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#661489] to-[#4A1FA0] p-6 text-white shadow-[0_16px_40px_rgba(98,54,204,0.28)]">
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#470B37] to-[#2D0723] p-6 text-white shadow-[0_16px_40px_rgba(98,54,204,0.28)]">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
 
@@ -187,17 +187,17 @@ export const ProfilePage: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex flex-col gap-2 rounded-[24px] bg-gradient-to-br from-[#f7f3ff] to-[#ede7ff] border border-[#e0d6ff] p-5">
+          <div className="flex flex-col gap-2 rounded-[24px] bg-gradient-to-br from-[#F9EEF5] to-[#FDF2F7] border border-[#F5E6F0] p-5">
             <div className="flex items-center gap-2">
-              <Gift size={16} className="text-[#661489]" />
+              <Gift size={16} className="text-[#470B37]" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('available_bonus')}</span>
             </div>
-            <p className="text-lg font-black text-[#661489]">
+            <p className="text-lg font-black text-[#470B37]">
               {user?.solde_bonus ?? 0} <span className="text-sm font-bold">RUB</span>
             </p>
             <button
               onClick={() => navigate('/referral')}
-              className="mt-auto text-[11px] font-bold text-[#661489] opacity-70 hover:opacity-100 text-left transition"
+              className="mt-auto text-[11px] font-bold text-[#470B37] opacity-70 hover:opacity-100 text-left transition"
             >
               {t('menu_referral')} →
             </button>
@@ -233,7 +233,7 @@ export const ProfilePage: React.FC = () => {
                     name="tel"
                     value={formData.tel}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#470B37]/40"
                   />
                 ) : (
                   <p className="text-sm font-semibold text-slate-900">{user?.tel || '—'}</p>
@@ -247,7 +247,7 @@ export const ProfilePage: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#661489] text-white font-bold text-sm hover:bg-[#4A1FA0] transition disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#470B37] text-white font-bold text-sm hover:bg-[#2D0723] transition disabled:opacity-50"
               >
                 <Check size={16} /> {loading ? t('saving') : t('save')}
               </button>
@@ -267,7 +267,7 @@ export const ProfilePage: React.FC = () => {
             <h2 className="font-black text-slate-900">{t('security')}</h2>
             <button 
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="text-xs font-bold text-[#661489] hover:underline"
+              className="text-xs font-bold text-[#470B37] hover:underline"
             >
               {showPasswordForm ? t('cancel') : t('change_password')}
             </button>
@@ -281,7 +281,7 @@ export const ProfilePage: React.FC = () => {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#470B37]/40"
                   placeholder={t('placeholder_current_password')}
                 />
               </div>
@@ -291,7 +291,7 @@ export const ProfilePage: React.FC = () => {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#470B37]/40"
                   placeholder={t('placeholder_new_password')}
                 />
               </div>
@@ -301,14 +301,14 @@ export const ProfilePage: React.FC = () => {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#470B37]/40"
                   placeholder={t('placeholder_confirm_password')}
                 />
               </div>
               <button
                 onClick={handleUpdatePassword}
                 disabled={loading || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                className="w-full py-4 rounded-2xl bg-[#661489] text-white font-bold text-sm shadow-lg shadow-[#661489]/20 hover:bg-[#4A1FA0] transition disabled:opacity-50"
+                className="w-full py-4 rounded-2xl bg-[#470B37] text-white font-bold text-sm shadow-lg shadow-[#470B37]/20 hover:bg-[#2D0723] transition disabled:opacity-50"
               >
                 {loading ? t('updating_password') : t('update_password_btn')}
               </button>
@@ -337,8 +337,8 @@ export const ProfilePage: React.FC = () => {
               onClick={() => navigate(to)}
               className="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition border-b border-slate-50 last:border-0"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#f7f3ff] flex items-center justify-center shrink-0">
-                <Icon size={16} className="text-[#661489]" />
+              <div className="w-9 h-9 rounded-xl bg-[#F9EEF5] flex items-center justify-center shrink-0">
+                <Icon size={16} className="text-[#470B37]" />
               </div>
               <span className="flex-1 text-sm font-semibold text-slate-800 text-left">{label}</span>
               <ChevronRight size={16} className="text-slate-300" />
@@ -351,12 +351,12 @@ export const ProfilePage: React.FC = () => {
             onClick={() => navigate('/support')}
             className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left"
           >
-            <HelpCircle size={20} className="text-[#661489]" />
+            <HelpCircle size={20} className="text-[#470B37]" />
             <p className="font-bold text-slate-900 text-sm">{t('contact_support')}</p>
             <p className="text-xs text-slate-400">{t('support_desc')}</p>
           </button>
           <button className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left">
-            <Star size={20} className="text-[#661489]" />
+            <Star size={20} className="text-[#470B37]" />
             <p className="font-bold text-slate-900 text-sm">{t('about')}</p>
             <p className="text-xs text-slate-400">{t('legal_desc')}</p>
           </button>

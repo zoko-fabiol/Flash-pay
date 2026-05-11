@@ -144,17 +144,17 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       </div>
 
       {/* Timer Alert */}
-      <div className="bg-[#f7f3ff] rounded-[32px] p-6 border border-[#661489]/10 mb-8 flex items-start gap-4">
-        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#661489] shrink-0 shadow-sm">
+      <div className="bg-[#F9EEF5] rounded-[32px] p-6 border border-[#470B37]/10 mb-8 flex items-start gap-4">
+        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#470B37] shrink-0 shadow-sm">
           <Info size={24} />
         </div>
         <div className="flex-1">
-          <p className="text-[#661489] font-bold text-sm leading-tight mb-1">
+          <p className="text-[#470B37] font-bold text-sm leading-tight mb-1">
             {t('payment_timer_msg_generic') || 'Effectuez le paiement sur les coordonnées ci-dessous et envoyez le reçu.'}
           </p>
-          <p className="text-xs text-[#661489]/70 font-semibold italic">{t('timer_20_min') || 'Vous avez 20 minutes pour effectuer le paiement.'}</p>
+          <p className="text-xs text-[#470B37]/70 font-semibold italic">{t('timer_20_min') || 'Vous avez 20 minutes pour effectuer le paiement.'}</p>
         </div>
-        <div className="flex items-center gap-2 text-[#661489] font-black bg-white px-4 py-2 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-2 text-[#470B37] font-black bg-white px-4 py-2 rounded-2xl shadow-sm">
           <Clock size={18} />
           <span className={timerSeconds < 120 ? 'text-red-500' : ''}>{formatTimer(timerSeconds)}</span>
         </div>
@@ -174,18 +174,18 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
               banks.map((bank, idx) => (
                 <div key={bank.id || idx} className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
                   <div className="mb-4 flex justify-between items-center">
-                    <span className="bg-[#661489] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+                    <span className="bg-[#470B37] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
                       {bank.type === 'phone' ? 'SBP / TÉLÉPHONE' : 'CARTE BANCAIRE'}
                     </span>
                     <button 
                       onClick={() => { navigator.clipboard.writeText(bank.number || bank.phone || ''); toast.success(t('copied')); }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#661489]/5 text-[#661489] font-black text-[10px] uppercase tracking-widest hover:bg-[#661489]/10 transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#470B37]/5 text-[#470B37] font-black text-[10px] uppercase tracking-widest hover:bg-[#470B37]/10 transition-all"
                     >
                       <Copy size={12} /> {t('copy')}
                     </button>
                   </div>
                   <div className="flex items-start gap-5">
-                    <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#661489] shrink-0 overflow-hidden border border-slate-100">
+                    <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#470B37] shrink-0 overflow-hidden border border-slate-100">
                       {bank.logo ? (
                         <img src={bank.logo} alt={bank.name} className="w-full h-full object-contain p-2" />
                       ) : bank.type === 'phone' ? (

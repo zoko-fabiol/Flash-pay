@@ -105,7 +105,7 @@ export const EmailVerificationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f3eeff] via-[#ede7ff] to-[#f8f5ff] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#f3eeff] via-[#FDF2F7] to-[#f8f5ff] flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-[32px] shadow-[0_20px_60px_rgba(98,54,204,0.12)] p-8 border border-[#eadfff]">
         <button 
           onClick={() => navigate('/signup')} 

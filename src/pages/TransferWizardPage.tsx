@@ -71,9 +71,9 @@ const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previ
       <div className="grid gap-6">
         <button
           onClick={() => { updateTransferData({ isBulk: false }); nextStep(); }}
-          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${!transferData.isBulk ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${!transferData.isBulk ? 'border-[#470B37] bg-[#470B37]/5 ring-4 ring-[#470B37]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
         >
-          <div className={`p-5 rounded-[24px] ${!transferData.isBulk ? 'bg-[#661489] text-white' : 'bg-slate-100 text-[#661489]'}`}>
+          <div className={`p-5 rounded-[24px] ${!transferData.isBulk ? 'bg-[#470B37] text-white' : 'bg-slate-100 text-[#470B37]'}`}>
             <User size={32} />
           </div>
           <div>
@@ -84,9 +84,9 @@ const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previ
 
         <button
           onClick={() => { updateTransferData({ isBulk: true }); nextStep(); }}
-          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${transferData.isBulk ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${transferData.isBulk ? 'border-[#470B37] bg-[#470B37]/5 ring-4 ring-[#470B37]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
         >
-          <div className={`p-5 rounded-[24px] ${transferData.isBulk ? 'bg-[#661489] text-white' : 'bg-slate-100 text-[#661489]'}`}>
+          <div className={`p-5 rounded-[24px] ${transferData.isBulk ? 'bg-[#470B37] text-white' : 'bg-slate-100 text-[#470B37]'}`}>
             <Globe size={32} />
           </div>
           <div>
