@@ -69,7 +69,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
   const t = React.useCallback((key: string, vars?: Record<string, any>) => {
     const dict = translations[language] || translations['fr'];
-    let text = dict[key] || key;
+    let text = dict[key] || key.replace(/_/g, ' ');
 
     if (vars) {
       Object.entries(vars).forEach(([k, v]) => {
