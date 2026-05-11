@@ -84,7 +84,7 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="text-center mt-8 pt-8 border-t border-slate-50 text-sm text-slate-500 font-medium">
+          <div className="text-center mt-[3.5mm] text-sm text-slate-500 font-medium">
             {t('no_account')}{' '}
             <button onClick={() => navigate('/signup')} className="text-primary font-bold hover:underline underline-offset-4">
               {t('signup')}
