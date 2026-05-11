@@ -88,20 +88,20 @@ export const SignupPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-8 text-center px-4">
+          <div className="text-center mt-[3.5mm] text-sm text-slate-500 font-medium">
+            {t('already_account')}{' '}
+            <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline underline-offset-4">
+              {t('login')}
+            </button>
+          </div>
+
+          <div className="mt-8 text-center px-4 opacity-60">
             <p className="text-[10px] text-slate-400 leading-relaxed font-medium uppercase tracking-widest">
               {t('by_signing_up')}{' '}
               <button onClick={() => navigate('/terms')} type="button" className="text-primary font-bold hover:underline">{t('terms_of_use')}</button>
               {' '}{t('legal_and')}{' '}
               <button onClick={() => navigate('/privacy-policy')} type="button" className="text-primary font-bold hover:underline">{t('privacy_policy')}</button>.
             </p>
-          </div>
-
-          <div className="text-center mt-8 pt-8 border-t border-slate-50 text-sm text-slate-500 font-medium">
-            {t('already_account')}{' '}
-            <button onClick={() => navigate('/login')} className="text-primary font-bold hover:underline underline-offset-4">
-              {t('login')}
-            </button>
           </div>
         </div>
       </div>
