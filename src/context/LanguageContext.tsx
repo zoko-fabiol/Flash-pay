@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { translations } from '../i18n/translations';
 
 type Language = 'fr' | 'en';
-type FontSize = 'small' | 'normal' | 'large' | 'huge';
+type FontSize = 'tiny' | 'small' | 'normal';
 
 type LanguageContextValue = {
   language: Language;
@@ -18,10 +18,9 @@ type LanguageContextValue = {
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
 const FONT_SIZE_MAP = {
+  tiny: '12px',
   small: '14px',
   normal: '16px',
-  large: '20px',
-  huge: '24px',
 };
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
@@ -40,7 +39,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [fontSize, setFontSizeState] = useState<FontSize>(() => {
     try {
       const saved = localStorage.getItem('flashpay_font_size');
-      if (saved && ['small', 'normal', 'large', 'huge'].includes(saved)) {
+      if (saved && ['tiny', 'small', 'normal'].includes(saved)) {
         return saved as FontSize;
       }
     } catch (e) {

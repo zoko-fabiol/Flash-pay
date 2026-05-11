@@ -95,7 +95,7 @@ export const ReferralPage: React.FC = () => {
   };
 
   const stats = [
-    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#470B37]',   bg: 'bg-[#F9EEF5]' },
+    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#661489]',   bg: 'bg-[#F5E8FF]' },
     { icon: Gift,      label: t('total_bonus'),       value: formatNumber(totalBonus, 'RUB'), color: 'text-emerald-700', bg: 'bg-emerald-50' },
     { icon: Clock,     label: t('pending_validated'), value: `${pendingCount} / ${rewardedCount}`, color: 'text-amber-700', bg: 'bg-amber-50' },
     { icon: TrendingUp,label: t('signup_commission'), value: formatNumber(referralBonusRUB, 'RUB'), color: 'text-blue-700', bg: 'bg-blue-50' },
@@ -228,3 +228,5 @@ export const ReferralPage: React.FC = () => {
     </Layout>
   );
 };
+
+

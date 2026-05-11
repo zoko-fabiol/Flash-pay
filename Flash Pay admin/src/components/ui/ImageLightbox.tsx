@@ -155,7 +155,7 @@ const ImageLightbox: React.FC<Props> = ({
             </span>
           </div>
           {currentLabel && (
-            <div className="px-4 py-2 rounded-full bg-[#470B37]/40 backdrop-blur-md border border-[#470B37]/40">
+            <div className="px-4 py-2 rounded-full bg-[#661489]/40 backdrop-blur-md border border-[#661489]/40">
               <span className="text-white text-[10px] font-black uppercase tracking-widest">
                 {currentLabel}
               </span>
@@ -198,7 +198,7 @@ const ImageLightbox: React.FC<Props> = ({
             target="_blank"
             rel="noopener noreferrer"
             download
-            className="p-2.5 rounded-2xl bg-[#470B37]/50 hover:bg-[#470B37] border border-[#470B37]/50 text-white transition-all"
+            className="p-2.5 rounded-2xl bg-[#661489]/50 hover:bg-[#661489] border border-[#661489]/50 text-white transition-all"
             title="Télécharger"
             onClick={(e) => e.stopPropagation()}
           >
@@ -255,7 +255,7 @@ const ImageLightbox: React.FC<Props> = ({
       {hasPrev && (
         <button
           onClick={(e) => { e.stopPropagation(); showPrev(); }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-4 rounded-full bg-white/10 hover:bg-[#470B37]/60 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-110 shadow-2xl"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-4 rounded-full bg-white/10 hover:bg-[#661489]/60 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-110 shadow-2xl"
           aria-label="Précédent"
         >
           <ChevronLeft size={24} />
@@ -264,7 +264,7 @@ const ImageLightbox: React.FC<Props> = ({
       {hasNext && (
         <button
           onClick={(e) => { e.stopPropagation(); showNext(); }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-4 rounded-full bg-white/10 hover:bg-[#470B37]/60 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-110 shadow-2xl"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-4 rounded-full bg-white/10 hover:bg-[#661489]/60 backdrop-blur-md border border-white/20 text-white transition-all hover:scale-110 shadow-2xl"
           aria-label="Suivant"
         >
           <ChevronRight size={24} />
@@ -286,7 +286,7 @@ const ImageLightbox: React.FC<Props> = ({
                 width:   i === index ? 64 : 48,
                 height:  i === index ? 64 : 48,
                 borderRadius: 16,
-                border: i === index ? '2px solid #470B37' : '2px solid rgba(255,255,255,0.15)',
+                border: i === index ? '2px solid #661489' : '2px solid rgba(255,255,255,0.15)',
                 boxShadow: i === index ? '0 0 0 4px rgba(103,80,164,0.35)' : 'none',
                 overflow: 'hidden',
                 opacity: i === index ? 1 : 0.5,
@@ -306,3 +306,4 @@ const ImageLightbox: React.FC<Props> = ({
 };
 
 export default ImageLightbox;
+

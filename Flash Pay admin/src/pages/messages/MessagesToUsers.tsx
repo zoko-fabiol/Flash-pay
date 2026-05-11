@@ -108,7 +108,7 @@ export const MessagesToUsers: React.FC = () => {
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 rounded-2xl bg-[#470B37]/10 flex items-center justify-center text-[#470B37]">
+        <div className="w-12 h-12 rounded-2xl bg-[#661489]/10 flex items-center justify-center text-[#661489]">
           <MessageSquare size={28} />
         </div>
         <div>
@@ -120,7 +120,7 @@ export const MessagesToUsers: React.FC = () => {
       {/* Formulaire d'envoi */}
       <div className="bg-white rounded-[32px] p-8 shadow-[0_20px_50px_rgba(126,80,157,0.05)] border border-slate-100">
         <div className="flex items-center gap-3 mb-8 pb-4 border-b border-slate-50">
-          <div className="w-10 h-10 rounded-xl bg-[#470B37]/5 flex items-center justify-center text-[#470B37]">
+          <div className="w-10 h-10 rounded-xl bg-[#661489]/5 flex items-center justify-center text-[#661489]">
             <Plus size={20} />
           </div>
           <h2 className="text-xl font-black text-slate-900">Envoyer un nouveau message</h2>
@@ -134,7 +134,7 @@ export const MessagesToUsers: React.FC = () => {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[20px] focus:border-[#470B37] focus:bg-white focus:ring-4 focus:ring-[#470B37]/5 outline-none transition-all text-slate-900 font-bold placeholder:text-slate-400 placeholder:font-medium"
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-[20px] focus:border-[#661489] focus:bg-white focus:ring-4 focus:ring-[#661489]/5 outline-none transition-all text-slate-900 font-bold placeholder:text-slate-400 placeholder:font-medium"
                 placeholder="ex: Annonce importante sur les nouveaux tarifs"
                 required
               />
@@ -145,7 +145,7 @@ export const MessagesToUsers: React.FC = () => {
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent rounded-[24px] focus:border-[#470B37] focus:bg-white focus:ring-4 focus:ring-[#470B37]/5 outline-none transition-all text-slate-900 font-bold resize-none min-h-[180px] placeholder:text-slate-400 placeholder:font-medium"
+                className="w-full px-6 py-5 bg-slate-50 border-2 border-transparent rounded-[24px] focus:border-[#661489] focus:bg-white focus:ring-4 focus:ring-[#661489]/5 outline-none transition-all text-slate-900 font-bold resize-none min-h-[180px] placeholder:text-slate-400 placeholder:font-medium"
                 placeholder="Entrez le message à envoyer (Le format HTML est supporté pour les emails)"
                 required
               />
@@ -155,15 +155,15 @@ export const MessagesToUsers: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div 
               onClick={() => setSendEmail(!sendEmail)}
-              className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 group ${sendEmail ? 'border-[#470B37] bg-[#470B37]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+              className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 group ${sendEmail ? 'border-[#661489] bg-[#661489]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${sendEmail ? 'bg-[#470B37] text-white shadow-lg shadow-[#470B37]/20' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${sendEmail ? 'bg-[#661489] text-white shadow-lg shadow-[#661489]/20' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
                 <Mail size={24} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className={`font-black text-base ${sendEmail ? 'text-slate-900' : 'text-slate-500'}`}>Par Email</span>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${sendEmail ? 'border-[#470B37] bg-[#470B37] text-white' : 'border-slate-200'}`}>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${sendEmail ? 'border-[#661489] bg-[#661489] text-white' : 'border-slate-200'}`}>
                     {sendEmail && <Check size={14} strokeWidth={4} />}
                   </div>
                 </div>
@@ -173,15 +173,15 @@ export const MessagesToUsers: React.FC = () => {
             
             <div 
               onClick={() => setSendNotification(!sendNotification)}
-              className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 group ${sendNotification ? 'border-[#470B37] bg-[#470B37]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+              className={`p-6 rounded-[24px] border-2 cursor-pointer transition-all flex items-center gap-5 group ${sendNotification ? 'border-[#661489] bg-[#661489]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${sendNotification ? 'bg-[#470B37] text-white shadow-lg shadow-[#470B37]/20' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${sendNotification ? 'bg-[#661489] text-white shadow-lg shadow-[#661489]/20' : 'bg-slate-100 text-slate-400 group-hover:bg-slate-200'}`}>
                 <Bell size={24} />
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className={`font-black text-base ${sendNotification ? 'text-slate-900' : 'text-slate-500'}`}>En Notification</span>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${sendNotification ? 'border-[#470B37] bg-[#470B37] text-white' : 'border-slate-200'}`}>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${sendNotification ? 'border-[#661489] bg-[#661489] text-white' : 'border-slate-200'}`}>
                     {sendNotification && <Check size={14} strokeWidth={4} />}
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export const MessagesToUsers: React.FC = () => {
         
         {loadingBroadcasts ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
-             <div className="w-10 h-10 border-4 border-slate-100 border-t-[#470B37] rounded-full animate-spin" />
+             <div className="w-10 h-10 border-4 border-slate-100 border-t-[#661489] rounded-full animate-spin" />
              <p className="text-slate-500 font-bold">Chargement de l'historique...</p>
           </div>
         ) : broadcasts.length === 0 ? (
@@ -238,7 +238,7 @@ export const MessagesToUsers: React.FC = () => {
         ) : (
           <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
             {broadcasts.map((broadcast) => (
-              <div key={broadcast.id} className="p-6 bg-white border border-slate-100 rounded-[24px] hover:border-[#470B37]/30 hover:shadow-lg transition-all group relative overflow-hidden">
+              <div key={broadcast.id} className="p-6 bg-white border border-slate-100 rounded-[24px] hover:border-[#661489]/30 hover:shadow-lg transition-all group relative overflow-hidden">
                 <div className="flex justify-between items-start relative z-10">
                   <div className="flex-1 min-w-0 pr-12">
                     <div className="flex items-center gap-3 mb-2">
@@ -256,12 +256,12 @@ export const MessagesToUsers: React.FC = () => {
                          <Calendar size={12} className="text-slate-300" /> {formatDate(broadcast.createdAt)}
                       </div>
                       {broadcast.sendEmail && (
-                        <div className="flex items-center gap-2 text-[#470B37]">
+                        <div className="flex items-center gap-2 text-[#661489]">
                            <Mail size={12} /> Email ({broadcast.recipientCount || 0})
                         </div>
                       )}
                       {broadcast.sendNotification && (
-                        <div className="flex items-center gap-2 text-[#470B37]">
+                        <div className="flex items-center gap-2 text-[#661489]">
                            <Bell size={12} /> Notification ({broadcast.notificationsCreated || 0})
                         </div>
                       )}
@@ -277,7 +277,7 @@ export const MessagesToUsers: React.FC = () => {
                 </div>
                 
                 {/* Background Decoration */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#470B37]/5 rounded-full -mr-16 -mt-16 group-hover:bg-[#470B37]/10 transition-all"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#661489]/5 rounded-full -mr-16 -mt-16 group-hover:bg-[#661489]/10 transition-all"></div>
               </div>
             ))}
           </div>
@@ -288,3 +288,4 @@ export const MessagesToUsers: React.FC = () => {
 };
 
 export default MessagesToUsers;
+

@@ -296,14 +296,14 @@ const TransferJourneyPage: React.FC = () => {
 
   const renderSidebarSummary = () => (
     <aside className="hidden lg:flex lg:flex-col lg:gap-5">
-      <div className="overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-[#7b47de] via-[#470B37] to-[#4a239c] p-7 text-white shadow-[0_28px_60px_rgba(98,54,204,0.22)]">
+      <div className="overflow-hidden rounded-[28px] border border-white/70 bg-gradient-to-br from-[#7b47de] via-[#661489] to-[#4a239c] p-7 text-white shadow-[0_28px_60px_rgba(98,54,204,0.22)]">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/70">Flash Pay</p>
         <h1 className="mt-3 text-3xl font-black leading-tight">Envoyez en quelques étapes, suivez en temps réel.</h1>
         <p className="mt-3 text-sm text-white/80">Flux desktop et mobile alignés avec le back-office Firebase.</p>
       </div>
 
       <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#470B37]">Aperçu</p>
+        <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#661489]">Aperçu</p>
         <div className="mt-4 space-y-3 text-sm text-slate-600">
           <div className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3">
             <span>Destinataire</span>
@@ -363,7 +363,7 @@ const TransferJourneyPage: React.FC = () => {
               </button>
 
               <div className="mt-5 text-center lg:text-left">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#470B37]">Veuillez saisir les informations du destinataire</p>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#661489]">Veuillez saisir les informations du destinataire</p>
                 <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">Nom du bénéficiaire et numéro de téléphone</h2>
               </div>
 
@@ -431,7 +431,7 @@ const TransferJourneyPage: React.FC = () => {
                 {selected?.operators?.length ? (
                   <div>
                     <span className="mb-2 block text-sm font-medium text-slate-700">Opérateur détecté automatiquement</span>
-                    <div className="rounded-2xl border border-[#eadfff] bg-[#F9EEF5] px-4 py-3 text-sm font-semibold text-[#470B37] shadow-sm">
+                    <div className="rounded-2xl border border-[#eadfff] bg-[#F5E8FF] px-4 py-3 text-sm font-semibold text-[#661489] shadow-sm">
                       {transferData.recipientOperator || 'En attente de détection'}
                     </div>
                   </div>
@@ -441,12 +441,12 @@ const TransferJourneyPage: React.FC = () => {
               <button
                 onClick={() => nextStep()}
                 disabled={!transferData.recipientName || !transferData.recipientPhone || !transferData.destinationCountry}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#470B37] px-6 py-4 text-base font-bold text-white shadow-[0_14px_30px_rgba(98,54,204,0.24)] transition-all disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 lg:w-auto"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#661489] px-6 py-4 text-base font-bold text-white shadow-[0_14px_30px_rgba(98,54,204,0.24)] transition-all disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 lg:w-auto"
               >
                 Continuer <ArrowRight size={18} />
               </button>
 
-              <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#470B37]/20 bg-white px-6 py-4 text-sm font-semibold text-[#470B37] lg:w-auto">
+              <button className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#661489]/20 bg-white px-6 py-4 text-sm font-semibold text-[#661489] lg:w-auto">
                 <Smartphone size={16} /> Choisir parmi les contacts enregistrés
               </button>
             </div>
@@ -472,7 +472,7 @@ const TransferJourneyPage: React.FC = () => {
               </button>
 
               <div className="mt-5 text-center lg:text-left">
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#470B37]">Vérifier les détails</p>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#661489]">Vérifier les détails</p>
                 <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">Tout est prêt avant le paiement</h2>
               </div>
 
@@ -483,11 +483,11 @@ const TransferJourneyPage: React.FC = () => {
                   ) : (
                     <span />
                   )}
-                  <ArrowRight className="text-[#470B37]" size={28} />
+                  <ArrowRight className="text-[#661489]" size={28} />
                   {recipientFlagImg ? (
                     <img src={recipientFlagImg} alt="Destination flag" className="w-8 h-8" />
                   ) : (
-                    <Globe size={28} className="text-[#470B37]" />
+                    <Globe size={28} className="text-[#661489]" />
                   )}
                 </div>
                 <p className="mt-4 text-center text-sm text-slate-500">Vous envoyez</p>
@@ -514,9 +514,9 @@ const TransferJourneyPage: React.FC = () => {
                 <SummaryRow label="Bonus" value={`${Math.round(transferData.amount || 0)} points`} accent />
               </div>
 
-              <div className="mt-4 rounded-[24px] border border-slate-100 bg-[#F9EEF5] p-4 text-sm text-slate-700 shadow-sm">
+              <div className="mt-4 rounded-[24px] border border-slate-100 bg-[#F5E8FF] p-4 text-sm text-slate-700 shadow-sm">
                 <div className="flex items-start gap-3">
-                  <ShieldCheck className="mt-0.5 text-[#470B37]" size={18} />
+                  <ShieldCheck className="mt-0.5 text-[#661489]" size={18} />
                   <div>
                     <p className="font-semibold text-slate-900">Généralement livré en moins de 10 minutes</p>
                     <p className="mt-1 text-slate-600">Ajoutez une narration optionnelle si vous le souhaitez avant de continuer.</p>
@@ -534,7 +534,7 @@ const TransferJourneyPage: React.FC = () => {
                 />
               </label>
 
-              <button onClick={() => nextStep()} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#470B37] px-6 py-4 text-base font-bold text-white shadow-[0_14px_30px_rgba(98,54,204,0.24)] lg:w-auto">
+              <button onClick={() => nextStep()} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#661489] px-6 py-4 text-base font-bold text-white shadow-[0_14px_30px_rgba(98,54,204,0.24)] lg:w-auto">
                 Continuer <ArrowRight size={18} />
               </button>
             </div>
@@ -558,22 +558,22 @@ const TransferJourneyPage: React.FC = () => {
                 <ArrowLeft size={16} /> Retour
               </button>
 
-              <div className="mt-5 flex items-start justify-between gap-4 rounded-[24px] border border-[#470B37]/15 bg-[#F9EEF5] p-5">
+              <div className="mt-5 flex items-start justify-between gap-4 rounded-[24px] border border-[#661489]/15 bg-[#F5E8FF] p-5">
                 <div>
-                  <p className="text-sm font-semibold text-[#470B37]">Effectuez le paiement sur l’un des numéros ci-dessous et envoyez la capture d’écran du reçu.</p>
+                  <p className="text-sm font-semibold text-[#661489]">Effectuez le paiement sur l’un des numéros ci-dessous et envoyez la capture d’écran du reçu.</p>
                   <p className="mt-2 text-sm text-slate-600">Vous avez 20 minutes pour effectuer le paiement.</p>
                 </div>
-                <div className="rounded-full bg-white px-4 py-2 text-xl font-black text-[#470B37] shadow-sm">{timerLabel}</div>
+                <div className="rounded-full bg-white px-4 py-2 text-xl font-black text-[#661489] shadow-sm">{timerLabel}</div>
               </div>
 
               <div className="mt-6 space-y-4">
                 {bankAccounts.map((bank, index) => (
                   <div key={`${bank.name}-${index}`} className="rounded-[24px] border border-slate-100 bg-slate-50 p-4 shadow-sm sm:p-5">
-                    <div className="mb-3 inline-flex rounded-full bg-[#470B37] px-3 py-1 text-xs font-bold text-white">{bank.title}</div>
+                    <div className="mb-3 inline-flex rounded-full bg-[#661489] px-3 py-1 text-xs font-bold text-white">{bank.title}</div>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex items-start gap-4">
                         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-sm">
-                          {bank.logo ? <img src={bank.logo} alt={bank.name} className="h-full w-full object-contain p-2" /> : <span className="text-xl font-black text-[#470B37]">{bank.name.charAt(0)}</span>}
+                          {bank.logo ? <img src={bank.logo} alt={bank.name} className="h-full w-full object-contain p-2" /> : <span className="text-xl font-black text-[#661489]">{bank.name.charAt(0)}</span>}
                         </div>
                         <div>
                           <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Numéro de compte</p>
@@ -585,7 +585,7 @@ const TransferJourneyPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <button onClick={() => handleCopy(bank.number)} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#470B37]/30 bg-white px-4 py-3 text-sm font-semibold text-[#470B37] transition-all hover:bg-[#470B37] hover:text-white">
+                      <button onClick={() => handleCopy(bank.number)} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#661489]/30 bg-white px-4 py-3 text-sm font-semibold text-[#661489] transition-all hover:bg-[#661489] hover:text-white">
                         <Copy size={16} /> Copier
                       </button>
                     </div>
@@ -593,20 +593,20 @@ const TransferJourneyPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="mt-4 rounded-[24px] border border-[#470B37]/15 bg-[#F9EEF5] p-4 text-sm text-slate-700">
+              <div className="mt-4 rounded-[24px] border border-[#661489]/15 bg-[#F5E8FF] p-4 text-sm text-slate-700">
                 <div className="flex items-start gap-3">
-                  <MapPinned className="mt-0.5 text-[#470B37]" size={18} />
+                  <MapPinned className="mt-0.5 text-[#661489]" size={18} />
                   <p>Ces numéros sont mis à jour quotidiennement pour votre sécurité. Utilisez uniquement les numéros affichés ici.</p>
                 </div>
               </div>
 
               <div className="mt-6 rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="flex items-center gap-3 text-sm font-semibold text-slate-700">
-                  <Upload size={16} className="text-[#470B37]" /> Téléchargez la preuve de paiement
+                  <Upload size={16} className="text-[#661489]" /> Téléchargez la preuve de paiement
                 </div>
                 <p className="mt-1 text-sm text-slate-500">Formats acceptés : JPG, PNG - Taille max : 5 Mo</p>
 
-                <label className="mt-4 block cursor-pointer rounded-[24px] border-2 border-dashed border-[#470B37]/25 bg-[#faf8ff] p-6 text-center transition-all hover:border-[#470B37]">
+                <label className="mt-4 block cursor-pointer rounded-[24px] border-2 border-dashed border-[#661489]/25 bg-[#faf8ff] p-6 text-center transition-all hover:border-[#661489]">
                   <input
                     type="file"
                     className="hidden"
@@ -644,7 +644,7 @@ const TransferJourneyPage: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <Paperclip className="mx-auto text-[#470B37]" size={40} />
+                      <Paperclip className="mx-auto text-[#661489]" size={40} />
                       <p className="mt-3 font-semibold text-slate-900">Glissez votre reçu ici ou cliquez pour sélectionner</p>
                       <p className="mt-1 text-sm text-slate-500">JPG ou PNG uniquement</p>
                     </>
@@ -655,7 +655,7 @@ const TransferJourneyPage: React.FC = () => {
               <button
                 onClick={handlePaymentSubmit}
                 disabled={!proofFile || isSubmitting || secondsLeft <= 0}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#470B37] px-6 py-4 text-base font-bold text-white shadow-[0_14px_30px_rgba(98,54,204,0.24)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 lg:w-auto"
+                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#661489] px-6 py-4 text-base font-bold text-white shadow-[0_14px_30px_rgba(98,54,204,0.24)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 lg:w-auto"
               >
                 Continuer
               </button>
@@ -673,30 +673,30 @@ const TransferJourneyPage: React.FC = () => {
           <div className="hidden lg:block">
             <div className="rounded-[32px] bg-gradient-to-br from-[#efe7ff] to-white p-10 shadow-[0_18px_50px_rgba(98,54,204,0.12)]">
               <div className="mx-auto flex h-48 w-48 items-center justify-center rounded-full bg-white shadow-inner">
-                <Send size={72} className="text-[#470B37]" />
+                <Send size={72} className="text-[#661489]" />
               </div>
             </div>
           </div>
 
           <div className="rounded-[32px] border border-white/70 bg-white p-6 text-center shadow-[0_16px_50px_rgba(98,54,204,0.08)] sm:p-10">
-            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#efe7ff] text-[#470B37]">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#efe7ff] text-[#661489]">
               <CheckCircle2 size={42} />
             </div>
             <h2 className="mt-6 text-3xl font-black text-slate-900">Paiement initié</h2>
             <p className="mt-3 text-slate-600">Votre paiement de {transferData.amount?.toLocaleString('fr-FR') || '0'} roubles a été initié.</p>
 
-            <div className="mt-6 rounded-[24px] bg-[#F9EEF5] p-4 text-left text-sm text-slate-700">
+            <div className="mt-6 rounded-[24px] bg-[#F5E8FF] p-4 text-left text-sm text-slate-700">
               <div className="flex items-start gap-3">
-                <Clock3 className="mt-0.5 text-[#470B37]" size={18} />
+                <Clock3 className="mt-0.5 text-[#661489]" size={18} />
                 <p>Votre paiement est en cours. Nous vous avertirons quand il sera terminé.</p>
               </div>
             </div>
 
-            <button onClick={() => navigate(`/transactions/${createdTransactionId}`)} disabled={!createdTransactionId} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#470B37] px-6 py-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500">
+            <button onClick={() => navigate(`/transactions/${createdTransactionId}`)} disabled={!createdTransactionId} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#661489] px-6 py-4 text-base font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500">
               Voir la transaction
             </button>
 
-            <button onClick={() => { resetWizard(); navigate('/'); }} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#470B37]/25 bg-white px-6 py-4 text-base font-bold text-[#470B37]">
+            <button onClick={() => { resetWizard(); navigate('/'); }} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#661489]/25 bg-white px-6 py-4 text-base font-bold text-[#661489]">
               Retour à la page d'accueil
             </button>
           </div>
@@ -715,8 +715,10 @@ const TransferJourneyPage: React.FC = () => {
 const SummaryRow = ({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) => (
   <div className="flex items-center justify-between gap-4 border-b border-slate-100 py-2 last:border-0 last:pb-0">
     <span className="text-sm text-slate-600">{label}</span>
-    <span className={`text-sm font-bold ${accent ? 'text-[#470B37]' : 'text-slate-900'}`}>{value}</span>
+    <span className={`text-sm font-bold ${accent ? 'text-[#661489]' : 'text-slate-900'}`}>{value}</span>
   </div>
 );
 
 export default TransferJourneyPage;
+
+

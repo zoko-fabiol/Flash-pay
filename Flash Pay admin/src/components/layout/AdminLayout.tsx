@@ -59,11 +59,11 @@ const AdminLayout: React.FC = () => {
     <div className="min-h-screen bg-[#FEF7FF] flex flex-col lg:flex-row">
       <div className="lg:hidden bg-white border-b border-[#E7E0EB] p-4 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#470B37] rounded-[12px] flex items-center justify-center shadow-lg shadow-[#470B37]/20">
+          <div className="w-10 h-10 bg-[#661489] rounded-[12px] flex items-center justify-center shadow-lg shadow-[#661489]/20">
             <CreditCardProIcon className="text-white" size={20} />
           </div>
           <span className="text-xl font-black text-[#1D1B20] tracking-tighter">
-            FLASH PAY <span className="text-[#470B37]">AD</span>
+            FLASH PAY <span className="text-[#661489]">AD</span>
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -98,12 +98,12 @@ const AdminLayout: React.FC = () => {
       `}>
         <div className="h-full flex flex-col p-6 overflow-y-auto">
           <div className="hidden lg:flex items-center gap-4 mb-10 px-2">
-            <div className="w-12 h-12 bg-[#470B37] rounded-[16px] flex items-center justify-center shadow-xl shadow-[#470B37]/20">
+            <div className="w-12 h-12 bg-[#661489] rounded-[16px] flex items-center justify-center shadow-xl shadow-[#661489]/20">
               <CreditCardProIcon className="text-white" size={24} />
             </div>
             <div>
               <h1 className="text-2xl font-black text-[#1D1B20] tracking-tight leading-none">FLASH PAY</h1>
-              <span className="text-[10px] font-black text-[#470B37] tracking-[0.3em] uppercase opacity-60">Admin Portal</span>
+              <span className="text-[10px] font-black text-[#661489] tracking-[0.3em] uppercase opacity-60">Admin Portal</span>
             </div>
           </div>
 
@@ -120,7 +120,7 @@ const AdminLayout: React.FC = () => {
                     : 'text-[#49454F] hover:bg-[#F3EDF7] hover:text-[#1D1B20]'}
                 `}
               >
-                <div className={`p-2.5 rounded-[12px] transition-colors ${location.pathname === item.path ? 'bg-[#470B37] text-white' : 'bg-transparent text-[#49454F] group-hover:bg-[#EADDFF]/50'}`}>
+                <div className={`p-2.5 rounded-[12px] transition-colors ${location.pathname === item.path ? 'bg-[#661489] text-white' : 'bg-transparent text-[#49454F] group-hover:bg-[#EADDFF]/50'}`}>
                   <item.icon size={20} />
                 </div>
                 <div className="flex flex-col">
@@ -128,7 +128,7 @@ const AdminLayout: React.FC = () => {
                   <span className="text-[9px] font-medium opacity-50 uppercase tracking-wider">{item.desc}</span>
                 </div>
                 {location.pathname === item.path && (
-                  <div className="absolute right-4 w-1.5 h-1.5 bg-[#470B37] rounded-full" />
+                  <div className="absolute right-4 w-1.5 h-1.5 bg-[#661489] rounded-full" />
                 )}
               </NavLink>
             ))}
@@ -136,12 +136,12 @@ const AdminLayout: React.FC = () => {
 
           <div className="mt-auto pt-8 border-t border-[#E7E0EB]">
             <div className="bg-[#F3EDF7] p-4 rounded-[24px] mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#470B37] font-black shadow-sm">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#661489] font-black shadow-sm">
                 {currentUser?.email?.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-black text-[#1D1B20] truncate">{currentUser?.email}</p>
-                <p className="text-[9px] font-bold text-[#470B37] uppercase tracking-widest">
+                <p className="text-[9px] font-bold text-[#661489] uppercase tracking-widest">
                               {profile?.adminRole === 'restricted' ? 'Accès restreint' : profile?.adminRole === 'email-only' ? 'Notification seulement' : 'Administrateur complet'}
                 </p>
               </div>
@@ -178,7 +178,7 @@ const AdminLayout: React.FC = () => {
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right">
                 <p className="text-xs font-black text-[#1D1B20]">Support Flash Pay</p>
-                <p className="text-[10px] font-bold text-[#470B37] uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-[#661489] uppercase tracking-widest">
                   {permissions.receiveOrderEmails ? 'Notifications actives' : 'Notifications désactivées'}
                 </p>
               </div>
@@ -198,3 +198,4 @@ const AdminLayout: React.FC = () => {
 };
 
 export default AdminLayout;
+
