@@ -218,7 +218,9 @@ export interface ProblemReport {
   status: 'pending' | 'in_progress' | 'resolved' | 'rejected';
   createdAt: Timestamp;
   resolvedAt?: Timestamp;
+  resolvedBy?: string;
   adminNotes?: string;
+  resolutionNote?: string;
 }
 
 export interface Operator {

@@ -19,7 +19,7 @@ import {
 import toast from 'react-hot-toast';
 
 import { adminService } from '../../services/adminService';
-import Modal from '../../components/ui/Modal';
+import { Modal } from '../../components/ui/Modal';
 
 const ProblemsPage: React.FC = () => {
   const navigate = useNavigate();
