@@ -1114,7 +1114,7 @@ export const kycService = {
 // Handles exchange rate snapshots, commission calculations, and complete transaction validation
 
 export interface TransactionInput {
-  transferType: 'russia-russia' | 'russia-africa' | 'africa-russia';
+  transferType: 'africa-africa' | 'russia-africa' | 'africa-russia';
   amount: number;
   inputCurrency: string;
   outputCurrency: string;
@@ -1139,14 +1139,17 @@ export interface TransactionCalculation {
 
 // Default fallback rates if not found in Firestore
 const DEFAULT_RATES: { [key: string]: number } = {
-  'RUB-XAF': 7.22,
-  'XAF-RUB': 0.1385,
+  'RUB-XAF': 1.0,
+  'XAF-RUB': 1.0,
   'RUB-RUB': 1.0,
   'XAF-XAF': 1.0,
-  'EUR-XAF': 655.957,
-  'XAF-EUR': 0.001525,
-  'EUR-RUB': 90.8,
-  'RUB-EUR': 0.011011,
+  'XOF-XOF': 1.0,
+  'XAF-XOF': 1.0,
+  'XOF-XAF': 1.0,
+  'EUR-XAF': 1.0,
+  'XAF-EUR': 1.0,
+  'EUR-RUB': 1.0,
+  'RUB-EUR': 1.0,
 };
 
 // Get current exchange rate from Firestore with fallback
@@ -1168,8 +1171,59 @@ async function getExchangeRateSnapshot(fromCurrency: string, toCurrency: string)
     if (!snapshot.empty) {
       const rateDoc = snapshot.docs[0].data();
       return { 
-        rate: rateDoc.rate, 
+        rate: rateDoc.rate || rateDoc.rateFixed || 1.0, 
         timestamp: Timestamp.now() 
+      };
+    }
+
+    // Check custom_rates if not in global exchange_rates
+    const qCustom = query(
+      collection(db, 'custom_rates'),
+      where('from', '==', fromCurrency),
+      where('to', '==', toCurrency),
+      limit(1)
+    );
+    const customSnapshot = await getDocs(qCustom);
+    if (!customSnapshot.empty) {
+       const rateDoc = customSnapshot.docs[0].data();
+       return {
+         rate: rateDoc.rate || rateDoc.rateFixed || 1.0,
+         timestamp: Timestamp.now()
+       };
+    }
+
+    // --- TRY INVERSE LOOKUP ---
+    // Try global inverse
+    const qInvGlobal = query(
+      collection(db, 'exchange_rates'),
+      where('from', '==', toCurrency),
+      where('to', '==', fromCurrency),
+      limit(1)
+    );
+    const invGlobalSnap = await getDocs(qInvGlobal);
+    if (!invGlobalSnap.empty) {
+      const rateDoc = invGlobalSnap.docs[0].data();
+      const baseRate = rateDoc.rate || rateDoc.rateFixed || 1.0;
+      return {
+        rate: 1 / baseRate,
+        timestamp: Timestamp.now()
+      };
+    }
+
+    // Try custom inverse
+    const qInvCustom = query(
+      collection(db, 'custom_rates'),
+      where('from', '==', toCurrency),
+      where('to', '==', fromCurrency),
+      limit(1)
+    );
+    const invCustomSnap = await getDocs(qInvCustom);
+    if (!invCustomSnap.empty) {
+      const rateDoc = invCustomSnap.docs[0].data();
+      const baseRate = rateDoc.rate || rateDoc.rateFixed || 1.0;
+      return {
+        rate: 1 / baseRate,
+        timestamp: Timestamp.now()
       };
     }
 
@@ -1193,7 +1247,7 @@ async function getExchangeRateSnapshot(fromCurrency: string, toCurrency: string)
 
 // Get applicable commission for transfer type and amount with destination specificity
 async function getCommissionForAmount(
-  transferType: 'russia-russia' | 'russia-africa' | 'africa-russia',
+  transferType: 'africa-africa' | 'russia-africa' | 'africa-russia',
   amount: number,
   currency: string,
   destinationCountry?: string,
@@ -1202,8 +1256,8 @@ async function getCommissionForAmount(
   try {
     const q = query(
       collection(db, 'commissions'),
-      where('transferType', '==', transferType),
-      where('currency', '==', currency)
+      where('transferType', 'in', transferType === 'africa-africa' ? ['africa-africa', 'russia-russia'] : [transferType]),
+      where('currency', 'in', (currency === 'XAF' || currency === 'XOF') ? ['XAF', 'XOF'] : [currency])
     );
     const snapshot = await getDocs(q);
 

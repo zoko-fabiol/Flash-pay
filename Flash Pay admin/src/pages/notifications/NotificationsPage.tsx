@@ -85,11 +85,17 @@ const NotificationsPage: React.FC = () => {
               key={notification.id}
               onClick={async () => {
                 if (!notification.read) await markAsRead(notification.id);
-                if (notification.link) navigate(notification.link);
+                if (notification.link) {
+                  // Clean the link to remove legacy /admin prefix
+                  const targetLink = notification.link.startsWith('/admin') 
+                    ? notification.link.replace('/admin', '') 
+                    : notification.link;
+                  navigate(targetLink || '/');
+                }
               }}
               className={`
                 group relative bg-white border rounded-[24px] p-5 flex items-start gap-4 transition-all cursor-pointer shadow-sm hover:shadow-md
-                ${notification.read ? 'border-slate-100 opacity-75' : 'border-[#EADDFF] ring-1 ring-[#6750A4]/5 shadow-[#6750A4]/5'}
+                ${notification.read ? 'border-slate-100 opacity-75' : 'border-[#EADDFF] ring-1 ring-[#661489]/5 shadow-[#661489]/5'}
               `}
             >
               <div className={`
@@ -105,7 +111,7 @@ const NotificationsPage: React.FC = () => {
                     {notification.title}
                   </h4>
                   {!notification.read && (
-                    <span className="w-1.5 h-1.5 bg-[#6750A4] rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-[#661489] rounded-full"></span>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">

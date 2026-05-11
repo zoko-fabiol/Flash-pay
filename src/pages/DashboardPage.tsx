@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { db } from '../services/firebase';
 import { collection, query, where, onSnapshot, limit } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
+import { Loading } from '../components/UI';
 import { 
   ArrowRight, 
   TrendingUp, 
@@ -21,17 +22,24 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, language, formatNumber } = useLanguage();
   const navigate = useNavigate();
-  const [exchangeRate, setExchangeRate] = useState(7.22);
+  const [exchangeRate, setExchangeRate] = useState(1.0);
   const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [referralBonus, setReferralBonus] = useState(500);
 
   useEffect(() => {
     const unsubRates = onSnapshot(collection(db, 'exchange_rates'), (snapshot) => {
-      const rates = snapshot.docs.map(doc => doc.data());
-      const rateObj = rates.find(r => r.from === 'RUB' && r.to === 'XAF');
-      if (rateObj) setExchangeRate(rateObj.rate);
-      setLoading(false);
+      const globalRates = snapshot.docs.map(doc => doc.data());
+      onSnapshot(collection(db, 'custom_rates'), (snapshot2) => {
+        const customRates = snapshot2.docs.map(doc => doc.data());
+        const allRates = [...globalRates, ...customRates];
+        const foundRate = allRates.find(r => r.from === 'RUB' && r.to === 'XAF');
+        const inverseRate = !foundRate ? allRates.find(r => r.from === 'XAF' && r.to === 'RUB') : null;
+        
+        const rate = foundRate?.rate || foundRate?.rateFixed || (inverseRate ? (1 / (inverseRate.rate || inverseRate.rateFixed)) : 1.0);
+        setExchangeRate(rate);
+        setLoading(false);
+      });
     });
 
     const unsubSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
@@ -83,7 +91,7 @@ export const DashboardPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">{t('loading')}</div>;
+    return <Loading fullScreen />;
   }
 
   return (
@@ -91,7 +99,7 @@ export const DashboardPage: React.FC = () => {
       <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Banner Section - Matching Screenshot */}
-        <section className="relative mx-2 min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#6A44D3] via-[#5833B4] to-[#33206F] p-7 text-white shadow-[0_24px_60px_rgba(33,16,82,0.28)] sm:p-8">
+        <section className="relative mx-2 min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#661489] via-[#4D0F67] to-[#2A083B] p-7 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)] sm:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_26%)]" />
           <div className="absolute inset-y-0 right-0 w-[70%] opacity-45 pointer-events-none overflow-hidden">
             <svg viewBox="0 0 200 200" className="h-full w-full translate-x-12 text-white">
@@ -123,7 +131,7 @@ export const DashboardPage: React.FC = () => {
             <div>
               <button 
                 onClick={() => navigate('/transfer')} 
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#5030B1] shadow-[0_10px_24px_rgba(14,8,42,0.2)] transition-transform active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#661489] shadow-[0_10px_24px_rgba(42,8,59,0.2)] transition-transform active:scale-95"
               >
                 {t('start_transfer')} 
                 <ArrowRight size={16} />
@@ -133,7 +141,7 @@ export const DashboardPage: React.FC = () => {
         </section>
 
         {/* Referral Card - Matching Screenshot */}
-        <section className="relative mx-2 overflow-hidden rounded-[32px] bg-[#F5F3FF] p-6 shadow-sm border border-[#E9E4FF]">
+        <section className="relative mx-2 overflow-hidden rounded-[32px] bg-[#FDF7FF] p-6 shadow-sm border border-[#F3E8FF]">
           <div className="flex justify-between items-start">
             <div className="space-y-6 flex-1 pr-4">
               <h3 className="text-lg font-bold text-slate-800 leading-snug">
@@ -143,7 +151,7 @@ export const DashboardPage: React.FC = () => {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => navigate('/referral')} 
-                  className="rounded-xl bg-[#6236CC] px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 transition-all"
+                  className="rounded-xl bg-[#661489] px-5 py-2.5 text-sm font-bold text-white shadow-md active:scale-95 transition-all"
                 >
                   {t('refer_now')}
                 </button>
@@ -151,36 +159,17 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-end gap-2 shrink-0">
-               <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[10px] font-bold text-[#6236CC] shadow-sm border border-[#E9E4FF]">
+               <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white text-[10px] font-bold text-[#661489] shadow-sm border border-[#F3E8FF]">
                  <Gift size={12} /> {t('special_offer')}
                </div>
                <div className="mt-2 scale-110">
                  {/* Placeholder for gift box illustration */}
-                 <Gift size={80} className="text-[#A78BFA]" />
+                 <Gift size={80} className="text-[#D8B4FE]" />
                </div>
             </div>
           </div>
         </section>
 
-        <div className="px-4 pt-4">
-          <h2 className="text-xl font-bold text-slate-900 mb-4">{t('current_rate_title')}</h2>
-          
-          {/* Exchange Rate Card - Matching Screenshot */}
-          <section className="rounded-[32px] bg-[#F8F7FF] p-8 border border-[#F0EFFF]">
-            <div className="space-y-4">
-               <div>
-                 <p className="text-lg font-bold text-[#6236CC]">RUB</p>
-                 <p className="text-xs font-bold text-slate-400">RUB vers XAF</p>
-               </div>
-               <div className="flex items-baseline gap-2">
-                 <span className="text-3xl font-bold text-[#6236CC]">
-                   {exchangeRate.toLocaleString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'fr-FR')}
-                 </span>
-                 <span className="text-xl font-bold text-[#6236CC]">XAF</span>
-               </div>
-            </div>
-          </section>
-        </div>
 
         {/* Recent Transactions Section */}
         <section className="px-4 pt-4 space-y-4">

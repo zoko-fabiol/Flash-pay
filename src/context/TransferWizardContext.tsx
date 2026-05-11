@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 
-export type TransferType = 'africa-russia' | 'russia-africa' | 'russia-russia' | null;
+export type TransferType = 'africa-russia' | 'russia-africa' | 'africa-africa' | null;
 export type RecipientType = 'bank' | 'operator' | null;
 
 export interface BulkRecipient {
@@ -26,6 +26,7 @@ interface TransferData {
   
   // For Afrique→Afrique
   originCountry?: string;
+  originCurrency?: string;
   recipientPhone?: string;
   recipientOperator?: string;
   

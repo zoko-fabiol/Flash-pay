@@ -72,7 +72,8 @@ export const adminService = {
           read: false,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
-          link: '/transactions'
+          link: `/transactions/${transactionId}`,
+          data: { transactionId }
         });
 
         // Maintain broadcast/flat collection for history/compatibility if needed
@@ -83,7 +84,8 @@ export const adminService = {
           type: 'transaction_update',
           read: false,
           createdAt: Timestamp.now(),
-          link: '/transactions'
+          link: `/transactions/${transactionId}`,
+          data: { transactionId }
         });
 
         // Referral Bonus Logic on First Completed Transfer
@@ -228,7 +230,8 @@ export const adminService = {
             read: false,
             createdAt: Timestamp.now(),
             updatedAt: Timestamp.now(),
-            link: '/transactions'
+            link: `/transactions/${transactionId}`,
+            data: { transactionId }
           });
         }
       }

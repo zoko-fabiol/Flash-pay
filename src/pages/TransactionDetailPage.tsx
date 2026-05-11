@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { ArrowLeft, CheckCircle2, Clock3, Download, FileText, Info, Send, User } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle2, Clock3, Copy, Download, FileText, Info, Send, Smartphone, User } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
@@ -36,6 +36,7 @@ export const TransactionDetailPage: React.FC = () => {
   const { formatNumber } = useLanguage();
   const [transaction, setTransaction] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'update' | 'details'>('update');
 
   useEffect(() => {
     if (!transactionId) return;
@@ -83,7 +84,7 @@ export const TransactionDetailPage: React.FC = () => {
       const margin = isBulkRec ? 12 : 10;
       let y = 15;
 
-      const mainColor = [115, 78, 212]; // #734ED4
+      const mainColor = [102, 20, 137]; // #661489
 
       // Header background
       pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
@@ -228,7 +229,7 @@ export const TransactionDetailPage: React.FC = () => {
       <Layout>
         <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <p className="text-lg font-bold text-slate-900">Transaction introuvable</p>
-          <button onClick={() => navigate('/transactions')} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#6236CC] px-5 py-3 font-semibold text-white">
+          <button onClick={() => navigate('/transactions')} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#661489] px-5 py-3 font-semibold text-white">
             <ArrowLeft size={16} /> Retour
           </button>
         </div>
@@ -242,59 +243,93 @@ export const TransactionDetailPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="mx-auto max-w-3xl space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <button 
-          onClick={() => navigate('/transactions')} 
-          className="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.2em] text-[#6236CC] hover:opacity-70 transition-all group px-2"
-        >
-          <div className="p-2 bg-[#6236CC]/10 rounded-full group-hover:-translate-x-1 transition-transform">
-            <ArrowLeft size={16} />
-          </div>
-          Retour à l’historique
-        </button>
+      <div className="mx-auto max-w-md space-y-5 pb-24 pt-2 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex items-center justify-between px-1">
+          <button
+            onClick={() => navigate('/transactions')}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#661489] hover:bg-[#661489]/10 transition-all"
+            aria-label="Retour"
+          >
+            <ArrowLeft size={22} />
+          </button>
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#661489] hover:bg-[#661489]/10 transition-all"
+            aria-label="Aide"
+          >
+            <Info size={20} />
+          </button>
+        </div>
 
-        <div className="overflow-hidden rounded-[40px] border border-[#eadfff] bg-white shadow-[0_30px_90px_-20px_rgba(98,54,204,0.12)] transition-all">
-          {/* Header Section with Glassmorphism Effect */}
-          <div className="bg-gradient-to-br from-[#7C4DFF] via-[#6236CC] to-[#4d259f] px-8 py-16 text-white text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full -mr-48 -mt-48 blur-[80px] animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#7C4DFF]/20 rounded-full -ml-32 -mb-32 blur-[60px]"></div>
-            
-            <div className="relative z-10 space-y-6">
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-white/10 backdrop-blur-xl shadow-2xl border border-white/20 scale-110">
-                <Send size={32} className="text-white drop-shadow-md" />
+        <div className="overflow-hidden rounded-[32px] border border-[#eadfff] bg-white shadow-[0_20px_60px_rgba(98,54,204,0.10)]">
+          <div className="bg-white px-6 pt-10 pb-8 text-center relative overflow-hidden">
+            <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(98,54,204,0.10),transparent_70%)]" />
+
+            <div className="relative z-10 space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EFE7FF] text-[#661489] shadow-sm">
+                {currentStatus === 'completed' ? <CheckCircle2 size={28} /> : <Send size={28} />}
               </div>
-              
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 drop-shadow-sm">
-                  {transaction.isBulk ? 'Transfert Groupé' : (statusLabels[currentStatus] || 'Transaction')}
+
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#661489]">
+                  {transaction.isBulk ? 'Transfert groupé' : (currentStatus === 'completed' ? 'Terminé' : 'En cours')}
                 </p>
-                <h1 className="text-5xl font-black tracking-tighter sm:text-6xl drop-shadow-lg">
-                  {transaction.amount?.toLocaleString('fr-FR')} <span className="text-2xl font-bold opacity-60">{transaction.currency}</span>
+                <h1 className="text-3xl font-black tracking-tight text-[#1D1B20]">
+                  {currentStatus === 'completed' ? 'Transfert effectué' : 'Transfert en cours'}
                 </h1>
-                <p className="text-sm text-white/60 font-black tracking-widest uppercase">
-                  {transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}
+                <p className="text-[11px] font-medium text-[#49454F] opacity-80">
+                  {currentStatus === 'completed'
+                    ? 'Votre transfert a été validé avec succès.'
+                    : 'Votre transfert est en cours. Nous vous tiendrons informé dès qu’il sera terminé.'}
                 </p>
+              </div>
+
+              <div className="pt-2">
+                <div className="text-5xl font-black tracking-tighter text-[#1D1B20]">
+                  {transaction.amount?.toLocaleString('fr-FR')} <span className="text-2xl font-bold text-[#49454F] opacity-70">{transaction.currency}</span>
+                </div>
+                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em] text-[#49454F] opacity-60">
+                  {transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                </p>
+              </div>
+
+              <div className="mx-auto mt-3 flex w-full max-w-[320px] rounded-full bg-[#F3EDF7] p-1.5">
+                <button 
+                  onClick={() => setActiveTab('update')}
+                  className={`flex-1 rounded-full px-4 py-3 text-center text-sm font-bold transition-all ${
+                    activeTab === 'update' ? 'bg-[#E8DEF8] text-[#21005D] shadow-sm' : 'text-[#49454F]'
+                  }`}
+                >
+                  Mise à jour
+                </button>
+                <button 
+                  onClick={() => setActiveTab('details')}
+                  className={`flex-1 rounded-full px-4 py-3 text-center text-sm font-bold transition-all ${
+                    activeTab === 'details' ? 'bg-[#E8DEF8] text-[#21005D] shadow-sm' : 'text-[#49454F]'
+                  }`}
+                >
+                  Détails
+                </button>
               </div>
             </div>
           </div>
 
-          <div className="space-y-12 p-8 sm:p-12 bg-[#FEF7FF]/30 backdrop-blur-3xl">
-            
-            {/* BULK PROGRESS BANNER - Modernized */}
+          <div className="space-y-6 bg-[#FCFAFF] px-5 pb-6 pt-4 min-h-[400px]">
+            {activeTab === 'update' ? (
+              <>
             {transaction.isBulk && (
-              <div className="rounded-[36px] border-2 border-[#6236CC]/10 bg-white p-8 space-y-6 shadow-xl shadow-[#6236CC]/5 hover:shadow-2xl hover:shadow-[#6236CC]/10 transition-all duration-500">
+              <div className="rounded-[28px] border border-[#661489]/10 bg-white p-6 space-y-5 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
-                    <h3 className="text-[#6236CC] font-black text-xl tracking-tight">Progression de l'envoi</h3>
+                    <h3 className="text-[#661489] font-black text-lg tracking-tight">Progression de l'envoi</h3>
                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{completedRecipients} sur {totalRecipients} bénéficiaires payés</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-4xl font-black text-[#6236CC] tracking-tighter">{Math.round(bulkProgress)}%</span>
+                    <span className="text-3xl font-black text-[#661489] tracking-tighter">{Math.round(bulkProgress)}%</span>
                   </div>
                 </div>
-                <div className="w-full h-5 bg-[#F3EDF7] rounded-full overflow-hidden p-1 shadow-inner">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#6236CC] rounded-full transition-all duration-1000 ease-out shadow-lg"
+                <div className="w-full h-4 bg-[#F3EDF7] rounded-full overflow-hidden p-1 shadow-inner">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#661489] rounded-full transition-all duration-1000 ease-out shadow-lg"
                     style={{ width: `${bulkProgress}%` }}
                   >
                     <div className="w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[progress-bar-stripes_2s_linear_infinite]" />
@@ -303,47 +338,46 @@ export const TransactionDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* RECIPIENT(S) LIST - Premium Cards */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 px-2">
-                <div className="w-1 h-4 bg-[#6236CC] rounded-full"></div>
+                <div className="w-1 h-4 bg-[#661489] rounded-full"></div>
                 {transaction.isBulk ? 'Liste des bénéficiaires' : 'Détails du bénéficiaire'}
               </h3>
-              
+
               {!transaction.isBulk ? (
-                <div className="rounded-[32px] border border-[#eadfff] bg-white p-8 flex items-center justify-between shadow-lg shadow-[#6236CC]/5 group hover:scale-[1.01] transition-all">
-                  <div className="space-y-2">
-                    <p className="text-2xl font-black text-slate-900 tracking-tight">{transaction.recipientName || 'N/A'}</p>
-                    <div className="flex items-center gap-3">
-                        <span className="text-xs font-bold text-slate-400">{transaction.recipientPhone || 'N/A'}</span>
-                        <div className="w-1 h-1 bg-slate-200 rounded-full" />
-                        <span className="text-xs font-black text-[#6236CC] uppercase tracking-widest">{transaction.recipientOperator || 'Orange Money'}</span>
+                <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <p className="text-[12px] font-black uppercase tracking-[0.18em] text-[#49454F]">Vous envoyez</p>
+                      <p className="text-3xl font-black text-[#1D1B20] tracking-tight">{transaction.amount?.toLocaleString('fr-FR')}</p>
+                      <p className="text-sm font-black text-[#661489] tracking-tight">{transaction.currency}</p>
+                      <p className="text-xs text-[#49454F] font-medium pt-2">à {transaction.recipientName || 'N/A'}</p>
                     </div>
-                  </div>
-                  <div className={`rounded-2xl px-6 py-3 text-[10px] font-black uppercase tracking-[0.2em] shadow-sm border ${statusTone[currentStatus] || statusTone.pending} border-current/10`}>
-                    {statusLabels[currentStatus] || currentStatus}
+                    <div className={`rounded-full px-4 py-2 text-[9px] font-black uppercase tracking-[0.22em] shadow-sm border ${statusTone[currentStatus] || statusTone.pending} border-current/10`}>
+                      {statusLabels[currentStatus] || currentStatus}
+                    </div>
                   </div>
                 </div>
               ) : (
                 <div className="grid gap-4">
                   {transaction.bulkRecipients?.map((rec: any) => (
-                    <div key={rec.id} className="rounded-[32px] border border-slate-100 bg-white p-6 flex items-center justify-between hover:border-[#6236CC]/30 transition-all group shadow-sm hover:shadow-xl hover:shadow-[#6236CC]/5">
+                    <div key={rec.id} className="rounded-[28px] border border-slate-100 bg-white p-5 flex items-center justify-between shadow-sm">
                       <div className="space-y-1">
                         <p className="font-black text-slate-900 text-lg tracking-tight">{rec.name}</p>
                         <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{rec.phone} • {rec.operator}</p>
                       </div>
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4">
                         <div className="text-right">
                           <p className="text-xl font-black text-slate-900 tracking-tighter">{Math.floor(rec.amount * (transaction.exchangeRate || 1)).toLocaleString()} <span className="text-xs opacity-40">{transaction.destinationCurrency}</span></p>
                           <div className={`text-[9px] font-black uppercase tracking-widest mt-1 flex items-center justify-end gap-1.5 ${rec.status === 'completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
-                             {rec.status === 'completed' && <CheckCircle2 size={10} />}
-                             {rec.status === 'completed' ? 'Effectué' : 'En attente'}
+                            {rec.status === 'completed' && <CheckCircle2 size={10} />}
+                            {rec.status === 'completed' ? 'Effectué' : 'En attente'}
                           </div>
                         </div>
                         {rec.status === 'completed' && (
-                          <button 
+                          <button
                             onClick={() => handleReceiptDownload(rec)}
-                            className="p-4 bg-[#6236CC]/5 text-[#6236CC] rounded-[20px] hover:bg-[#6236CC] hover:text-white transition-all shadow-sm border border-[#6236CC]/10"
+                            className="p-4 bg-[#661489]/5 text-[#661489] rounded-[20px] hover:bg-[#661489] hover:text-white transition-all shadow-sm border border-[#661489]/10"
                             title="Télécharger le reçu A5"
                           >
                             <Download size={20} />
@@ -356,32 +390,31 @@ export const TransactionDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* GLOBAL STATUS TIMELINE - Premium Checkmark Design */}
             {!transaction.isBulk && (
-              <div className="rounded-[40px] border border-[#eadfff] bg-white p-10 sm:p-12 shadow-xl shadow-[#6236CC]/5">
-                <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#6236CC] mb-12">
-                  <div className="p-2 bg-[#6236CC]/10 rounded-lg">
+              <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
+                <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.28em] text-[#661489] mb-8">
+                  <div className="p-2 bg-[#661489]/10 rounded-lg">
                     <Clock3 size={18} />
                   </div>
-                  Chronologie du transfert
+                  Mise à jour
                 </div>
-                
-                <div className="space-y-12 relative ml-3">
+
+                <div className="space-y-8 relative ml-3">
                   <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-[#f3edff]" />
                   {steps.map((status, index) => {
                     const active = index <= stepIndex;
                     const isFailed = status === 'failed' && currentStatus === 'failed';
 
                     return (
-                      <div key={status} className="flex gap-10 relative z-10 group">
+                      <div key={status} className="flex gap-6 relative z-10 group">
                         <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-700 ${
-                            isFailed ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30' :
-                            active ? 'bg-[#6236CC] text-white shadow-xl shadow-[#6236CC]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
+                          isFailed ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30' :
+                          active ? 'bg-[#661489] text-white shadow-xl shadow-[#661489]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
                         }`}>
                           {isFailed ? <ArrowLeft size={18} strokeWidth={3} className="rotate-[135deg]" /> : <CheckCircle2 size={18} strokeWidth={3} className={active ? 'animate-in zoom-in duration-500' : ''} />}
                         </div>
                         <div className="flex-1 space-y-1">
-                          <p className={`font-black text-xl tracking-tight transition-colors duration-500 ${isFailed ? 'text-rose-600' : active ? 'text-slate-900' : 'text-slate-200'}`}>{statusLabels[status]}</p>
+                          <p className={`font-black text-[18px] tracking-tight transition-colors duration-500 ${isFailed ? 'text-rose-600' : active ? 'text-slate-900' : 'text-slate-200'}`}>{statusLabels[status]}</p>
                           <div className={`text-sm font-medium leading-relaxed transition-colors duration-500 ${isFailed ? 'text-rose-500' : active ? 'text-slate-500' : 'text-slate-100'}`}>
                             {status === 'pending' && 'La demande a été transmise à notre service.'}
                             {status === 'proof_received' && 'Nous avons bien reçu votre justificatif de paiement.'}
@@ -401,25 +434,113 @@ export const TransactionDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* GLOBAL RECEIPT section - Premium Call to Action */}
             {currentStatus === 'completed' && !transaction.isBulk && (
-              <div className="rounded-[40px] border-2 border-[#eadfff] bg-gradient-to-br from-white to-[#F3EDF7]/50 p-10 sm:p-12 shadow-2xl shadow-[#6236CC]/10 group hover:scale-[1.01] transition-all">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-10">
-                  <div className="flex items-start gap-6">
-                    <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center text-[#6236CC] shadow-xl border border-[#eadfff] group-hover:rotate-6 transition-transform">
-                      <FileText size={36} />
+              <div className="rounded-[28px] border border-[#eadfff] bg-gradient-to-br from-white to-[#F3EDF7]/50 p-6 shadow-[0_18px_50px_rgba(98,54,204,0.10)]">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-[#661489] shadow-lg border border-[#eadfff]">
+                    <FileText size={30} />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <h4 className="font-black text-slate-900 text-xl tracking-tight">Télécharger le reçu de la transaction</h4>
+                    <p className="text-sm text-slate-500 font-medium">Cliquez pour télécharger le reçu de votre transaction.</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleReceiptDownload()}
+                  className="mt-6 w-full px-6 py-4 bg-[#661489] text-white font-black rounded-full shadow-[0_14px_30px_rgba(98,54,204,0.24)] active:scale-95 transition-all flex items-center justify-center gap-4"
+                >
+                  <Download size={20} /> Télécharger le reçu
+                </button>
+              </div>
+            )}
+            </>
+            ) : (
+              <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                {/* Financial Summary */}
+                <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-sm space-y-4">
+                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
+                    <Banknote size={14} className="text-brand" /> Résumé Financier
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Montant envoyé</span>
+                      <span className="font-bold text-slate-900">{transaction.amount?.toLocaleString()} {transaction.currency}</span>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="font-black text-slate-900 text-2xl tracking-tight">Reçu de transaction</h4>
-                      <p className="text-sm text-slate-500 font-bold uppercase tracking-widest opacity-60">Votre document officiel est prêt</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-500 font-medium">Taux de change</span>
+                      <span className="font-bold text-slate-900">1 {transaction.currency} = {transaction.exchangeRate?.toFixed(2)} {transaction.destinationCurrency}</span>
+                    </div>
+                    {transaction.commission > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 font-medium">Commission</span>
+                        <span className="font-bold text-slate-900">{transaction.commission?.toLocaleString()} {transaction.currency}</span>
+                      </div>
+                    )}
+                    <div className="pt-3 border-t border-slate-50 flex justify-between items-center">
+                      <span className="text-brand font-black">Net à recevoir</span>
+                      <span className="text-2xl font-black text-brand">{Math.floor(transaction.amount * (transaction.exchangeRate || 1)).toLocaleString()} {transaction.destinationCurrency}</span>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => handleReceiptDownload()}
-                    className="w-full sm:w-auto px-12 py-5 bg-[#6236CC] text-white font-black uppercase text-xs tracking-widest rounded-full shadow-2xl shadow-[#6236CC]/40 hover:translate-y-[-4px] active:scale-95 transition-all flex items-center justify-center gap-4 group"
-                  >
-                    <Download size={22} className="group-hover:animate-bounce" /> Télécharger
-                  </button>
+                </div>
+
+                {/* Participants */}
+                <div className="grid gap-4">
+                  <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-sm space-y-4">
+                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
+                      <User size={14} className="text-brand" /> Expéditeur
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 font-bold">
+                        {transaction.clientName?.charAt(0).toUpperCase() || 'C'}
+                      </div>
+                      <div>
+                        <p className="font-black text-slate-900">{transaction.clientName || 'Client Flash Pay'}</p>
+                        <p className="text-xs text-slate-500 font-medium">Payé via {transaction.selectedOperator || 'Méthode directe'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {!transaction.isBulk && (
+                    <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-sm space-y-4">
+                      <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
+                        <Smartphone size={14} className="text-brand" /> Bénéficiaire
+                      </h3>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-brand/5 flex items-center justify-center text-brand font-bold">
+                          {transaction.recipientName?.charAt(0).toUpperCase() || 'B'}
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-900">{transaction.recipientName}</p>
+                          <p className="text-xs text-slate-500 font-medium">{transaction.recipientPhone} • {transaction.recipientOperator}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Technical Info */}
+                <div className="rounded-[28px] border border-dashed border-slate-200 p-6 space-y-4">
+                   <div className="flex justify-between items-start">
+                     <div>
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ID Transaction</p>
+                       <p className="text-xs font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">#{transaction.id.toUpperCase()}</p>
+                     </div>
+                     <button 
+                       onClick={() => {
+                         navigator.clipboard.writeText(transaction.id);
+                         toast.success('ID copié !');
+                       }}
+                       className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400"
+                     >
+                       <Copy size={16} />
+                     </button>
+                   </div>
+                   <div>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Date du transfert</p>
+                     <p className="text-xs text-slate-600 font-bold">
+                       {transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                     </p>
+                   </div>
                 </div>
               </div>
             )}

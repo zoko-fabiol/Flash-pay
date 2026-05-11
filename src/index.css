@@ -3,20 +3,20 @@
 
 @theme {
   /* Vibrant Fintech Palette */
-  --color-primary: #6236CC;
-  --color-primary-dark: #4A25A3;
-  --color-primary-light: #8B66E5;
+  --color-primary: #661489;
+  --color-primary-dark: #4D0F67;
+  --color-primary-light: #8E3DA8;
   
   --color-accent: #00D1FF; /* Cyan accent for contrast */
   --color-flash: #c084fc;
-  --color-brand: #6236CC;
+  --color-brand: #661489;
   --color-ink: #1f2937;
   
   --color-background: #F8F9FF;
   --color-surface: #FFFFFF;
   
-  --shadow-premium: 0 10px 40px -10px rgba(98, 54, 204, 0.12);
-  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --shadow-premium: 0 10px 40px -10px rgba(102, 20, 137, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(102, 20, 137, 0.07);
 
   --font-sans: "Outfit", sans-serif;
 }
@@ -60,7 +60,7 @@ body {
 
 .premium-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 50px -12px rgba(98, 54, 204, 0.18);
+  box-shadow: 0 20px 50px -12px rgba(102, 20, 137, 0.18);
 }
 
 /* Gradients */
@@ -71,9 +71,9 @@ body {
 .bg-gradient-mesh {
   background-color: #f8f9ff;
   background-image: 
-    radial-gradient(at 0% 0%, hsla(253,100%,93%,1) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(225,100%,96%,1) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, hsla(260,100%,94%,1) 0, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(281,100%,93%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(281,100%,96%,1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(281,100%,94%,1) 0, transparent 50%);
 }
 
 /* Custom Scrollbar */

@@ -28,9 +28,9 @@ export const TransferStep1Page: React.FC = () => {
       component: Zap,
     },
     {
-      type: 'russia-russia' as TransferType,
-      title: 'Russie → Russie',
-      description: 'Envoyer de l\'argent vers un autre compte en Russie',
+      type: 'africa-africa' as TransferType,
+      title: 'Afrique → Afrique',
+      description: 'Envoyer de l\'argent entre pays africains',
       component: Building2,
     },
   ];

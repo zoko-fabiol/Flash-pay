@@ -4,9 +4,13 @@ import toast from 'react-hot-toast';
 import {
   collection,
   onSnapshot,
-  query
+  query,
+  where,
+  getDocs,
+  addDoc,
+  Timestamp
 } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { db, auth } from '../../lib/firebase';
 import type { Country, RussianBank } from '../../types';
 import { adminService } from '../../services/adminService';
 import {
@@ -34,6 +38,13 @@ const CountriesListPage: React.FC = () => {
   const [tempOperators, setTempOperators] = useState<any[]>([]);
   const [bankLogo, setBankLogo] = useState('');
   const [restrictionModal, setRestrictionModal] = useState<{ open: boolean; country: any }>({ open: false, country: null });
+  const [destinationsModal, setDestinationsModal] = useState<{ open: boolean; country: Country | null }>({ open: false, country: null });
+  const [rateModal, setRateModal] = useState<{ open: boolean; from: string; to: string; onConfirm: (rate: number) => void }>({ 
+    open: false, 
+    from: '', 
+    to: '', 
+    onConfirm: () => {} 
+  });
 
   const sortedCountries = useMemo(
     () => [...countries].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
@@ -121,7 +132,7 @@ const CountriesListPage: React.FC = () => {
             className={`
               flex-1 lg:flex-none flex items-center gap-3 px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap
               ${activeTab === tab.id 
-                ? 'bg-[#6750A4] text-white shadow-lg shadow-[#6750A4]/20' 
+                ? 'bg-[#661489] text-white shadow-lg shadow-[#661489]/20' 
                 : 'text-[#49454F] hover:bg-[#EADDFF] hover:text-[#21005D]'}
             `}
           >
@@ -148,13 +159,13 @@ const CountriesListPage: React.FC = () => {
                 <div>
                   <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">{country.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[#6750A4] text-[10px] font-black uppercase tracking-widest bg-[#EADDFF] px-2 py-0.5 rounded-md">{(country as any).dialCode || '+???'}</span>
+                    <span className="text-[#661489] text-[10px] font-black uppercase tracking-widest bg-[#EADDFF] px-2 py-0.5 rounded-md">{(country as any).dialCode || '+???'}</span>
                     <span className="text-[#49454F] text-[10px] font-bold uppercase tracking-widest">• {country.currency}</span>
                   </div>
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleEdit(country)} className="p-2.5 bg-[#F3EDF7] text-[#6750A4] rounded-full hover:bg-[#EADDFF] transition-all"><Edit3 size={16} /></button>
+                <button onClick={() => handleEdit(country)} className="p-2.5 bg-[#F3EDF7] text-[#661489] rounded-full hover:bg-[#EADDFF] transition-all"><Edit3 size={16} /></button>
                 <button onClick={() => handleDelete(country.id, 'countries')} className="p-2.5 bg-[#F9DEDC] text-[#B3261E] rounded-full hover:bg-[#B3261E] hover:text-white transition-all"><Trash2 size={16} /></button>
               </div>
             </div>
@@ -165,7 +176,7 @@ const CountriesListPage: React.FC = () => {
                 <span className="text-[#1D1B20]">{country.operators.length}</span>
               </div>
               <div className="h-1.5 bg-[#F3EDF7] rounded-full overflow-hidden">
-                <div className="h-full bg-[#6750A4] rounded-full" style={{ width: `${Math.min(100, country.operators.length * 20)}%` }}></div>
+                <div className="h-full bg-[#661489] rounded-full" style={{ width: `${Math.min(100, country.operators.length * 20)}%` }}></div>
               </div>
               <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-[#49454F]">
                 <span>Comptes dépôt</span>
@@ -175,7 +186,7 @@ const CountriesListPage: React.FC = () => {
 
             <div className="pt-6 border-t border-[#E7E0EB] flex justify-between items-center">
               <div>
-                 <p className="text-[9px] font-black text-[#6750A4] uppercase tracking-widest mb-1">Status Réseau</p>
+                 <p className="text-[9px] font-black text-[#661489] uppercase tracking-widest mb-1">Status Réseau</p>
                  <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${country.enabled ? 'bg-emerald-500' : 'bg-[#CAC4D0]'}`}></div>
                     <span className={`text-[10px] font-black uppercase tracking-widest ${country.enabled ? 'text-emerald-600' : 'text-[#49454F]'}`}>
@@ -183,9 +194,14 @@ const CountriesListPage: React.FC = () => {
                     </span>
                  </div>
               </div>
-              <button onClick={() => setRestrictionModal({ open: true, country })} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-[0.2em] shadow-sm">
-                Configurer <ChevronRight size={14} />
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => setDestinationsModal({ open: true, country })} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-[0.2em] shadow-sm">
+                  Destinations <ArrowRightLeft size={14} className="ml-1" />
+                </button>
+                <button onClick={() => setRestrictionModal({ open: true, country })} className="p-2.5 bg-[#F3EDF7] text-[#661489] rounded-full hover:bg-[#EADDFF] transition-all">
+                  <Settings2 size={16} />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -221,7 +237,7 @@ const CountriesListPage: React.FC = () => {
                       <td className="px-8 py-5">
                          <div className="flex flex-wrap gap-1.5">
                            {(op as any).prefixes?.map((p: string, i: number) => (
-                             <span key={i} className="px-2 py-0.5 bg-[#F3EDF7] text-[#6750A4] rounded text-[9px] font-mono font-bold border border-[#E7E0EB]">{p}</span>
+                             <span key={i} className="px-2 py-0.5 bg-[#F3EDF7] text-[#661489] rounded text-[9px] font-mono font-bold border border-[#E7E0EB]">{p}</span>
                            )) || <span className="text-[#CAC4D0] italic text-[10px]">Tous</span>}
                          </div>
                       </td>
@@ -232,7 +248,7 @@ const CountriesListPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-8 py-5 text-right">
-                        <button onClick={() => { setActiveTab('countries'); handleEdit(op.parentCountry); }} className="p-2.5 bg-[#F3EDF7] text-[#6750A4] rounded-xl hover:bg-[#EADDFF] transition-all opacity-0 group-hover:opacity-100"><Edit3 size={16} /></button>
+                        <button onClick={() => { setActiveTab('countries'); handleEdit(op.parentCountry); }} className="p-2.5 bg-[#F3EDF7] text-[#661489] rounded-xl hover:bg-[#EADDFF] transition-all opacity-0 group-hover:opacity-100"><Edit3 size={16} /></button>
                       </td>
                     </tr>
                   ))}
@@ -247,7 +263,7 @@ const CountriesListPage: React.FC = () => {
           <div key={bank.id} className="m3-card-elevated group">
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-[#EADDFF] rounded-[20px] flex items-center justify-center text-[#21005D] border border-[#6750A4]/10 shadow-sm overflow-hidden">
+                <div className="w-14 h-14 bg-[#EADDFF] rounded-[20px] flex items-center justify-center text-[#21005D] border border-[#661489]/10 shadow-sm overflow-hidden">
                   {bank.logo ? <img src={bank.logo} alt={bank.name} className="w-full h-full object-cover" /> : <Landmark size={28} />}
                 </div>
                 <div>
@@ -258,7 +274,7 @@ const CountriesListPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => handleEdit(bank)} className="p-2.5 bg-[#F3EDF7] text-[#6750A4] rounded-full hover:bg-[#EADDFF] transition-all"><Edit3 size={16} /></button>
+                <button onClick={() => handleEdit(bank)} className="p-2.5 bg-[#F3EDF7] text-[#661489] rounded-full hover:bg-[#EADDFF] transition-all"><Edit3 size={16} /></button>
                 <button onClick={() => handleDelete(bank.id, 'banks')} className="p-2.5 bg-[#F9DEDC] text-[#B3261E] rounded-full hover:bg-[#B3261E] hover:text-white transition-all"><Trash2 size={16} /></button>
               </div>
             </div>
@@ -267,9 +283,9 @@ const CountriesListPage: React.FC = () => {
                <div className="absolute top-0 right-0 p-4 opacity-[0.05]"><Phone size={60} /></div>
                <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Identifiant / Numéro</p>
                <p className="text-[#1D1B20] font-mono font-black text-lg tracking-tight flex items-center gap-2">
-                 <Phone size={14} className="text-[#6750A4]" /> {bank.number}
+                 <Phone size={14} className="text-[#661489]" /> {bank.number}
                </p>
-               {bank.holder && <p className="text-[10px] font-bold text-[#6750A4] mt-2 uppercase tracking-wide opacity-70 truncate">{bank.holder}</p>}
+               {bank.holder && <p className="text-[10px] font-bold text-[#661489] mt-2 uppercase tracking-wide opacity-70 truncate">{bank.holder}</p>}
             </div>
 
             <div className="flex justify-between items-center">
@@ -350,26 +366,26 @@ const CountriesListPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Nom du Pays</label>
-                        <input name="name" required defaultValue={editingItem?.name} placeholder="Cameroun" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                        <input name="name" required defaultValue={editingItem?.name} placeholder="Cameroun" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Code ISO (CM, CI...)</label>
-                        <input name="code" required defaultValue={editingItem?.code} placeholder="CM" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                        <input name="code" required defaultValue={editingItem?.code} placeholder="CM" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Devise Locale</label>
-                        <input name="currency" required defaultValue={editingItem?.currency} placeholder="XAF" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                        <input name="currency" required defaultValue={editingItem?.currency} placeholder="XAF" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Indicatif (+)</label>
-                        <input name="dialCode" required defaultValue={editingItem?.dialCode} placeholder="+237" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                        <input name="dialCode" required defaultValue={editingItem?.dialCode} placeholder="+237" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                       </div>
                     </div>
 
                     <div className="space-y-6 pt-4 border-t border-[#E7E0EB]">
                       <div className="flex justify-between items-center">
                         <h4 className="text-sm font-black text-[#1D1B20] uppercase tracking-widest flex items-center gap-2">
-                          <Smartphone size={16} className="text-[#6750A4]" /> Gestion des Opérateurs
+                          <Smartphone size={16} className="text-[#661489]" /> Gestion des Opérateurs
                         </h4>
                         <button type="button" onClick={() => setTempOperators([...tempOperators, { name: '', prefixes: [], depositNumber: '', depositHolder: '', logo: '', id: Date.now().toString() }])} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-widest">
                           <Plus size={14} /> Ajouter un réseau
@@ -388,7 +404,7 @@ const CountriesListPage: React.FC = () => {
                                <input value={op.depositHolder || ''} onChange={e => { const n = [...tempOperators]; n[i].depositHolder = e.target.value; setTempOperators(n); }} placeholder="Titulaire du compte (ex: FLASH PAY)" className="col-span-full bg-white border border-[#E7E0EB] rounded-xl px-4 py-2.5 text-xs font-bold" />
                                <div className="col-span-full flex items-center gap-4 bg-white/50 p-3 rounded-2xl border border-dashed border-[#E7E0EB]">
                                   <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-[#E7E0EB]">
-                                    {op.logo ? <img src={op.logo} className="w-full h-full object-contain p-1" /> : <Upload size={14} className="text-[#6750A4]/30" />}
+                                    {op.logo ? <img src={op.logo} className="w-full h-full object-contain p-1" /> : <Upload size={14} className="text-[#661489]/30" />}
                                   </div>
                                   <input type="file" accept="image/*" onChange={async (e) => {
                                     const file = e.target.files?.[0];
@@ -412,24 +428,24 @@ const CountriesListPage: React.FC = () => {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Nom de la Banque</label>
-                      <input name="name" required defaultValue={editingItem?.name} placeholder="Sberbank" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                      <input name="name" required defaultValue={editingItem?.name} placeholder="Sberbank" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Type de Compte</label>
-                        <select name="type" defaultValue={editingItem?.type || 'phone'} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all appearance-none">
+                        <select name="type" defaultValue={editingItem?.type || 'phone'} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all appearance-none">
                           <option value="phone">Virement SBP (Téléphone)</option>
                           <option value="card">Numéro de Carte / IBAN</option>
                         </select>
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Numéro / Identifiant</label>
-                        <input name="number" required defaultValue={editingItem?.number} placeholder="+7 900..." className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-mono font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                        <input name="number" required defaultValue={editingItem?.number} placeholder="+7 900..." className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-mono font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                       </div>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Titulaire du Compte</label>
-                      <input name="holder" defaultValue={editingItem?.holder} placeholder="Nom du détenteur" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#6750A4]/10 transition-all" />
+                      <input name="holder" defaultValue={editingItem?.holder} placeholder="Nom du détenteur" className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Logo Banque</label>
@@ -473,12 +489,12 @@ const CountriesListPage: React.FC = () => {
                  <ArrowRightLeft size={40} />
               </div>
               <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-2">Flux de Transfert</h3>
-              <p className="text-[#49454F] text-sm font-medium">Définissez les restrictions pour <span className="text-[#6750A4] font-black">{restrictionModal.country?.name}</span></p>
+              <p className="text-[#49454F] text-sm font-medium">Définissez les restrictions pour <span className="text-[#661489] font-black">{restrictionModal.country?.name}</span></p>
             </div>
 
             <div className="space-y-3">
                {[
-                 { id: 'full', label: 'Service Complet', desc: 'Double sens (RU ↔ AF)', icon: Zap, color: '#6750A4' },
+                 { id: 'full', label: 'Service Complet', desc: 'Double sens (RU ↔ AF)', icon: Zap, color: '#661489' },
                  { id: 'ru-af', label: 'RU ➔ AF Unique', desc: 'Réception uniquement', icon: Globe, color: '#10B981' },
                  { id: 'af-ru', label: 'AF ➔ RU Unique', desc: 'Envoi uniquement', icon: Settings2, color: '#F59E0B' },
                  { id: 'off', label: 'Désactiver le Pays', desc: 'Maintenance / Bloqué', icon: Trash2, color: '#EF4444' }
@@ -499,7 +515,7 @@ const CountriesListPage: React.FC = () => {
                       } catch (err) { toast.error('Erreur'); }
                       setRestrictionModal({ open: false, country: null });
                    }}
-                   className="w-full flex items-center gap-4 p-5 rounded-[28px] bg-[#F3EDF7] border border-transparent hover:border-[#6750A4]/20 hover:bg-white transition-all text-left shadow-sm group"
+                   className="w-full flex items-center gap-4 p-5 rounded-[28px] bg-[#F3EDF7] border border-transparent hover:border-[#661489]/20 hover:bg-white transition-all text-left shadow-sm group"
                  >
                     <div className="w-12 h-12 rounded-[16px] bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                        <opt.icon size={24} style={{ color: opt.color }} />
@@ -515,6 +531,179 @@ const CountriesListPage: React.FC = () => {
             <button onClick={() => setRestrictionModal({ open: false, country: null })} className="w-full mt-8 py-4 text-[#49454F] font-black uppercase text-[10px] tracking-[0.2em] hover:text-[#B3261E] transition-colors">
               Fermer sans changer
             </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL: DESTINATIONS CONFIG */}
+      {destinationsModal.open && destinationsModal.country && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => setDestinationsModal({ open: false, country: null })} />
+          <div className="relative bg-white w-full max-w-xl rounded-[40px] shadow-2xl overflow-hidden p-8 border border-[#E7E0EB] flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-8 shrink-0">
+              <div className="w-20 h-20 bg-[#EADDFF] text-[#21005D] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-lg">
+                 <Globe size={40} />
+              </div>
+              <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-2">Destinations Afrique-Afrique</h3>
+              <p className="text-[#49454F] text-sm font-medium">Sélectionnez les pays vers lesquels <span className="text-[#661489] font-black">{destinationsModal.country.name}</span> peut envoyer de l'argent.</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-8 scrollbar-hide">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {sortedCountries.filter(c => c.id !== destinationsModal.country?.id).map((c) => {
+                  const isSelected = destinationsModal.country?.allowedDestinations?.includes(c.code) || false;
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={async () => {
+                        const currentCountry = destinationsModal.country!;
+                        const currentDestinations = currentCountry.allowedDestinations || [];
+                        const isAdding = !isSelected;
+                        
+                        const handleSave = async (rate?: number) => {
+                          let newDestinations;
+                          if (isSelected) {
+                            newDestinations = currentDestinations.filter(code => code !== c.code);
+                          } else {
+                            newDestinations = [...currentDestinations, c.code];
+                          }
+                          
+                          try {
+                            await adminService.saveCountry(currentCountry.id, { 
+                              ...currentCountry, 
+                              allowedDestinations: newDestinations 
+                            });
+
+                            if (rate && isAdding) {
+                              // Find if rate exists or just add new
+                              const q = query(
+                                collection(db, 'exchange_rates'),
+                                where('from', '==', currentCountry.currency),
+                                where('to', '==', c.currency)
+                              );
+                              const snap = await getDocs(q);
+                              if (!snap.empty) {
+                                await adminService.updateExchangeRate(snap.docs[0].id, rate, 0);
+                              } else {
+                                await addDoc(collection(db, 'exchange_rates'), {
+                                  from: currentCountry.currency,
+                                  to: c.currency,
+                                  rate: rate,
+                                  margin: 0,
+                                  updatedAt: Timestamp.now(),
+                                  updatedBy: auth.currentUser?.uid,
+                                  source: 'manual'
+                                });
+                              }
+                            }
+
+                            setDestinationsModal({ 
+                              open: true, 
+                              country: { ...currentCountry, allowedDestinations: newDestinations } 
+                            });
+                            toast.success(isSelected ? 'Destination retirée' : 'Destination ajoutée');
+                          } catch (err) {
+                            toast.error('Erreur lors de la mise à jour');
+                          }
+                        };
+
+                        if (isAdding && currentCountry.currency !== c.currency) {
+                          setRateModal({
+                            open: true,
+                            from: currentCountry.currency,
+                            to: c.currency,
+                            onConfirm: (rate) => {
+                              handleSave(rate);
+                              setRateModal(prev => ({ ...prev, open: false }));
+                            }
+                          });
+                        } else {
+                          handleSave();
+                        }
+                      }}
+                      className={`flex items-center gap-4 p-4 rounded-[24px] border-2 transition-all text-left shadow-sm group ${isSelected ? 'border-[#661489] bg-[#661489]/5' : 'border-[#F3EDF7] bg-white hover:border-[#661489]/20'}`}
+                    >
+                      <div className="w-10 h-10 rounded-full overflow-hidden border border-[#E7E0EB] shrink-0">
+                        <img 
+                          src={`https://flagcdn.com/${c.code.toLowerCase()}.svg`} 
+                          alt={c.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-xs font-black uppercase tracking-widest ${isSelected ? 'text-[#661489]' : 'text-[#1D1B20]'}`}>{c.name}</p>
+                      </div>
+                      {isSelected && <div className="w-6 h-6 bg-[#661489] rounded-full flex items-center justify-center text-white shrink-0"><Plus size={14} className="rotate-45" /></div>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <button onClick={() => setDestinationsModal({ open: false, country: null })} className="w-full py-5 m3-btn-filled rounded-full text-[10px] uppercase tracking-[0.2em] shadow-lg shrink-0">
+              Terminer la configuration
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL: EXCHANGE RATE POPUP */}
+      {rateModal.open && ReactDOM.createPortal(
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => setRateModal(prev => ({ ...prev, open: false }))} />
+          <div className="relative bg-white w-full max-w-sm rounded-[40px] shadow-2xl overflow-hidden p-8 border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-[#EADDFF] text-[#21005D] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg rotate-3">
+                 <ArrowRightLeft size={32} />
+              </div>
+              <h3 className="text-xl font-black text-[#1D1B20] tracking-tight mb-2">Taux de Change</h3>
+              <p className="text-[#49454F] text-xs font-medium uppercase tracking-widest opacity-60">Configuration de la conversion</p>
+            </div>
+
+            <div className="bg-[#F3EDF7] p-6 rounded-[28px] border border-[#E7E0EB] mb-8">
+               <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-black text-[#661489] uppercase tracking-widest">Paire</span>
+                  <span className="text-xs font-black text-[#1D1B20]">{rateModal.from} ➔ {rateModal.to}</span>
+               </div>
+               <div className="space-y-2">
+                  <label className="text-[9px] font-black text-[#49454F] uppercase tracking-widest ml-1">Valeur de 1 {rateModal.from}</label>
+                  <div className="relative">
+                    <input 
+                      type="number" 
+                      step="0.0001"
+                      autoFocus
+                      placeholder="0.0000"
+                      id="rateInput"
+                      className="w-full bg-white border-2 border-[#E7E0EB] rounded-2xl px-5 py-4 text-lg font-mono font-black text-[#1D1B20] focus:border-[#661489] outline-none transition-all"
+                    />
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#661489] uppercase tracking-widest">{rateModal.to}</span>
+                  </div>
+               </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setRateModal(prev => ({ ...prev, open: false }))}
+                className="flex-1 py-4 bg-[#F3EDF7] text-[#49454F] font-black uppercase text-[10px] tracking-widest rounded-full hover:bg-[#E7E0EB] transition-all"
+              >
+                Annuler
+              </button>
+              <button 
+                onClick={() => {
+                  const val = (document.getElementById('rateInput') as HTMLInputElement).value;
+                  if (!val || parseFloat(val) <= 0) {
+                    toast.error('Veuillez entrer un taux valide');
+                    return;
+                  }
+                  rateModal.onConfirm(parseFloat(val));
+                }}
+                className="flex-1 bg-[#661489] text-white py-4 font-black uppercase text-[10px] tracking-widest rounded-full shadow-lg shadow-[#661489]/20 hover:bg-[#5D4696] transition-all"
+              >
+                Confirmer
+              </button>
+            </div>
           </div>
         </div>,
         document.body

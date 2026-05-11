@@ -36,11 +36,11 @@ const RateCard = ({ rate, onEdit }: { rate: ExchangeRate; onEdit: (rate: Exchang
   const getStyle = (currency: string) => {
     if (currency === 'USD') return 'bg-[#E8DEF8] text-[#1D192B]';
     if (currency === 'EUR') return 'bg-[#EADDFF] text-[#21005D]';
-    return 'bg-[#F3EDF7] text-[#6750A4]';
+    return 'bg-[#F3EDF7] text-[#661489]';
   };
 
   return (
-    <div className="m3-card-elevated group hover:border-[#6750A4]/30 transition-all">
+    <div className="m3-card-elevated group hover:border-[#661489]/30 transition-all">
       <div className="flex justify-between items-start mb-8">
         <div className="flex items-center gap-4">
           <div className="flex items-center -space-x-4">
@@ -58,7 +58,7 @@ const RateCard = ({ rate, onEdit }: { rate: ExchangeRate; onEdit: (rate: Exchang
         </div>
         <button 
           onClick={() => onEdit(rate)}
-          className="p-3 bg-[#F3EDF7] text-[#6750A4] hover:bg-[#6750A4] hover:text-white rounded-xl transition-all shadow-sm group-hover:scale-110"
+          className="p-3 bg-[#F3EDF7] text-[#661489] hover:bg-[#661489] hover:text-white rounded-xl transition-all shadow-sm group-hover:scale-110"
         >
           <Edit3 size={18} />
         </button>
@@ -69,9 +69,9 @@ const RateCard = ({ rate, onEdit }: { rate: ExchangeRate; onEdit: (rate: Exchang
           <span className="text-[#49454F] text-[10px] font-black uppercase tracking-widest opacity-60">Taux Actuel</span>
           <span className="text-[#1D1B20] font-mono font-black text-xl">{rate.rate.toFixed(4)}</span>
         </div>
-        <div className="flex justify-between items-center px-5 py-3 bg-[#EADDFF]/50 rounded-full border border-[#6750A4]/10">
+        <div className="flex justify-between items-center px-5 py-3 bg-[#EADDFF]/50 rounded-full border border-[#661489]/10">
           <span className="text-[#21005D] text-[9px] font-black uppercase tracking-[0.2em]">Marge Opérationnelle</span>
-          <span className="text-[#6750A4] font-black text-sm">{(rate.margin * 100).toFixed(1)}%</span>
+          <span className="text-[#661489] font-black text-sm">{(rate.margin * 100).toFixed(1)}%</span>
         </div>
       </div>
     </div>
@@ -235,7 +235,7 @@ const ExchangeRatesPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#6750A4] text-white rounded-[16px] flex items-center justify-center shadow-lg"><ArrowRightLeft size={24} /></div>
+            <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg"><ArrowRightLeft size={24} /></div>
             Devises & Systèmes
           </h2>
           <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Configuration des marchés et limites opérationnelles</p>
@@ -255,7 +255,7 @@ const ExchangeRatesPage: React.FC = () => {
            <div className="col-span-full m3-card-elevated !p-0 overflow-hidden mt-4">
              <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center">
                 <h3 className="text-xl font-black text-[#1D1B20] tracking-tight flex items-center gap-3">
-                  <Coins className="text-[#6750A4]" size={20} /> Paires Additionnelles
+                  <Coins className="text-[#661489]" size={20} /> Paires Additionnelles
                 </h3>
                 <button onClick={() => setIsAddModalOpen(true)} disabled={!canAdd} className="m3-btn-tonal !py-2 !px-5 text-[9px] uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"><Plus size={14} /> Ajouter</button>
              </div>
@@ -276,10 +276,10 @@ const ExchangeRatesPage: React.FC = () => {
                       customRates.map(crate => (
                         <tr key={crate.id} className="hover:bg-[#F3EDF7]/20 transition-all group">
                           <td className="px-8 py-5 text-sm font-black text-[#1D1B20]">{crate.from} ➔ {crate.to}</td>
-                          <td className="px-8 py-5 text-sm font-mono font-black text-[#6750A4]">{crate.rate.toFixed(2)}</td>
+                          <td className="px-8 py-5 text-sm font-mono font-black text-[#661489]">{crate.rate.toFixed(2)}</td>
                           <td className="px-8 py-5 text-[10px] font-bold text-[#49454F] opacity-50 uppercase">{crate.updatedAt?.toDate().toLocaleDateString('fr-FR')}</td>
                           <td className="px-8 py-5 text-right flex justify-end gap-3">
-                             <button onClick={() => handleEditCustomRate(crate)} disabled={!canEdit} className="p-2 text-[#6750A4] hover:bg-[#F3EDF7] hover:text-[#6750A4] transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"><Edit3 size={16} /></button>
+                             <button onClick={() => handleEditCustomRate(crate)} disabled={!canEdit} className="p-2 text-[#661489] hover:bg-[#F3EDF7] hover:text-[#661489] transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"><Edit3 size={16} /></button>
                              <button onClick={() => adminService.deleteCustomRate(crate.id)} disabled={!canDelete} className="p-2 text-[#49454F]/20 hover:text-[#B3261E] hover:bg-[#FFEBEE] transition-all disabled:opacity-30 disabled:cursor-not-allowed rounded-lg"><Trash2 size={16} /></button>
                           </td>
                         </tr>
@@ -292,7 +292,7 @@ const ExchangeRatesPage: React.FC = () => {
         </div>
 
         {/* System Settings Sidebar */}
-        <div className="m3-card-elevated !bg-[#6750A4] text-white shadow-2xl">
+        <div className="m3-card-elevated !bg-[#661489] text-white shadow-2xl">
            <div className="flex items-center gap-4 mb-8">
               <div className="p-3 bg-white/20 rounded-2xl"><Shield size={24} /></div>
               <div>
@@ -330,7 +330,7 @@ const ExchangeRatesPage: React.FC = () => {
                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-300">Emails d'Alerte (Admin)</h4>
                  <div className="flex gap-3">
                     <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="admin@flashpay.ru" disabled={!canEdit} className="flex-1 bg-white/10 border border-white/20 rounded-full px-5 py-3 text-xs outline-none disabled:opacity-60" />
-                    <button onClick={addEmail} disabled={!canAdd} className="p-3 bg-white text-[#6750A4] rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"><Plus size={18} /></button>
+                    <button onClick={addEmail} disabled={!canAdd} className="p-3 bg-white text-[#661489] rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-40 disabled:cursor-not-allowed"><Plus size={18} /></button>
                  </div>
                  <div className="flex flex-wrap gap-2">
                     {editingEmails.map(email => (
@@ -342,7 +342,7 @@ const ExchangeRatesPage: React.FC = () => {
                  </div>
               </div>
 
-              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full py-5 bg-white text-[#6750A4] rounded-[28px] font-black uppercase text-[11px] tracking-widest shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
+              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full py-5 bg-white text-[#661489] rounded-[28px] font-black uppercase text-[11px] tracking-widest shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
                  {isSavingSettings ? 'Mise à jour...' : 'Synchroniser la configuration'}
               </button>
            </div>
@@ -367,7 +367,7 @@ const ExchangeRatesPage: React.FC = () => {
                     <div>
                        <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] ml-1 mb-2 block">Valeur du Taux</label>
                        <div className="relative">
-                          <TrendingUp className="absolute left-5 top-1/2 -translate-y-1/2 text-[#6750A4]" size={20} />
+                          <TrendingUp className="absolute left-5 top-1/2 -translate-y-1/2 text-[#661489]" size={20} />
                           <input type="number" step="0.0001" value={newRateValue} onChange={e => setNewRateValue(parseFloat(e.target.value))} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-xl font-black text-[#1D1B20] outline-none" />
                        </div>
                     </div>
@@ -375,7 +375,7 @@ const ExchangeRatesPage: React.FC = () => {
                        <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] ml-1 mb-2 block">Marge Opérationnelle (%)</label>
                        <div className="relative">
                           <input type="number" step="0.1" value={newMarginValue} onChange={e => setNewMarginValue(parseFloat(e.target.value))} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 px-6 text-xl font-black text-[#1D1B20] outline-none" />
-                          <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[#6750A4] font-black">%</span>
+                          <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[#661489] font-black">%</span>
                        </div>
                        <p className="text-[10px] text-[#49454F] font-bold opacity-40 mt-3 italic">* Cette marge s'ajoute au taux de base pour le calcul final.</p>
                     </div>
@@ -385,7 +385,7 @@ const ExchangeRatesPage: React.FC = () => {
                     <div>
                        <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] ml-1 mb-2 block">Taux Fixe</label>
                        <div className="relative">
-                          <TrendingUp className="absolute left-5 top-1/2 -translate-y-1/2 text-[#6750A4]" size={20} />
+                          <TrendingUp className="absolute left-5 top-1/2 -translate-y-1/2 text-[#661489]" size={20} />
                           <input type="number" step="0.01" value={newRateValue} onChange={e => setNewRateValue(parseFloat(e.target.value))} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-xl font-black text-[#1D1B20] outline-none" />
                        </div>
                     </div>

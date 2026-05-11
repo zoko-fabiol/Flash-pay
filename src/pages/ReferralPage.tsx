@@ -95,7 +95,7 @@ export const ReferralPage: React.FC = () => {
   };
 
   const stats = [
-    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#6236CC]',   bg: 'bg-[#f7f3ff]' },
+    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#661489]',   bg: 'bg-[#f7f3ff]' },
     { icon: Gift,      label: t('total_bonus'),       value: formatNumber(totalBonus, 'RUB'), color: 'text-emerald-700', bg: 'bg-emerald-50' },
     { icon: Clock,     label: t('pending_validated'), value: `${pendingCount} / ${rewardedCount}`, color: 'text-amber-700', bg: 'bg-amber-50' },
     { icon: TrendingUp,label: t('signup_commission'), value: formatNumber(referralBonusRUB, 'RUB'), color: 'text-blue-700', bg: 'bg-blue-50' },

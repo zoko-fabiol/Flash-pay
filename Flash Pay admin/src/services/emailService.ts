@@ -41,10 +41,10 @@ export const emailService = {
     return `
       <div style="font-family: sans-serif; background-color: #f7f3ff; padding: 40px; text-align: center;">
         <div style="background-color: #ffffff; border-radius: 24px; padding: 40px; max-width: 450px; margin: 0 auto; border: 1px solid #eadfff;">
-          <h1 style="color: #6236CC; margin-bottom: 8px;">FLASH PAY</h1>
+          <h1 style="color: #661489; margin-bottom: 8px;">FLASH PAY</h1>
           <h2 style="color: #1e293b;">Code de vérification</h2>
           <p style="color: #64748b; font-size: 15px;">Voici votre code de validation pour finaliser votre inscription :</p>
-          <div style="background-color: #f7f3ff; color: #6236CC; font-size: 32px; font-weight: 900; padding: 20px; border-radius: 16px; margin: 30px 0; letter-spacing: 5px; border: 2px dashed #6236CC;">
+          <div style="background-color: #f7f3ff; color: #661489; font-size: 32px; font-weight: 900; padding: 20px; border-radius: 16px; margin: 30px 0; letter-spacing: 5px; border: 2px dashed #661489;">
             ${code}
           </div>
           <p style="color: #94a3b8; font-size: 12px;">Ce code expirera bientôt. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
@@ -59,8 +59,8 @@ export const emailService = {
   getAdminTransferTemplate(txData: any) {
     return `
       <div style="font-family: sans-serif; background-color: #f8fafc; padding: 30px;">
-        <div style="background-color: #ffffff; border-radius: 20px; padding: 30px; border-left: 6px solid #6236CC;">
-          <div style="font-size: 12px; font-weight: bold; color: #6236CC; text-transform: uppercase; margin-bottom: 15px;">Nouveau Transfert à traiter</div>
+        <div style="background-color: #ffffff; border-radius: 20px; padding: 30px; border-left: 6px solid #661489;">
+          <div style="font-size: 12px; font-weight: bold; color: #661489; text-transform: uppercase; margin-bottom: 15px;">Nouveau Transfert à traiter</div>
           <div style="font-size: 28px; font-weight: 900; color: #0f172a; margin-bottom: 20px;">${txData.amount} ${txData.currency}</div>
           <div style="background-color: #f1f5f9; padding: 20px; border-radius: 12px; font-size: 14px;">
             <div style="margin-bottom: 8px;"><strong>Client :</strong> ${txData.clientName}</div>
@@ -68,7 +68,7 @@ export const emailService = {
             <div style="margin-bottom: 8px;"><strong>Pays :</strong> ${txData.country}</div>
             <div style="margin-bottom: 8px;"><strong>ID Transaction :</strong> ${txData.txId}</div>
           </div>
-          <p style="margin-top: 20px;"><a href="https://flashpay-admin.web.app" style="background-color: #6236CC; color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">Accéder au Panel Admin</a></p>
+          <p style="margin-top: 20px;"><a href="https://flashpay-admin.web.app" style="background-color: #661489; color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">Accéder au Panel Admin</a></p>
         </div>
       </div>
     `;
@@ -106,7 +106,7 @@ export const emailService = {
           
           <div style="text-align: center;">
             <p style="color: #64748b; font-size: 14px; margin-bottom: 25px;">Merci d'avoir choisi Flash Pay pour vos transferts.</p>
-            <a href="https://flash-pay-937d7.web.app" style="background-color: #6236CC; color: white; padding: 14px 28px; border-radius: 14px; text-decoration: none; font-weight: bold; display: inline-block;">Voir mes transactions</a>
+            <a href="https://flash-pay-937d7.web.app" style="background-color: #661489; color: white; padding: 14px 28px; border-radius: 14px; text-decoration: none; font-weight: bold; display: inline-block;">Voir mes transactions</a>
           </div>
         </div>
       </div>
@@ -122,8 +122,8 @@ export const emailService = {
       <div style="font-family: sans-serif; background-color: #f7f3ff; padding: 40px;">
         <div style="background-color: #ffffff; border-radius: 24px; padding: 40px; max-width: 500px; margin: 0 auto; border: 1px solid #eadfff;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #6236CC; margin: 0; font-size: 28px;">FLASH PAY</h1>
-            <div style="height: 2px; width: 40px; background-color: #6236CC; margin: 15px auto;"></div>
+            <h1 style="color: #661489; margin: 0; font-size: 28px;">FLASH PAY</h1>
+            <div style="height: 2px; width: 40px; background-color: #661489; margin: 15px auto;"></div>
           </div>
           
           <div style="color: #1e293b; font-size: 16px; line-height: 1.6;">
