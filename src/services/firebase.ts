@@ -284,6 +284,53 @@ export const userService = {
     });
   },
 
+  async deductPoints(userId: string, points: number, reason: string) {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      solde_points: increment(-points),
+      updatedAt: serverTimestamp()
+    });
+    
+    // Log points transaction
+    await addDoc(collection(db, 'points_history'), {
+      userId,
+      amount: -points,
+      type: 'deduction',
+      reason,
+      timestamp: serverTimestamp()
+    });
+  },
+
+  async addPoints(userId: string, points: number, reason: string) {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      solde_points: increment(points),
+      updatedAt: serverTimestamp()
+    });
+    
+    await addDoc(collection(db, 'points_history'), {
+      userId,
+      amount: points,
+      type: 'earning',
+      reason,
+      timestamp: serverTimestamp()
+    });
+  },
+
+  /**
+   * Helper to calculate points based on RUB amount
+   * 1 RUB = 1 Point
+   */
+  calculatePointsFromAmount(amount: number, currency: string, rates: any[]): number {
+    let amountInRUB = amount;
+    if (currency !== 'RUB') {
+      const rateObj = rates.find(r => r.from === currency && r.to === 'RUB');
+      const rate = rateObj?.rate || (currency === 'XAF' ? 0.1385 : 1);
+      amountInRUB = amount * rate;
+    }
+    return Math.floor(amountInRUB);
+  },
+
   async validateKYCSubmission(payload: {
     formData: {
       firstName: string;

@@ -532,24 +532,19 @@ export const TransferWizardPage: React.FC = () => {
         paidByCash: calculation.totalToPay, // Default to full amount
       });
 
-      // 4.0 Notify Admin of new transaction
-      try {
-        const isLarge = finalAmount >= 100000;
-        await addDoc(collection(db, 'admin_notifications'), {
-          title: isLarge ? '⚠️ GROS TRANSFERT' : 'Nouveau transfert',
-          body: `${isLarge ? 'ALERTE : ' : ''}Un nouveau transfert de ${finalAmount} ${inputCurrency} a été initié par ${user?.nom || 'un client'}.`,
-          type: 'transaction',
-          priority: isLarge ? 'high' : 'normal',
-          read: false,
-          createdAt: Timestamp.now(),
-          link: `/admin/queue/${txDocRef.id}`
-        });
-      } catch (err) {
-        console.error('Failed to notify admin of transaction:', err);
-      }
+      // 4.0 Notify Admin of new transaction (Background)
+      addDoc(collection(db, 'admin_notifications'), {
+        title: finalAmount >= 100000 ? '⚠️ GROS TRANSFERT' : 'Nouveau transfert',
+        body: `${finalAmount >= 100000 ? 'ALERTE : ' : ''}Un nouveau transfert de ${finalAmount} ${inputCurrency} a été initié par ${user?.nom || 'un client'}.`,
+        type: 'transaction',
+        priority: finalAmount >= 100000 ? 'high' : 'normal',
+        read: false,
+        createdAt: Timestamp.now(),
+        link: `/admin/queue/${txDocRef.id}`
+      }).catch(err => console.error('Failed to notify admin:', err));
 
-      // 4.1 Trigger user notification
-      await notificationService.sendNotification({
+      // 4.1 Trigger user notification (Background)
+      notificationService.sendNotification({
         userId: auth.currentUser?.uid || '',
         title: t('transfer_initiated_title'),
         body: t('transfer_initiated_body', { 
@@ -565,44 +560,70 @@ export const TransferWizardPage: React.FC = () => {
           amount: finalAmount,
           currency: inputCurrency
         }
-      });
+      }).catch(err => console.error('User notification failed:', err));
 
       toast.success(t('transfer_validated'), { id: t_toast });
 
-      // 4.5 Deduct bonus if applicable (Hybrid support)
+      // 4.5 Deduct Bonus (RUB) and Points (Hybrid support)
       if (payWithBonus) {
-        let bonusCostInRUB = calculation.totalToPay;
+        let rubNeeded = calculation.totalToPay;
         if (inputCurrency === 'XAF') {
           const rateObj = rates.find(r => r.from === 'XAF' && r.to === 'RUB');
           const rate = rateObj?.rate || 0.1385;
-          bonusCostInRUB = calculation.totalToPay * rate;
+          rubNeeded = calculation.totalToPay * rate;
         }
         
-        // Only deduct what the user actually has
-        const actualDeductionInRUB = Math.min(user?.solde_bonus || 0, bonusCostInRUB);
+        // 1. Use Referral Bonus (RUB) first
+        const availableRUB = user?.solde_bonus || 0;
+        const rubUsed = Math.min(availableRUB, rubNeeded);
+        let rubRemaining = rubNeeded - rubUsed;
+        
+        // 2. Use Points if RUB not enough
+        let pointsUsed = 0;
+        let pointsDeductionInRUB = 0;
+        if (rubRemaining > 0) {
+           const availablePoints = user?.solde_points || 0;
+           const pointsNeeded = Math.ceil(rubRemaining * 1000);
+           pointsUsed = Math.min(availablePoints, pointsNeeded);
+           pointsDeductionInRUB = pointsUsed / 1000;
+           rubRemaining -= pointsDeductionInRUB;
+        }
+
+        const totalDeductionInRUB = rubUsed + pointsDeductionInRUB;
         
         // Calculate equivalent cash paid
         let cashPaidInInputCurrency = 0;
-        if (actualDeductionInRUB < bonusCostInRUB) {
+        if (rubRemaining > 0) {
            const rubToXafRate = 1 / (rates.find(r => r.from === 'XAF' && r.to === 'RUB')?.rate || 0.1385);
            const coverageInInputCurrency = inputCurrency === 'XAF' 
-              ? (actualDeductionInRUB * rubToXafRate)
-              : actualDeductionInRUB;
+              ? (totalDeductionInRUB * rubToXafRate)
+              : totalDeductionInRUB;
            cashPaidInInputCurrency = Math.max(0, calculation.totalToPay - coverageInInputCurrency);
         }
 
         await updateDoc(doc(db, 'transactions', txDocRef.id), {
-          bonusUsed: actualDeductionInRUB,
+          bonusUsed: rubUsed,
+          pointsUsed: pointsUsed,
+          totalDiscountRUB: totalDeductionInRUB,
           paidByCash: cashPaidInInputCurrency,
-          isHybrid: actualDeductionInRUB > 0 && cashPaidInInputCurrency > 0
+          isHybrid: (rubUsed > 0 || pointsUsed > 0) && cashPaidInInputCurrency > 0
         });
         
-        await userService.deductBonus(user?.id || auth.currentUser?.uid || '', actualDeductionInRUB, t('transfer_to_recipient', { 
-          recipient: (transferData.recipientName || t('recipient')) + (actualDeductionInRUB < bonusCostInRUB ? ' ' + t('partial') : '') 
-        }));
+        const deductionPromises = [];
+        if (rubUsed > 0) {
+          deductionPromises.push(userService.deductBonus(user?.id || auth.currentUser?.uid || '', rubUsed, t('transfer_to_recipient', { 
+            recipient: (transferData.recipientName || t('recipient'))
+          })));
+        }
+        if (pointsUsed > 0) {
+          deductionPromises.push(userService.deductPoints(user?.id || auth.currentUser?.uid || '', pointsUsed, t('transfer_to_recipient', { 
+            recipient: (transferData.recipientName || t('recipient'))
+          })));
+        }
+        await Promise.all(deductionPromises);
       }
 
-      // 5. Notify Admins via Google Apps Script
+      // 5. Notify Admins via Google Apps Script (Background)
       if (settings.notificationEmails && settings.notificationEmails.length > 0) {
         try {
           const emailBody = emailService.getAdminTransferTemplate({
@@ -614,12 +635,11 @@ export const TransferWizardPage: React.FC = () => {
             country: transferData.destinationCountry || 'N/A',
           });
 
-          // Send to each admin configured
-          await Promise.all(settings.notificationEmails.map(email => 
-            emailService.sendEmail(email, 'Nouveau Transfert Flash Pay', emailBody)
-          ));
+          settings.notificationEmails.forEach(email => {
+            emailService.sendEmail(email, 'Nouveau Transfert Flash Pay', emailBody).catch(console.error);
+          });
         } catch (mailErr) {
-          console.error('Failed to notify admins:', mailErr);
+          console.error('Failed to prepare admin email:', mailErr);
         }
       }
 

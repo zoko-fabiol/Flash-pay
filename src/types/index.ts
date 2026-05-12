@@ -26,6 +26,7 @@ export interface User {
   statut_kyc: 'Standard' | 'Pending' | 'Expert' | 'Rejected';
   kyc?: KYCState;
   solde_bonus: number;
+  solde_points?: number;
   referralCode?: string;
   referredUsers?: string[];
   referredBy?: string | null;

@@ -110,6 +110,49 @@ export const adminService = {
               }
             }
 
+            // --- AWARD LOYALTY POINTS ---
+            try {
+              let amountInRUB = txData.amount;
+              if (txData.currency && txData.currency !== 'RUB') {
+                const ratesSnap = await getDocs(collection(db, 'exchange_rates'));
+                const rates = ratesSnap.docs.map(d => d.data());
+                const rateObj = rates.find(r => r.from === txData.currency && r.to === 'RUB');
+                const rate = rateObj?.rate || (txData.currency === 'XAF' ? 0.1385 : 1);
+                amountInRUB = txData.amount * rate;
+              }
+              
+              const pointsToEarn = Math.floor(amountInRUB);
+              if (pointsToEarn > 0) {
+                await updateDoc(userRef, {
+                  solde_points: increment(pointsToEarn),
+                  updatedAt: Timestamp.now()
+                });
+
+                // Log points history
+                await addDoc(collection(db, 'points_history'), {
+                  userId,
+                  amount: pointsToEarn,
+                  type: 'earning',
+                  reason: `Points de fidélité gagnés pour la transaction #${transactionId.slice(-6)}`,
+                  timestamp: Timestamp.now()
+                });
+
+                // Notify user
+                await addDoc(collection(db, 'notifications', userId, 'items'), {
+                  title: 'Points de fidélité reçus !',
+                  body: `Vous avez reçu ${pointsToEarn} points pour votre transaction.`,
+                  type: 'points_earned',
+                  priority: 'normal',
+                  read: false,
+                  createdAt: Timestamp.now(),
+                  updatedAt: Timestamp.now()
+                });
+              }
+            } catch (ptsErr) {
+              console.error('Failed to award loyalty points:', ptsErr);
+            }
+            // ---------------------------
+
             const referrerId = userData.referredBy;
             
             if (referrerId && !userData.referralBonusOnTransferPaid) {
@@ -130,10 +173,10 @@ export const adminService = {
                   bonusAmount = settingsSnapshot.docs[0].data().referralBonusRUB || 500;
                 }
 
-                // Award bonus to referrer
+                // Award RUB bonus to referrer
                 const referrerRef = doc(db, 'users', referrerId);
                 await updateDoc(referrerRef, {
-                  solde_bonus: increment(bonusAmount),
+                  solde_bonus: increment(bonusAmount), // Referral bonus in RUB
                   'referralStats.rewarded': increment(1),
                   referralRewards: arrayUnion({
                     referredUserId: userId,
@@ -309,46 +352,9 @@ export const adminService = {
       updatedAt: Timestamp.now(),
     });
 
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    const userData = userDoc.data() as any;
-    const referrerId = userData?.referredBy;
-
-    if (referrerId && userData?.referralStatus !== 'rewarded') {
-      const referralQuery = query(
-        collection(db, 'referrals'),
-        where('referredUserId', '==', userId),
-        where('referrerId', '==', referrerId)
-      );
-      const referralSnapshot = await getDocs(referralQuery);
-
-      if (!referralSnapshot.empty) {
-        const referralDoc = referralSnapshot.docs[0];
-        await updateDoc(doc(db, 'referrals', referralDoc.id), {
-          status: 'rewarded',
-          rewardedAt: Timestamp.now(),
-          rewardReason: 'kyc_approved',
-        });
-
-        await updateDoc(doc(db, 'users', referrerId), {
-          solde_bonus: increment(500),
-          'referralStats.rewarded': increment(1),
-          'referralStats.pending': increment(-1),
-          referralRewards: arrayUnion({
-            referredUserId: userId,
-            amount: 500,
-            type: 'kyc_approved',
-            awardedAt: Timestamp.now(),
-          }),
-          updatedAt: Timestamp.now(),
-        });
-
-        await updateDoc(doc(db, 'users', userId), {
-          referralStatus: 'rewarded',
-          referralRewardedAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        });
-      }
-    }
+    // --- REMOVED REFERRAL REWARD ON KYC ---
+    // User requested to reward ONLY on first transaction.
+    // --------------------------------------
 
     await addDoc(collection(db, 'admin_logs'), {
       adminId: auth.currentUser?.uid,

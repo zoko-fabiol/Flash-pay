@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { userService, authService, db } from '../services/firebase';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
-import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star, User } from 'lucide-react';
+import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star, User, Zap, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
@@ -15,7 +15,7 @@ import { Capacitor } from '@capacitor/core';
 
 export const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
-  const { t, formatDate } = useLanguage();
+  const { t, formatDate, formatNumber } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
@@ -28,6 +28,17 @@ export const ProfilePage: React.FC = () => {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(localStorage.getItem('biometric_enabled') === 'true');
   const [showBiometricConfirm, setShowBiometricConfirm] = useState(false);
+  const [referralReward, setReferralReward] = useState(500);
+
+  useEffect(() => {
+    const unsubSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs[0].data();
+        if (data.referralBonusRUB) setReferralReward(data.referralBonusRUB);
+      }
+    });
+    return () => unsubSettings();
+  }, []);
   const [confirmPasswordForBiometric, setConfirmPasswordForBiometric] = useState('');
 
   const [formData, setFormData] = useState({
@@ -311,18 +322,53 @@ export const ProfilePage: React.FC = () => {
           <div className="flex flex-col gap-2 rounded-[24px] bg-gradient-to-br from-[#F5E8FF] to-[#FDF2F7] border border-[#F5E6F0] p-5">
             <div className="flex items-center gap-2">
               <Gift size={16} className="text-[#661489]" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('available_bonus')}</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('referral_reward_label') || 'Parrainage'}</span>
             </div>
             <p className="text-lg font-black text-[#661489]">
-              {user?.solde_bonus ?? 0} <span className="text-sm font-bold">RUB</span>
+              {user?.solde_bonus ?? 0} <span className="text-sm font-bold uppercase tracking-wider opacity-60">RUB</span>
+            </p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+              +{formatNumber(referralReward, 'RUB')} / parrainage
             </p>
             <button
               onClick={() => navigate('/referral')}
               className="mt-auto text-[11px] font-bold text-[#661489] opacity-70 hover:opacity-100 text-left transition"
             >
-              {t('menu_referral')} →
+              {t('view_details') || 'Voir détails'} →
             </button>
           </div>
+        </div>
+
+        {/* ── Points Loyalty Card ── */}
+        <div className="mt-4 rounded-[28px] bg-white border-2 border-slate-100 p-6 shadow-sm overflow-hidden relative group">
+           <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+              <Zap size={80} strokeWidth={3} className="text-brand" />
+           </div>
+           
+           <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
+                 <Zap size={24} strokeWidth={3} />
+              </div>
+              <div>
+                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('loyalty_points') || 'Points Fidélité'}</h3>
+                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">1000 pts = 1 RUB</p>
+              </div>
+           </div>
+
+           <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-black text-brand tracking-tight">{user?.solde_points ?? 0}</span>
+              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Points accumulés</span>
+           </div>
+
+           <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                 <ShieldCheck size={14} className="text-emerald-500" />
+                 {t('points_safe') || 'Points sécurisés'}
+              </div>
+              <p className="text-[10px] text-slate-400 font-bold italic">
+                {t('points_earned_desc') || 'Gagnés sur vos transactions'}
+              </p>
+           </div>
         </div>
 
         {/* ── Personal Info ── */}

@@ -107,11 +107,13 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       );
 
   const totalToPay = baseAmount + commissionFee;
-  const bonusAvailable = user?.solde_bonus || 0;
+  const bonusAvailableRUB = user?.solde_bonus || 0;
+  const pointsAvailable = user?.solde_points || 0;
+  const pointsValueInRUB = pointsAvailable / 1000;
+  const totalDiscountAvailableRUB = bonusAvailableRUB + pointsValueInRUB;
   
   // Hybrid payment logic
-  // For simplicity, we convert bonus (RUB) to origin currency if needed
-  let bonusInOriginCurrency = bonusAvailable;
+  let totalDiscountInOriginCurrency = totalDiscountAvailableRUB;
   if (fromCurrency !== 'RUB') {
     const directRubRate = rates.find(r => 
       r.from?.toString().toUpperCase().trim() === 'RUB' && 
@@ -123,11 +125,11 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
     ) : null;
     
     const rubToOriginRate = directRubRate?.rate || directRubRate?.rateFixed || (inverseRubRate ? (1 / (inverseRubRate.rate || inverseRubRate.rateFixed)) : 1.0);
-    bonusInOriginCurrency = bonusAvailable * rubToOriginRate;
+    totalDiscountInOriginCurrency = totalDiscountAvailableRUB * rubToOriginRate;
   }
 
-  const bonusFullyCovers = bonusInOriginCurrency >= totalToPay;
-  const remainder = Math.max(0, totalToPay - bonusInOriginCurrency);
+  const bonusFullyCovers = totalDiscountInOriginCurrency >= totalToPay;
+  const remainder = Math.max(0, totalToPay - totalDiscountInOriginCurrency);
   const needsProof = !payWithBonus || !bonusFullyCovers;
 
   const isStepValid = ((payWithBonus && bonusFullyCovers) || (needsProof && !!proofFile)) && !isSubmitting;
@@ -249,8 +251,8 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         </p>
       </div>
 
-      {/* Bonus Payment Option */}
-      {bonusAvailable > 0 && (
+      {/* Bonus & Points Payment Option */}
+      {totalDiscountAvailableRUB > 0 && (
         <div className={`p-8 rounded-[32px] border-2 transition-all mb-8 ${payWithBonus ? 'border-brand bg-brand/5 ring-4 ring-brand/5' : 'border-slate-100 bg-white hover:border-brand/30'}`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
@@ -258,13 +260,31 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
                 <Gift size={28} />
               </div>
               <div>
-                <p className="text-lg font-black text-slate-900">{t('use_bonus_balance') || 'Utiliser mon solde bonus'}</p>
-                <p className="text-sm text-slate-500 font-bold">{t('current_balance') || 'Solde actuel'}: {formatNumber(bonusAvailable, 'RUB')}</p>
+                <p className="text-lg font-black text-slate-900">{t('use_bonuses_and_points') || 'Utiliser mes Bonus & Points'}</p>
+                <div className="flex flex-col gap-0.5">
+                   <p className="text-[11px] text-[#661489] font-black uppercase tracking-widest">
+                      {t('referral_bonus') || 'Bonus'}: {formatNumber(bonusAvailableRUB, 'RUB')}
+                   </p>
+                   <p className="text-[11px] text-brand font-black uppercase tracking-widest">
+                      {t('loyalty_points') || 'Points'}: {pointsAvailable} ({formatNumber(pointsValueInRUB, 'RUB')})
+                   </p>
+                </div>
+                {user?.kyc?.status !== 'approved' && (
+                  <p className="text-[10px] text-rose-500 font-black uppercase tracking-widest mt-1 flex items-center gap-1">
+                    <Info size={10} /> {t('kyc_required_to_use_points') || 'Validation KYC requise pour utiliser vos points/bonus'}
+                  </p>
+                )}
               </div>
             </div>
             <button 
-              onClick={() => setPayWithBonus(!payWithBonus)}
-              className={`w-14 h-8 rounded-full relative transition-all ${payWithBonus ? 'bg-brand' : 'bg-slate-200'}`}
+              onClick={() => {
+                if (user?.kyc?.status !== 'approved') {
+                  toast.error(t('kyc_required_points_toast') || 'Veuillez valider votre KYC pour utiliser vos points.');
+                  return;
+                }
+                setPayWithBonus(!payWithBonus);
+              }}
+              className={`w-14 h-8 rounded-full relative transition-all ${payWithBonus ? 'bg-brand' : 'bg-slate-200'} ${user?.kyc?.status !== 'approved' ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className={`absolute top-1.5 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${payWithBonus ? 'left-7.5' : 'left-1.5'}`} />
             </button>

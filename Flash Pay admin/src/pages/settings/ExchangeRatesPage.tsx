@@ -5,7 +5,10 @@ import {
   collection, 
   onSnapshot,
   query,
-  orderBy
+  orderBy,
+  doc,
+  updateDoc,
+  getDocs
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { ExchangeRate } from '../../types';
@@ -319,7 +322,8 @@ const ExchangeRatesPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                 <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Bonus Parrainage (RUB)</label>
+                 <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Bonus Parrainage (en RUB)</label>
+                 <p className="text-[9px] text-white/40 italic -mt-2 ml-1">Sera converti en points (1 RUB = 1000 pts)</p>
                  <div className="relative">
                     <input type="number" value={editingReferralBonus} onChange={e => setEditingReferralBonus(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[24px] px-6 py-4 text-white font-black text-lg outline-none focus:bg-white/20 transition-all disabled:opacity-60" />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 font-black text-xs uppercase">RUB</span>
@@ -345,6 +349,27 @@ const ExchangeRatesPage: React.FC = () => {
               <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full py-5 bg-white text-[#661489] rounded-[28px] font-black uppercase text-[11px] tracking-widest shadow-2xl hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50">
                  {isSavingSettings ? 'Mise à jour...' : 'Synchroniser la configuration'}
               </button>
+
+              <div className="pt-4">
+                 <button 
+                   onClick={async () => {
+                     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser TOUS les bonus de TOUS les utilisateurs à 0 ? Cette action est irréversible.')) {
+                        const t = toast.loading('Réinitialisation des bonus...');
+                        try {
+                          const usersSnap = await getDocs(collection(db, 'users'));
+                          const promises = usersSnap.docs.map((u: any) => updateDoc(doc(db, 'users', u.id), { solde_bonus: 0 }));
+                          await Promise.all(promises);
+                          toast.success('Tous les bonus ont été réinitialisés.', { id: t });
+                        } catch (e) {
+                          toast.error('Erreur lors de la réinitialisation.', { id: t });
+                        }
+                     }
+                   }}
+                   className="w-full py-3 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-2xl font-bold uppercase text-[9px] tracking-widest hover:bg-rose-500/30 transition-all"
+                 >
+                   Réinitialiser tous les bonus (Migration)
+                 </button>
+              </div>
            </div>
         </div>
       </div>
