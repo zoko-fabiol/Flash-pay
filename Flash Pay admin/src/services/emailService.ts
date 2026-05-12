@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// URL de votre script Google Apps Script (À remplacer par l'URL obtenue à l'étape 1)
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyquLPwMLLu8i7c27Htlw8lBV94HcHcWDTpE9bxJe2KBFBbd3LG6mBk1J_I-TpQF3myuA/exec';
+// URL de votre script Google Apps Script
+const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbyquLPwMLLu8i7c27Htlw8lBV94HcHcWDTpE9bxJe2KBFBbd3LG6mBk1J_I-TpQF3myuA/exec';
 
 export const emailService = {
   /**
@@ -22,9 +22,9 @@ export const emailService = {
           'Content-Type': 'text/plain;charset=utf-8',
         },
         body: JSON.stringify({
-          recipient,
-          subject,
-          htmlBody
+          recipients: [recipient],
+          title: subject,
+          body: htmlBody
         })
       });
       console.log('Requête d\'envoi d\'email transmise à GAS');
