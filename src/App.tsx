@@ -170,6 +170,8 @@ function AppRoutes() {
   );
 }
 
+import { PWAInstallProvider } from './context/PWAInstallContext';
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 function App() {
   return (
@@ -178,13 +180,15 @@ function App() {
       <LanguageProvider>
         <AuthProvider>
           <NotificationProvider>
-            <AppProvider>
-              <TransferWizardProvider>
-                <BiometricGuard>
-                  <AppRoutes />
-                </BiometricGuard>
-              </TransferWizardProvider>
-            </AppProvider>
+            <PWAInstallProvider>
+              <AppProvider>
+                <TransferWizardProvider>
+                  <BiometricGuard>
+                    <AppRoutes />
+                  </BiometricGuard>
+                </TransferWizardProvider>
+              </AppProvider>
+            </PWAInstallProvider>
           </NotificationProvider>
         </AuthProvider>
       </LanguageProvider>

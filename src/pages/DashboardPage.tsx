@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
+import { PWAInstallPrompt } from '../components/PWAInstallPrompt';
+
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { t, language, formatNumber } = useLanguage();
@@ -156,6 +158,8 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         </section>
+
+        <PWAInstallPrompt />
 
         {showReferral && (
           <section className="relative mx-2 overflow-hidden rounded-[28px] bg-[#FDF7FF] p-5 shadow-sm border border-[#F3E8FF]">
