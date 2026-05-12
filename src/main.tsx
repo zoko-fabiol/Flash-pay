@@ -4,12 +4,8 @@ import App from './App.tsx'
 import './index.css'
 import { registerServiceWorker } from './utils/serviceWorkerUtils'
 
-// Register Service Worker for push notifications
-if ('serviceWorker' in navigator) {
-  registerServiceWorker()
-    .then(() => console.log('✅ Service Worker registered'))
-    .catch(err => console.error('❌ Service Worker registration failed:', err))
-}
+// Service Worker for OneSignal is handled automatically by the OneSignal SDK
+// No need for manual registration here anymore.
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
