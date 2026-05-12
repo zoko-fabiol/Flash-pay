@@ -44,6 +44,7 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage';
 
 import { Loading } from './components/UI';
 import { initializePushNotifications } from './utils/pushNotifications';
+import { BiometricGuard } from './components/BiometricGuard';
 
 // ─── Android Back Button Handler ────────────────────────────────────────────
 const AndroidBackHandler: React.FC = () => {
@@ -179,7 +180,9 @@ function App() {
           <NotificationProvider>
             <AppProvider>
               <TransferWizardProvider>
-                <AppRoutes />
+                <BiometricGuard>
+                  <AppRoutes />
+                </BiometricGuard>
               </TransferWizardProvider>
             </AppProvider>
           </NotificationProvider>

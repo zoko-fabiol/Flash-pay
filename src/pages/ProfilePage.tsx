@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
 import { biometricService } from '../services/biometricService';
-import { Fingerprint } from 'lucide-react';
+import { Fingerprint, Lock } from 'lucide-react';
 import { Capacitor } from '@capacitor/core';
 
 
@@ -29,6 +29,7 @@ export const ProfilePage: React.FC = () => {
   const [biometricEnabled, setBiometricEnabled] = useState(localStorage.getItem('biometric_enabled') === 'true');
   const [showBiometricConfirm, setShowBiometricConfirm] = useState(false);
   const [referralReward, setReferralReward] = useState(500);
+  const [appLockEnabled, setAppLockEnabled] = useState(localStorage.getItem('app_lock_enabled') === 'true');
 
   useEffect(() => {
     const unsubSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
@@ -563,6 +564,35 @@ export const ProfilePage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          {/* App Lock Toggle */}
+          {biometricAvailable && (
+            <div className="border-t border-slate-50 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                    <Lock size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Verrouillage au lancement</p>
+                    <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                      {appLockEnabled ? 'Activé' : 'Désactivé'}
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const newValue = !appLockEnabled;
+                    setAppLockEnabled(newValue);
+                    localStorage.setItem('app_lock_enabled', String(newValue));
+                  }}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
             </div>
           )}
         </div>
