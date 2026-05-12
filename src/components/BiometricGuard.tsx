@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { biometricService } from '../services/biometricService';
 import { authService, auth } from '../services/firebase';
+import { Capacitor } from '@capacitor/core';
 import { Loading } from './UI';
 import { Fingerprint, Lock, KeyRound, LogOut } from 'lucide-react';
 import { translateFirebaseError } from '../utils/errorMessages';
