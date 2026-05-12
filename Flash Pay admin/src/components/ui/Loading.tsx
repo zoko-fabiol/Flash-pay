@@ -14,12 +14,8 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
         <div className="absolute w-32 h-32 rounded-full border-t border-[#661489] animate-spin" />
       </div>
 
-      {/* Branded Logo with Pulse Effect */}
-      <div className="relative w-24 h-24 mb-10 flex items-center justify-center">
-        <div className="absolute inset-0 bg-[#EADDFF] rounded-[32px] animate-pulse opacity-50"></div>
-        <div className="relative w-16 h-16 bg-[#661489] rounded-[24px] flex items-center justify-center shadow-2xl shadow-[#661489]/20 animate-bounce">
-           <CreditCard className="text-white" size={32} />
-        </div>
+      <div className="relative w-32 h-32 mb-10 flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite]">
+        <img src="/loader-icon.png" alt="Flash Pay" className="w-full h-full object-contain" />
       </div>
 
       {/* Loading Text & Bar */}

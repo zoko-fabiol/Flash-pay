@@ -16,7 +16,7 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
 
       {/* Branded Logo with Pulse Effect */}
       <div className="relative w-32 h-32 mb-6 animate-[pulse_2s_ease-in-out_infinite] flex items-center justify-center">
-        <img src="/full-logo.png" alt="Flash Pay" className="w-full h-full object-contain" />
+        <img src="/loader-icon.png" alt="Flash Pay" className="w-full h-full object-contain" />
       </div>
 
       {/* Loading Text & Bar */}

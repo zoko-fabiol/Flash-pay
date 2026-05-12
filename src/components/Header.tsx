@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Menu, Zap } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { useLanguage } from '../context/LanguageContext';
 import { NotificationBell } from './notifications/NotificationBell';
@@ -26,9 +26,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header className="glass-effect px-5 py-4 flex justify-between items-center sticky top-0 z-50 border-b border-white/50 shadow-sm">
-      <div className="flex items-center gap-2 text-primary font-black text-xl tracking-tight cursor-pointer" onClick={() => navigate('/')}>
-        <Zap size={24} />
-        <span>Flash Pay</span>
+      <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
+        <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
       </div>
       
       <div className="flex items-center gap-4">

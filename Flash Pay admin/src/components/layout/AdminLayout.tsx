@@ -59,11 +59,9 @@ const AdminLayout: React.FC = () => {
     <div className="min-h-screen bg-[#FEF7FF] flex flex-col lg:flex-row">
       <div className="lg:hidden bg-white border-b border-[#E7E0EB] p-4 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#661489] rounded-[12px] flex items-center justify-center shadow-lg shadow-[#661489]/20">
-            <CreditCardProIcon className="text-white" size={20} />
-          </div>
-          <span className="text-xl font-black text-[#1D1B20] tracking-tighter">
-            FLASH PAY <span className="text-[#661489]">AD</span>
+          <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
+          <span className="text-xl font-black text-[#661489] tracking-tighter">
+            AD
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -98,11 +96,8 @@ const AdminLayout: React.FC = () => {
       `}>
         <div className="h-full flex flex-col p-6 overflow-y-auto">
           <div className="hidden lg:flex items-center gap-4 mb-10 px-2">
-            <div className="w-12 h-12 bg-[#661489] rounded-[16px] flex items-center justify-center shadow-xl shadow-[#661489]/20">
-              <CreditCardProIcon className="text-white" size={24} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-[#1D1B20] tracking-tight leading-none">FLASH PAY</h1>
+            <img src="/header-logo.png" alt="Flash Pay" className="h-10 w-auto object-contain" />
+            <div className="border-l-2 border-[#661489]/20 pl-4">
               <span className="text-[10px] font-black text-[#661489] tracking-[0.3em] uppercase opacity-60">Admin Portal</span>
             </div>
           </div>
