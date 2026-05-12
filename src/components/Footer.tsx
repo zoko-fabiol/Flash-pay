@@ -7,7 +7,7 @@ interface Tab { path: string; label: string; icon: ComponentType<any>; featured?
 const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = ({ tabs, isActive }) => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-      <div className="bg-white shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] px-3 pt-3 pb-[26px] border-t border-slate-100 rounded-t-[32px]">
+      <div className="bg-white shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] px-3 pt-3 pb-1 border-t border-slate-100 rounded-t-[32px]">
         <div className="grid grid-cols-5 gap-1 items-center">
           {tabs.map((tab) => {
             const Icon = tab.icon;
