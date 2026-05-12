@@ -4,11 +4,6 @@ import OneSignal from '@onesignal/capacitor-plugin';
 const ONESIGNAL_APP_ID = '3b38ca69-e5eb-40a7-8b46-48942086dcb3';
 
 export const initializeAdminPushNotifications = async (adminId?: string) => {
-  if (Capacitor.getPlatform() === 'web') {
-    console.log('Push notifications on web (admin) are handled via browser');
-    return;
-  }
-
   try {
     // 1. OneSignal Initialization
     OneSignal.initialize(ONESIGNAL_APP_ID);
