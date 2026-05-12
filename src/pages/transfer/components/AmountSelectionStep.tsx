@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Zap, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface AmountSelectionStepProps {
   transferData: any;
@@ -30,6 +31,7 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   senderCountries,
   recipientCountries
 }) => {
+  const navigate = useNavigate();
   const [isSendMode, setIsSendMode] = useState(true);
   const [isSenderDropdownOpen, setIsSenderDropdownOpen] = useState(false);
   const [isRecipientDropdownOpen, setIsRecipientDropdownOpen] = useState(false);
@@ -217,6 +219,26 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
           </div>
         </div>
 
+        {requiresKYC && (
+          <div 
+            onClick={() => navigate('/kyc')}
+            className="bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100 p-4 rounded-[24px] flex items-center gap-4 cursor-pointer hover:shadow-md transition-all active:scale-95 group"
+          >
+            <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0 group-hover:scale-110 transition-transform">
+              <Info size={20} />
+            </div>
+            <div className="flex-1">
+              <p className="text-[13px] font-black text-rose-600 uppercase tracking-tight leading-none mb-1">
+                {t('kyc_required')}
+              </p>
+              <p className="text-[11px] font-bold text-rose-400 leading-tight">
+                {t('kyc_limit_warning') || "Le montant dépasse votre limite actuelle. Cliquez ici pour vérifier votre compte."}
+              </p>
+            </div>
+            <ChevronRight size={18} className="text-rose-300 group-hover:translate-x-1 transition-transform" />
+          </div>
+        )}
+
         <div className="bg-slate-900 rounded-[32px] p-6 text-white space-y-4 shadow-xl">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2 text-white/60 font-bold">
@@ -237,11 +259,6 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
               <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">{t('total_to_pay')}</p>
               <p className="text-3xl font-black">{formatNumber(totalToPay, fromCurrency)}</p>
             </div>
-            {requiresKYC && (
-              <div className="bg-rose-500/10 text-rose-400 px-4 py-2 rounded-xl border border-rose-500/20 text-[10px] font-black uppercase tracking-wider">
-                {t('kyc_required')}
-              </div>
-            )}
           </div>
         </div>
       </div>
