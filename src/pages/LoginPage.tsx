@@ -19,6 +19,8 @@ export const LoginPage: React.FC = () => {
   const [resetSent, setResetSent] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(localStorage.getItem('biometric_enabled') === 'true');
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
+  const [isNative] = useState(Capacitor.isNativePlatform());
 
   useEffect(() => {
     const checkBiometric = async () => {
@@ -56,12 +58,39 @@ export const LoginPage: React.FC = () => {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/');
+      
+      // Check if we should ask for biometric activation
+      if (isNative && biometricAvailable && !biometricEnabled && localStorage.getItem('biometric_asked') !== 'true') {
+        setShowBiometricPrompt(true);
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || t('login_error'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEnableBiometricAfterLogin = async () => {
+    setLoading(true);
+    try {
+      const success = await biometricService.saveCredentials({ email, password });
+      if (success) {
+        localStorage.setItem('biometric_asked', 'true');
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Failed to enable biometric after login:', err);
+      navigate('/'); // Still go to dashboard even if biometric setup fails
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkipBiometric = () => {
+    localStorage.setItem('biometric_asked', 'true');
+    navigate('/');
   };
 
   const handleForgotPassword = async () => {
@@ -131,7 +160,7 @@ export const LoginPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="votre@email.com"
+                  placeholder={t('email_placeholder')}
                   className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-slate-900 transition-all bg-white/50"
                   required
                 />
@@ -177,7 +206,7 @@ export const LoginPage: React.FC = () => {
                 className="w-full mt-4 flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-primary/20 text-primary font-black hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-bottom-2 duration-500"
               >
                 <Fingerprint size={24} />
-                Connecter avec l'empreinte
+                {t('biometric_login')}
               </button>
             )}
           </form>
@@ -198,6 +227,43 @@ export const LoginPage: React.FC = () => {
             </p>
         </div>
       </div>
+      </div>
+
+      {/* Biometric Activation Popup */}
+      {showBiometricPrompt && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in zoom-in slide-in-from-bottom-8 duration-500">
+            <div className="flex flex-col items-center text-center gap-6">
+              <div className="w-20 h-20 rounded-[28px] bg-[#661489]/10 flex items-center justify-center text-[#661489] animate-bounce-slow">
+                <Fingerprint size={40} />
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">Activer l'empreinte ?</h3>
+                <p className="text-slate-500 text-sm font-medium leading-relaxed">
+                  Souhaitez-vous utiliser votre empreinte digitale pour vous connecter plus rapidement la prochaine fois ?
+                </p>
+              </div>
+
+              <div className="w-full space-y-3 pt-2">
+                <button
+                  onClick={handleEnableBiometricAfterLogin}
+                  disabled={loading}
+                  className="w-full py-4 bg-[#661489] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#661489]/20 active:scale-95 transition-all"
+                >
+                  {loading ? 'Activation...' : 'ACTIVER MAINTENANT'}
+                </button>
+                <button
+                  onClick={handleSkipBiometric}
+                  className="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-slate-600 transition-colors"
+                >
+                  PLUS TARD
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -58,15 +58,15 @@ export const adminService = {
         // Send notification to sub-collection for real-time updates
         await addDoc(collection(db, 'notifications', userId, 'items'), {
           title: newStatus === 'completed' 
-            ? 'Transfert terminé' 
+            ? 'Transfert complété ✓' 
             : newStatus === 'failed' 
-            ? 'Échec du transfert'
+            ? 'Transfert non traité'
             : 'Mise à jour de votre transfert',
           body: newStatus === 'completed' 
-            ? `Votre transfert #${transactionId.slice(-6)} a été traité avec succès. Merci de votre confiance.` 
+            ? `Votre argent a bien été reçu par le destinataire. Merci!` 
             : newStatus === 'failed'
-            ? `Désolé, votre transfert #${transactionId.slice(-6)} a échoué. ${notes || 'Veuillez contacter le support pour plus d\'informations.'}`
-            : `Votre transfert #${transactionId.slice(-6)} est passé au statut : ${newStatus}. ${notes || ''}`,
+            ? `Malheureusement, ce transfert n'a pas pu être traité. ${notes || 'Veuillez contacter le support.'}`
+            : `Votre transfert a été mis à jour. ${notes || ''}`,
           type: 'transaction_update',
           priority: (newStatus === 'completed' || newStatus === 'failed') ? 'high' : 'normal',
           read: false,
@@ -76,11 +76,10 @@ export const adminService = {
           data: { transactionId }
         });
 
-        // Maintain broadcast/flat collection for history/compatibility if needed
         await addDoc(collection(db, 'notifications'), {
           userId,
           title: `Mise à jour de votre transfert`,
-          message: `Votre transfert #${transactionId.slice(-6)} est passé au statut : ${newStatus}. ${notes || ''}`,
+          message: `Votre transfert a été mis à jour. Statut: ${newStatus}. ${notes || ''}`,
           type: 'transaction_update',
           read: false,
           createdAt: Timestamp.now(),
@@ -140,8 +139,8 @@ export const adminService = {
                 // Notify user
                 await addDoc(collection(db, 'notifications', userId, 'items'), {
                   title: 'Points de fidélité reçus !',
-                  body: `Vous avez reçu ${pointsToEarn} points pour votre transaction.`,
-                  type: 'points_earned',
+                  body: `Vous avegagnés! 🎁',
+                  body: `Vous avez gagné ${pointsToEarn} points de fidélité avec ce transfert
                   priority: 'normal',
                   read: false,
                   createdAt: Timestamp.now(),
@@ -206,8 +205,8 @@ export const adminService = {
                 // Notify referrer
                 await addDoc(collection(db, 'notifications'), {
                   userId: referrerId,
-                  title: `Bonus de parrainage reçu !`,
-                  message: `Vous avez reçu un bonus de ${bonusAmount} RUB car votre filleul ${userData.nom || 'un utilisateur'} a effectué son premier transfert.`,
+                  title: `Bonus de parrain reçu!`,
+                  message: `Quelqu'un que vous aviez invité a envoyé son premier transfert. Vous avez reçu ${bonusAmount} RUB.`,
                   type: 'referral_bonus',
                   read: false,
                   createdAt: Timestamp.now(),
@@ -216,8 +215,8 @@ export const adminService = {
 
                 // Real-time sub-collection notification
                 await addDoc(collection(db, 'notifications', referrerId, 'items'), {
-                  title: `Bonus de parrainage reçu !`,
-                  body: `Vous avez reçu un bonus de ${bonusAmount} RUB car votre filleul ${userData.nom || 'un utilisateur'} a effectué son premier transfert.`,
+                  title: `Bonus reçu! 💰`,
+                  body: `Votre ami a envoyé son premier transfert. Vous avez reçu ${bonusAmount} RUB.`,
                   type: 'referral_bonus',
                   priority: 'high',
                   read: false,
@@ -266,8 +265,8 @@ export const adminService = {
         const userId = txDoc.data().userId;
         if (userId) {
           await addDoc(collection(db, 'notifications', userId, 'items'), {
-            title: 'Problème sur votre transfert',
-            body: `Un problème a été signalé sur votre transfert #${transactionId.slice(-6)} : ${problem.description}. Veuillez consulter les détails.`,
+            title: 'Alerte sur votre transfert ⚠️',
+            body: `Un problème a été détecté. ${problem.description} Consultez les détails.`,
             type: 'transaction_problem',
             priority: 'high',
             read: false,
@@ -439,8 +438,8 @@ export const adminService = {
         const userId = reportDoc.data().userId;
         if (userId) {
           await addDoc(collection(db, 'notifications', userId, 'items'), {
-            title: 'Ticket résolu',
-            body: `Votre demande de support #${reportId.slice(-4)} a été traitée. Résolution : ${resolution}`,
+            title: 'Demande traitée ✓',
+            body: `Votre demande a été examinée et résolue. ${resolution}`,
             type: 'support_resolution',
             priority: 'normal',
             read: false,

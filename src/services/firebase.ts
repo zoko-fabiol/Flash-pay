@@ -134,8 +134,8 @@ export const authService = {
     // --- Add Welcome Notification ---
     try {
       await addDoc(collection(db, 'notifications', user.uid, 'items'), {
-        title: 'Bienvenue sur Flash Pay !',
-        body: 'Nous sommes ravis de vous compter parmi nous. Commencez dès maintenant à envoyer de l\'argent vers l\'Afrique et la Russie au meilleur prix.',
+        title: 'Bienvenue! 🎉',
+        body: 'Heureux de vous avoir. Vous êtes prêt à envoyer de l\'argent vers l\'Afrique et la Russie en quelques minutes.',
         type: 'general',
         priority: 'high',
         isRead: false,
@@ -538,10 +538,8 @@ export const userService = {
         userId,
         type: 'kyc',
         event: 'submitted',
-        title: 'KYC soumis',
-        message: validation.isRussianCorridor
-          ? 'Votre dossier KYC pour le corridor Russie est en attente de vérification.'
-          : 'Votre dossier KYC est en attente de vérification.',
+        title: 'Vérification en cours',
+        message: 'Vos documents ont bien été reçus. Notre équipe examinera votre dossier d\'ici 24 à 48 heures.',
         status: 'unread',
         createdAt: Timestamp.now(),
         kycId: docRef.id,
@@ -549,10 +547,8 @@ export const userService = {
 
       // Real-time notification
       await addDoc(collection(db, 'notifications', userId, 'items'), {
-        title: 'KYC soumis',
-        body: validation.isRussianCorridor
-          ? 'Votre dossier KYC pour le corridor Russie est en attente de vérification.'
-          : 'Votre dossier KYC est en attente de vérification.',
+        title: 'Documents reçus ✓',
+        body: 'Merci d\'avoir fourni vos documents. Nous vérifierons votre identité et vous notifierons dès que possible.',
         type: 'kyc',
         priority: 'normal',
         read: false,
@@ -564,13 +560,13 @@ export const userService = {
       // Notify Admin
       try {
         await addDoc(collection(db, 'admin_notifications'), {
-          title: 'Nouveau KYC soumis',
-          body: `L'utilisateur ${userData?.email || userId} a soumis ses documents KYC.`,
+          title: 'Nouvelle vérification à examiner',
+          body: `Un utilisateur a soumis ses documents. Veuillez les vérifier.`,
           type: 'kyc',
           priority: 'normal',
           read: false,
           createdAt: Timestamp.now(),
-          link: `/admin/kyc` // Note: The admin KYC list handles deep linking via query or search, or we can use /admin/kyc?userId=${userId}
+          link: `/admin/kyc`
         });
       } catch (err) {
         console.error('Failed to notify admin of KYC submission:', err);
@@ -674,8 +670,8 @@ export const userService = {
       userId,
       type: 'kyc',
       event: 'rejected',
-      title: 'KYC rejeté',
-      message: `Votre dossier KYC a été rejeté: ${rejectionReason}`,
+      title: 'Vérification non valide',
+      message: `Nous n'avons pas pu valider vos documents. Raison: ${rejectionReason}`,
       status: 'unread',
       createdAt: Timestamp.now(),
       kycId,
@@ -683,8 +679,8 @@ export const userService = {
 
     // Real-time notification
     await addDoc(collection(db, 'notifications', userId, 'items'), {
-      title: 'KYC rejeté',
-      body: `Votre dossier KYC a été rejeté : ${rejectionReason}. Veuillez vérifier vos documents et soumettre à nouveau.`,
+      title: 'Vérification à renouveler',
+      body: `Raison: ${rejectionReason}. Veuillez corriger vos documents et les renvoyer.`,
       type: 'kyc',
       priority: 'high',
       read: false,
@@ -740,8 +736,8 @@ export const userService = {
       userId,
       type: 'kyc',
       event: 'approved',
-      title: 'KYC approuvé',
-      message: 'Votre dossier KYC a été approuvé. Vos limites ont été augmentées.',
+      title: 'Vérification approuvée',
+      message: 'Félicitations! Votre identité a été vérifiée. Vous pouvez maintenant envoyer plus d\'argent.',
       status: 'unread',
       createdAt: Timestamp.now(),
       kycId,
@@ -749,8 +745,8 @@ export const userService = {
 
     // Real-time notification
     await addDoc(collection(db, 'notifications', userId, 'items'), {
-      title: 'KYC approuvé !',
-      body: 'Votre dossier KYC a été approuvé avec succès. Vos limites de transfert ont été augmentées.',
+      title: 'Bienvenue - Compte vérifié ! 🎉',
+      body: 'Vous pouvez maintenant envoyer de l\'argent sans limite vers nos corridors de transfert.',
       type: 'kyc',
       priority: 'high',
       read: false,
@@ -915,8 +911,8 @@ export const userService = {
     // Notify Referrer
     try {
       await addDoc(collection(db, 'notifications', referrerDoc.id, 'items'), {
-        title: 'Nouveau parrainage !',
-        body: `Un nouvel utilisateur (${referredUserName || referredEmail || 'Inconnu'}) a utilisé votre code de parrainage. Votre bonus sera validé après son KYC.`,
+        title: 'Quelqu\'un vous a rejoint ! 👋',
+        body: `Un ami a créé son compte avec votre code. Une fois qu\'il aura vérifié son identité, vous recevrez votre bonus.`,
         type: 'referral',
         priority: 'normal',
         read: false,
@@ -977,8 +973,8 @@ export const userService = {
     // Notify Referrer of Reward
     try {
       await addDoc(collection(db, 'notifications', referrerId, 'items'), {
-        title: 'Bonus de parrainage validé !',
-        body: `Votre bonus de ${rewardAmount} RUB pour le parrainage de ${user.nom || 'un utilisateur'} a été ajouté à votre solde.`,
+        title: 'Bonus reçu! 💰',
+        body: `Votre ami a été vérifié. Vous avez reçu ${rewardAmount} RUB de bonus.`,
         type: 'referral_reward',
         priority: 'high',
         read: false,
@@ -1434,8 +1430,8 @@ export const transactionService = {
     try {
       const isLarge = transactionData.amount >= 100000;
       await addDoc(collection(db, 'admin_notifications'), {
-        title: isLarge ? '⚠️ GROS TRANSFERT' : 'Nouveau transfert',
-        body: `${isLarge ? 'ALERTE : ' : ''}Un nouveau transfert de ${transactionData.amount} ${transactionData.currency} a été initié.`,
+        title: 'Transfert initié',
+        body: `Un transfert de ${transactionData.amount} ${transactionData.currency} a été reçu. En attente de traitement.`,
         type: 'transaction',
         priority: isLarge ? 'high' : 'normal',
         read: false,
@@ -1543,8 +1539,8 @@ export const supportService = {
     // Notify user of ticket submission
     try {
       await addDoc(collection(db, 'notifications', userId, 'items'), {
-        title: 'Ticket de support créé',
-        body: `Votre demande concernant "${data.type || 'Anomalie'}" a été enregistrée. Notre équipe vous répondra sous peu.`,
+        title: 'Demande reçue',
+        body: `Nous avons bien reçu votre message. Notre équipe vous répondra dans les prochaines heures.`,
         type: 'support',
         priority: 'normal',
         read: false,
@@ -1595,14 +1591,58 @@ export const contactService = {
     const q = query(collection(db, 'contacts'), where('userId', '==', userId));
     const snapshot = await getDocs(q);
     const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-    // Sort in memory to avoid requiring a composite index
-    return contacts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    // Sort by most recently used first, then by creation date
+    return contacts.sort((a, b) => {
+      const aTime = a.lastUsedAt?.toMillis?.() || a.updatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || 0;
+      const bTime = b.lastUsedAt?.toMillis?.() || b.updatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || 0;
+      if (bTime !== aTime) return bTime - aTime;
+      return (a.name || '').localeCompare(b.name || '');
+    });
   },
 
   async addContact(userId: string, contactData: { name: string; phone: string; operator: string; countryCode: string }) {
     return await addDoc(collection(db, 'contacts'), {
       userId,
       ...contactData,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+  },
+
+  async touchRecentContact(
+    userId: string,
+    contactData: { name: string; phone: string; operator: string; countryCode: string; transactionId?: string }
+  ) {
+    const normalizedPhone = (contactData.phone || '').replace(/\D/g, '');
+    const normalizedName = (contactData.name || '').trim().toLowerCase();
+
+    const snapshot = await getDocs(query(collection(db, 'contacts'), where('userId', '==', userId)));
+    const match = snapshot.docs.find((docSnap) => {
+      const data = docSnap.data() as any;
+      const docPhone = String(data.phone || '').replace(/\D/g, '');
+      const docName = String(data.name || '').trim().toLowerCase();
+      return (
+        (normalizedPhone && (docPhone === normalizedPhone || docPhone.endsWith(normalizedPhone) || normalizedPhone.endsWith(docPhone))) ||
+        (normalizedName && docName === normalizedName)
+      );
+    });
+
+    if (match) {
+      await updateDoc(match.ref, {
+        lastUsedAt: serverTimestamp(),
+        lastTransactionId: contactData.transactionId || null,
+        operator: contactData.operator,
+        countryCode: contactData.countryCode,
+        updatedAt: serverTimestamp()
+      });
+      return match.ref;
+    }
+
+    return await addDoc(collection(db, 'contacts'), {
+      userId,
+      ...contactData,
+      lastUsedAt: serverTimestamp(),
+      lastTransactionId: contactData.transactionId || null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });

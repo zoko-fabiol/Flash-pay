@@ -21,22 +21,201 @@ import { useNotifications } from '../context/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 import type { Notification } from '../types/notifications';
 
-const formatRelativeDate = (value: any) => {
+const normalizeText = (value: string) => value
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '');
+
+const formatRelativeDate = (value: any, t: (key: string, vars?: Record<string, any>) => string, language: string) => {
   const date = value?.toDate ? value.toDate() : value ? new Date(value) : null;
   if (!date) return '';
 
   const diffMs = Date.now() - date.getTime();
   const diffMinutes = Math.floor(diffMs / 60000);
-  if (diffMinutes < 1) return 'À l\'instant';
-  if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+  if (diffMinutes < 1) return t('notification_now');
+  if (diffMinutes < 60) return t('notification_minutes_ago', { count: diffMinutes });
 
   const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `Il y a ${diffHours} h`;
+  if (diffHours < 24) return t('notification_hours_ago', { count: diffHours });
 
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `Il y a ${diffDays} j`;
+  if (diffDays < 7) return t('notification_days_ago', { count: diffDays });
 
-  return date.toLocaleDateString('fr-FR');
+  return date.toLocaleDateString(language === 'en' ? 'en-US' : language === 'ru' ? 'ru-RU' : 'fr-FR');
+};
+
+const translateNotificationText = (
+  notification: Notification,
+  t: (key: string, vars?: Record<string, any>) => string
+) => {
+  const title = normalizeText(notification.title || '');
+  const body = normalizeText(notification.body || '');
+  const type = normalizeText(String((notification as any).type || ''));
+  const event = normalizeText(String((notification as any).event || notification.data?.event || ''));
+
+  const txIdMatch = notification.body?.match(/#([A-Za-z0-9_-]{4,})/);
+  const txId = txIdMatch?.[1];
+
+  if (type === 'points_earned') {
+    const pointsMatch = notification.body?.match(/(\d[\d\s.,]*)\s*points?/i);
+    return {
+      title: t('notification_points_received_title'),
+      body: t('notification_points_received_body', { points: pointsMatch?.[1] || '' })
+    };
+  }
+
+  if (type === 'transaction_update') {
+    if (title.includes('completed') || title.includes('termine') || body.includes('success') || body.includes('succès') || body.includes('succes')) {
+      return {
+        title: t('notification_transfer_completed_title'),
+        body: t('notification_transfer_completed_body', { id: txId || '' })
+      };
+    }
+    if (title.includes('failed') || title.includes('echec') || body.includes('failed') || body.includes('echoué')) {
+      return {
+        title: t('notification_transfer_problem_title'),
+        body: t('notification_transfer_problem_body')
+      };
+    }
+    return {
+      title: t('notification_transfer_update_title'),
+      body: t('notification_transfer_update_body')
+    };
+  }
+
+  if (type === 'transaction_problem') {
+    return {
+      title: t('notification_transfer_problem_title'),
+      body: t('notification_transfer_problem_body')
+    };
+  }
+
+  if (type === 'support_resolution') {
+    return {
+      title: t('notification_support_resolution_title'),
+      body: t('notification_support_resolution_body')
+    };
+  }
+
+  if (type === 'support') {
+    return {
+      title: t('notification_support_title'),
+      body: t('notification_support_body')
+    };
+  }
+
+  if (type === 'kyc') {
+    if (event === 'approved' || title.includes('approved') || title.includes('approuve')) {
+      return {
+        title: t('notification_kyc_approved_title'),
+        body: t('notification_kyc_approved_body')
+      };
+    }
+    if (event === 'rejected' || title.includes('rejected') || title.includes('rejete')) {
+      return {
+        title: t('notification_kyc_rejected_title'),
+        body: t('notification_kyc_rejected_body')
+      };
+    }
+    return {
+      title: t('notification_kyc_submitted_title'),
+      body: t('notification_kyc_submitted_body')
+    };
+  }
+
+  if (type === 'referral' || type === 'referral_reward') {
+    return {
+      title: t('notification_referral_title'),
+      body: t('notification_referral_body')
+    };
+  }
+
+  if (type === 'general' && (title.includes('welcome') || title.includes('bienvenue'))) {
+    return {
+      title: t('notification_welcome_title'),
+      body: t('notification_welcome_body')
+    };
+  }
+
+  if (title.includes('points de fidelite reçus') || title.includes('points de fidelite recus') || title.includes('points de fidelite')) {
+    const pointsMatch = notification.body?.match(/(\d[\d\s.,]*)\s*points?/i);
+    return {
+      title: t('notification_points_received_title'),
+      body: t('notification_points_received_body', { points: pointsMatch?.[1] || '' })
+    };
+  }
+
+  if (title.includes('mise a jour de votre transfert') || title.includes('update de votre transfert') || title.includes('transfer update')) {
+    return {
+      title: t('notification_transfer_update_title'),
+      body: t('notification_transfer_update_body')
+    };
+  }
+
+  if (title.includes('transfert termine') || title.includes('transfer completed') || title.includes('transfer termine')) {
+    return {
+      title: t('notification_transfer_completed_title'),
+      body: t('notification_transfer_completed_body', { id: txId || '' })
+    };
+  }
+
+  if (title.includes('bienvenue sur flash pay') || title.includes('welcome to flash pay')) {
+    return {
+      title: t('notification_welcome_title'),
+      body: t('notification_welcome_body')
+    };
+  }
+
+  if (title.includes('probleme sur votre transfert') || title.includes('problem on your transfer')) {
+    return {
+      title: t('notification_transfer_problem_title'),
+      body: notification.body?.replace(/probl[èe]me sur votre transfert/i, t('notification_transfer_problem_body')).replace(/on your transfer/i, t('notification_transfer_problem_body')) || t('notification_transfer_problem_body')
+    };
+  }
+
+  if (title.includes('kyc soumis') || title.includes('kyc submitted')) {
+    return {
+      title: t('notification_kyc_submitted_title'),
+      body: t('notification_kyc_submitted_body')
+    };
+  }
+
+  if (title.includes('kyc approuve') || title.includes('kyc approved')) {
+    return {
+      title: t('notification_kyc_approved_title'),
+      body: t('notification_kyc_approved_body')
+    };
+  }
+
+  if (title.includes('kyc rejete') || title.includes('kyc rejected')) {
+    return {
+      title: t('notification_kyc_rejected_title'),
+      body: t('notification_kyc_rejected_body')
+    };
+  }
+
+  if (title.includes('nouveau parrainage') || title.includes('referral')) {
+    return {
+      title: t('notification_referral_title'),
+      body: t('notification_referral_body')
+    };
+  }
+
+  if (title.includes('ticket de support') || title.includes('support ticket')) {
+    return {
+      title: t('notification_support_title'),
+      body: t('notification_support_body')
+    };
+  }
+
+  if (body.includes('a été traité avec succès') || body.includes('has been processed successfully')) {
+    return {
+      title: t('notification_transfer_completed_title'),
+      body: t('notification_transfer_completed_body', { id: txId || '' })
+    };
+  }
+
+  return { title: notification.title, body: notification.body };
 };
 
 const NotificationIcon: React.FC<{ notification: Notification }> = ({ notification }) => {
@@ -60,7 +239,7 @@ const NotificationIcon: React.FC<{ notification: Notification }> = ({ notificati
 };
 
 export const NotificationsPage: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const {
     notifications,
     unreadCount,
@@ -71,6 +250,8 @@ export const NotificationsPage: React.FC = () => {
     clearAllNotifications,
   } = useNotifications();
   const navigate = useNavigate();
+
+  const totalLabel = t('notifications_total', { count: notifications.length });
 
   const handleNotificationClick = async (item: Notification) => {
     if (!item.read) await markAsRead(item.id);
@@ -87,6 +268,21 @@ export const NotificationsPage: React.FC = () => {
       return;
     }
 
+    const rawType = String((item as any).type || '').toLowerCase();
+    const title = (item.title || '').toLowerCase();
+    const body = (item.body || '').toLowerCase();
+
+    if (
+      rawType === 'points_earned' ||
+      title.includes('points') ||
+      body.includes('points') ||
+      title.includes('loyalty') ||
+      body.includes('loyalty')
+    ) {
+      navigate('/profile#points');
+      return;
+    }
+
     // Smart fallback based on data or content
     const transferId = item.data?.transactionId || item.data?.transferId || item.data?.orderId || item.data?.id || item.id;
     if (transferId && (
@@ -98,7 +294,6 @@ export const NotificationsPage: React.FC = () => {
       return;
     }
 
-    const title = (item.title || '').toLowerCase();
     if (title.includes('kyc') || title.includes('vérification')) {
       navigate('/kyc');
     } else if (title.includes('bonus') || title.includes('parrainage')) {
@@ -143,9 +338,7 @@ export const NotificationsPage: React.FC = () => {
         <div className="sticky top-4 z-20 rounded-[28px] bg-white/80 backdrop-blur-xl border border-slate-200/50 shadow-xl shadow-slate-200/40 p-4 flex items-center justify-between gap-3 mx-1">
           <div className="flex items-center gap-2 pl-2">
             <Bell className={unreadCount > 0 ? "text-[#661489] animate-bounce" : "text-slate-400"} size={20} />
-            <span className="text-sm font-bold text-slate-700">
-              {notifications.length} total
-            </span>
+            <span className="text-sm font-bold text-slate-700">{totalLabel}</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -212,11 +405,16 @@ export const NotificationsPage: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3 mb-1">
                         <div className="space-y-1">
-                          <p className={`font-black text-lg tracking-tight transition-colors ${item.read ? 'text-slate-800' : 'text-slate-900 group-hover:text-[#661489]'}`}>
-                            {item.title}
-                          </p>
+                          {(() => {
+                            const translated = translateNotificationText(item, t);
+                            return (
+                              <p className={`font-black text-lg tracking-tight transition-colors ${item.read ? 'text-slate-800' : 'text-slate-900 group-hover:text-[#661489]'}`}>
+                                {translated.title}
+                              </p>
+                            );
+                          })()}
                           <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            <span>{formatRelativeDate(item.createdAt)}</span>
+                                <span>{formatRelativeDate(item.createdAt, t, language)}</span>
                             {!item.read && (
                               <>
                                 <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
@@ -248,11 +446,11 @@ export const NotificationsPage: React.FC = () => {
                       </div>
 
                       <p className={`text-sm leading-relaxed mt-3 ${item.read ? 'text-slate-500' : 'text-slate-700 font-medium'}`}>
-                        {item.body}
+                        {translateNotificationText(item, t).body}
                       </p>
                       
                       <div className="mt-4 flex items-center text-[11px] font-black uppercase tracking-[0.15em] text-[#661489] transition-all group-hover:translate-x-1 w-fit bg-[#661489]/5 px-4 py-2 rounded-xl">
-                        Voir les détails <ChevronRight size={14} className="ml-1" />
+                        {t('view_details')} <ChevronRight size={14} className="ml-1" />
                       </div>
                       </div>
                     </div>

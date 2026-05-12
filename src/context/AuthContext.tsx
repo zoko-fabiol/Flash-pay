@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { onSnapshot, doc } from 'firebase/firestore';
 import { authService, userService, db } from '../services/firebase';
+import { translateFirebaseError } from '../utils/errorMessages';
 import type { User } from '../types';
 
 interface AuthContextType {
@@ -76,8 +77,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await authService.signup(email, password, { nom, tel, ref });
       setEmailVerificationSent(true);
     } catch (err: any) {
-      setError(err.message);
-      throw err;
+      const friendlyError = translateFirebaseError(err);
+      setError(friendlyError);
+      throw new Error(friendlyError);
     }
   };
 
@@ -89,8 +91,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(userData as User);
       setFirebaseUser(fbUser);
     } catch (err: any) {
-      setError(err.message);
-      throw err;
+      const friendlyError = translateFirebaseError(err);
+      setError(friendlyError);
+      throw new Error(friendlyError);
     }
   };
 
@@ -110,8 +113,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError(null);
       await authService.resetPassword(email);
     } catch (err: any) {
-      setError(err.message);
-      throw err;
+      const friendlyError = translateFirebaseError(err);
+      setError(friendlyError);
+      throw new Error(friendlyError);
     }
   };
 

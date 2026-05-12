@@ -10,6 +10,12 @@ import { app } from '../services/firebase';
 
 let messaging: ReturnType<typeof getMessaging> | null = null;
 
+function isValidVapidKey(vapidKey: string | undefined | null): boolean {
+  if (!vapidKey) return false;
+  if (vapidKey.length < 80) return false;
+  return /^[A-Za-z0-9_-]+$/.test(vapidKey);
+}
+
 /**
  * Initialize Firebase Messaging
  * Should be called on app startup
@@ -56,8 +62,8 @@ export async function requestNotificationPermission(): Promise<string | null> {
 
     // Get VAPID key from environment
     const vapidKey = import.meta.env.VITE_FCM_VAPID_KEY;
-    if (!vapidKey) {
-      console.error('❌ FCM VAPID Key not configured in environment');
+    if (!isValidVapidKey(vapidKey)) {
+      console.warn('⚠️ FCM VAPID Key is missing or invalid, skipping web push subscription');
       return null;
     }
 
@@ -84,8 +90,8 @@ export async function getFCMToken(): Promise<string | null> {
     }
 
     const vapidKey = import.meta.env.VITE_FCM_VAPID_KEY;
-    if (!vapidKey) {
-      console.error('❌ FCM VAPID Key not configured');
+    if (!isValidVapidKey(vapidKey)) {
+      console.warn('⚠️ FCM VAPID Key is missing or invalid, skipping token retrieval');
       return null;
     }
 

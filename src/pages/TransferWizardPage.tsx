@@ -564,6 +564,28 @@ export const TransferWizardPage: React.FC = () => {
 
       toast.success(t('transfer_validated'), { id: t_toast });
 
+      const recentContactPayload = {
+        name: transferData.recipientName || '',
+        phone: transferData.recipientPhone || transferData.beneficiaryAccount || '',
+        operator: transferData.recipientOperator || transferData.selectedOperator || '',
+        countryCode: transferData.destinationCountry || 'CM',
+        transactionId: txDocRef.id,
+      };
+
+      if (recentContactPayload.name || recentContactPayload.phone) {
+        setSavedContacts(prev => {
+          const key = `${recentContactPayload.name}|${recentContactPayload.phone}`.toLowerCase().trim();
+          const next = [
+            { id: txDocRef.id, ...recentContactPayload, lastUsedAt: Timestamp.now() },
+            ...prev.filter(contact => `${contact.name || contact.recipientName || ''}|${contact.phone || contact.recipientPhone || ''}`.toLowerCase().trim() !== key)
+          ];
+          return next;
+        });
+
+        contactService.touchRecentContact(user?.id || auth.currentUser?.uid || '', recentContactPayload)
+          .catch(err => console.error('Failed to update recent contact:', err));
+      }
+
       // 4.5 Deduct Bonus (RUB) and Points (Hybrid support)
       if (payWithBonus) {
         let rubNeeded = calculation.totalToPay;

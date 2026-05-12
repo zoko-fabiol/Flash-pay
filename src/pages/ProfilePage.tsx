@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { userService, authService, db } from '../services/firebase';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
@@ -17,6 +17,7 @@ export const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const { t, formatDate, formatNumber } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const [success, setSuccess] = useState('');
@@ -40,6 +41,14 @@ export const ProfilePage: React.FC = () => {
     });
     return () => unsubSettings();
   }, []);
+
+  useEffect(() => {
+    if (location.hash === '#points') {
+      const pointsSection = document.getElementById('points');
+      pointsSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.hash]);
+
   const [confirmPasswordForBiometric, setConfirmPasswordForBiometric] = useState('');
 
   const [formData, setFormData] = useState({
@@ -70,7 +79,7 @@ export const ProfilePage: React.FC = () => {
 
   const handleUpdatePassword = async () => {
     if (!currentPassword) {
-      setApiError('Veuillez entrer votre mot de passe actuel');
+      setApiError(t('current_password_required'));
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -82,7 +91,7 @@ export const ProfilePage: React.FC = () => {
       return;
     }
     if (currentPassword === newPassword) {
-      setApiError('Le nouveau mot de passe doit être différent du mot de passe actuel');
+      setApiError(t('current_password_must_differ'));
       return;
     }
 
@@ -96,8 +105,8 @@ export const ProfilePage: React.FC = () => {
       if (user) {
         await notificationService.sendNotification({
           userId: user.id,
-          title: 'Sécurité : Mot de passe modifié',
-          body: 'Votre mot de passe a été mis à jour avec succès.',
+          title: t('password_updated_notification_title'),
+          body: t('password_updated_notification_body'),
           type: 'in_app',
           priority: 'high'
         });
@@ -341,7 +350,7 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* ── Points Loyalty Card ── */}
-        <div className="mt-4 rounded-[28px] bg-white border-2 border-slate-100 p-6 shadow-sm overflow-hidden relative group">
+        <div id="points" className="mt-4 rounded-[28px] bg-white border-2 border-slate-100 p-6 shadow-sm overflow-hidden relative group">
            <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
               <Zap size={80} strokeWidth={3} className="text-brand" />
            </div>
@@ -351,23 +360,23 @@ export const ProfilePage: React.FC = () => {
                  <Zap size={24} strokeWidth={3} />
               </div>
               <div>
-                 <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('loyalty_points') || 'Points Fidélité'}</h3>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('loyalty_points')}</h3>
                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">1000 pts = 1 RUB</p>
               </div>
            </div>
 
            <div className="flex items-baseline gap-2">
               <span className="text-3xl font-black text-brand tracking-tight">{user?.solde_points ?? 0}</span>
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Points accumulés</span>
+                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('points_accumulated')}</span>
            </div>
 
            <div className="mt-6 pt-6 border-t border-slate-50 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
                  <ShieldCheck size={14} className="text-emerald-500" />
-                 {t('points_safe') || 'Points sécurisés'}
+                 {t('points_safe')}
               </div>
               <p className="text-[10px] text-slate-400 font-bold italic">
-                {t('points_earned_desc') || 'Gagnés sur vos transactions'}
+                {t('points_earned_desc')}
               </p>
            </div>
         </div>
@@ -522,9 +531,9 @@ export const ProfilePage: React.FC = () => {
                     <Fingerprint size={18} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Connexion par empreinte</p>
+                    <p className="text-sm font-semibold text-slate-900">{t('biometric_login')}</p>
                     <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
-                      {biometricEnabled ? 'Activé' : 'Désactivé'}
+                      {biometricEnabled ? t('enabled') : t('disabled')}
                     </p>
                   </div>
                 </div>
@@ -539,13 +548,13 @@ export const ProfilePage: React.FC = () => {
 
               {showBiometricConfirm && (
                 <div className="bg-slate-50 rounded-2xl p-4 space-y-3 animate-in fade-in zoom-in duration-300">
-                  <p className="text-xs font-bold text-slate-600">Confirmez votre mot de passe pour activer</p>
+                  <p className="text-xs font-bold text-slate-600">{t('confirm_password_to_activate')}</p>
                   <div className="flex gap-2">
                     <input
                       type="password"
                       value={confirmPasswordForBiometric}
                       onChange={(e) => setConfirmPasswordForBiometric(e.target.value)}
-                      placeholder="Votre mot de passe"
+                      placeholder={t('password_placeholder_generic')}
                       className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
                     />
                     <button
@@ -553,13 +562,13 @@ export const ProfilePage: React.FC = () => {
                       disabled={!confirmPasswordForBiometric || loading}
                       className="px-4 py-2 rounded-xl bg-[#661489] text-white text-xs font-bold disabled:opacity-50"
                     >
-                      {loading ? '...' : 'Activer'}
+                      {loading ? '...' : t('activate')}
                     </button>
                     <button
                       onClick={() => { setShowBiometricConfirm(false); setConfirmPasswordForBiometric(''); }}
                       className="px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-bold"
                     >
-                      Annuler
+                      {t('cancel')}
                     </button>
                   </div>
                 </div>
@@ -575,9 +584,9 @@ export const ProfilePage: React.FC = () => {
                     <Lock size={18} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">Verrouillage au lancement</p>
+                    <p className="text-sm font-semibold text-slate-900">{t('app_lock_title')}</p>
                     <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
-                      {appLockEnabled ? 'Activé' : 'Désactivé'}
+                      {appLockEnabled ? t('enabled') : t('disabled')}
                     </p>
                   </div>
                 </div>
