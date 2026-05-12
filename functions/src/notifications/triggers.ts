@@ -59,7 +59,7 @@ export const onInAppNotificationCreated = functions.firestore
         body: data.body,
         data: data.data || {}
       },
-      channels: ['fcm'],
+      channels: ['fcm', 'onesignal'],
       status: 'pending',
       scheduledFor: Date.now(),
       attempts: 0,

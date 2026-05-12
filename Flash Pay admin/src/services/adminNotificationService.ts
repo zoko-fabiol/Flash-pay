@@ -45,26 +45,7 @@ export async function sendBroadcastDirect(
       }
     });
 
-    // 1. Send emails via GAS
-    if (options.sendEmail && emailRecipients.length > 0 && GAS_URL) {
-      try {
-        await fetch(GAS_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'broadcastEmail',
-            title,
-            body,
-            recipients: emailRecipients
-          })
-        });
-      } catch (err) {
-        console.error('Email broadcast failed:', err);
-      }
-    }
-
-    // 2. Send Push Notification via OneSignal
+    // 1. Send Push Notification via Netlify Proxy (Free & No CORS)
     if (options.sendNotification) {
       try {
         await oneSignalService.broadcastNotification(title, body);
@@ -72,6 +53,38 @@ export async function sendBroadcastDirect(
         console.error('OneSignal broadcast failed:', err);
       }
     }
+
+    // 2. Send Emails via Google Apps Script (GAS)
+    if (options.sendEmail && emailRecipients.length > 0) {
+      const GAS_URL = import.meta.env.VITE_GAS_URL;
+      if (GAS_URL) {
+        try {
+          await fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'broadcastEmail',
+              title,
+              body,
+              recipients: emailRecipients
+            })
+          });
+        } catch (err) {
+          console.error('Email broadcast failed:', err);
+        }
+      }
+    }
+
+    // 3. Log to Firestore for History
+    await addDoc(collection(db, 'admin_broadcasts'), {
+      title,
+      body,
+      sendEmail: options.sendEmail,
+      sendNotification: options.sendNotification,
+      status: 'sent',
+      createdAt: Date.now()
+    });
 
     // 3. Create In-App Notifications
     let notificationsCreated = 0;

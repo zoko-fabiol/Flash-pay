@@ -257,23 +257,20 @@ export const userService = {
   },
 
   async notifyAdminsViaPush(title: string, body: string, payload: any = {}) {
-    const GAS_URL = import.meta.env.VITE_GAS_URL;
-    if (!GAS_URL) return;
-
     try {
-      await fetch(GAS_URL, {
+      await fetch('/.netlify/functions/onesignal', {
         method: 'POST',
-        mode: 'no-cors', // Important for GAS
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'notifyAdmins',
-          adminAppId: import.meta.env.VITE_ADMIN_ONESIGNAL_APP_ID,
+          app_id: import.meta.env.VITE_ADMIN_ONESIGNAL_APP_ID,
+          broadcast: true, // Send to all devices in the Admin App
           title,
           body,
-          payload
+          data: payload
         })
       });
     } catch (err) {
-      console.error('Failed to notify admins via GAS:', err);
+      console.error('Failed to notify admins via Netlify:', err);
     }
   },
 
