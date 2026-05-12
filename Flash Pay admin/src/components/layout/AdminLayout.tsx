@@ -142,7 +142,7 @@ const AdminLayout: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-black text-[#1D1B20] truncate">{currentUser?.email}</p>
                 <p className="text-[9px] font-bold text-[#661489] uppercase tracking-widest">
-                              {profile?.adminRole === 'restricted' ? 'Accès restreint' : profile?.adminRole === 'email-only' ? 'Notification seulement' : 'Administrateur complet'}
+                  {(profile?.adminRole as any) === 'agent' ? `Agent ${profile?.assignedCountry || ''}` : profile?.adminRole === 'restricted' ? 'Accès restreint' : profile?.adminRole === 'email-only' ? 'Notification seulement' : 'Administrateur complet'}
                 </p>
               </div>
             </div>

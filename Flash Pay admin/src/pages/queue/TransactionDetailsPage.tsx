@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
-import { doc, onSnapshot, updateDoc, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, Timestamp, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { Transaction, BulkRecipient, TransactionStatus } from '../../types';
 import { adminService } from '../../services/adminService';
@@ -55,6 +55,7 @@ const TransactionDetailsPage: React.FC = () => {
   const [emailSubject, setEmailSubject] = useState('À propos de votre transfert Flash Pay');
   const [emailMessage, setEmailMessage] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [destinationCountryName, setDestinationCountryName] = useState<string>('');
 
   useEffect(() => {
     if (!transactionId) return;
@@ -68,6 +69,34 @@ const TransactionDetailsPage: React.FC = () => {
 
     return () => unsubscribe();
   }, [transactionId]);
+
+  useEffect(() => {
+    const resolveCountryName = async () => {
+      const code = transaction?.destinationCountry || transaction?.toCountry;
+      if (!code) return;
+      
+      // If it looks like a name already (more than 3 chars), keep it
+      if (code.length > 3) {
+        setDestinationCountryName(code);
+        return;
+      }
+
+      try {
+        const q = query(collection(db, 'countries'), where('code', '==', code.toUpperCase()), limit(1));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setDestinationCountryName(snap.docs[0].data().name);
+        } else {
+          setDestinationCountryName(code);
+        }
+      } catch (err) {
+        console.error('Error resolving country name:', err);
+        setDestinationCountryName(code);
+      }
+    };
+
+    resolveCountryName();
+  }, [transaction]);
 
   const handleSendManualEmail = async () => {
     if (!transaction?.clientEmail || !emailMessage) return;
@@ -330,7 +359,14 @@ const TransactionDetailsPage: React.FC = () => {
             <ArrowLeft size={16} /> Retour à la file d'attente
           </button>
           <div className="flex items-center gap-4">
-             <h2 className="text-3xl font-black text-[#1D1B20] tracking-tighter">Transaction <span className="font-mono text-[#661489]">#{transaction.id.substring(0, 10)}</span></h2>
+             <h2 className="text-3xl font-black text-[#1D1B20] tracking-tighter">
+               Transaction <span className="font-mono text-[#661489]">#{transaction.id.substring(0, 10)}</span>
+               {(destinationCountryName) && (
+                 <span className="ml-3 px-3 py-1 bg-[#661489]/10 text-[#661489] rounded-lg text-xs align-middle">
+                   {destinationCountryName}
+                 </span>
+               )}
+             </h2>
           </div>
         </div>
         
@@ -422,6 +458,17 @@ const TransactionDetailsPage: React.FC = () => {
                       <div className="flex items-center gap-2 mt-1">
                         <a href={`mailto:${transaction.clientEmail}`} className="text-[#49454F] text-[9px] font-bold opacity-60 hover:underline truncate max-w-[120px]">{transaction.clientEmail}</a>
                         <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigator.clipboard.writeText(transaction.clientEmail!);
+                            toast.success('Email copié !');
+                          }}
+                          className="p-1.5 bg-[#F3EDF7] text-[#49454F] rounded-md hover:bg-[#661489] hover:text-white transition-all shadow-sm flex items-center justify-center"
+                          title="Copier l'email"
+                        >
+                          <Copy size={12} />
+                        </button>
+                        <button 
                           onClick={() => setIsEmailModalOpen(true)}
                           className="p-1.5 bg-[#EADDFF] text-[#21005D] rounded-md hover:bg-[#661489] hover:text-white transition-all shadow-sm flex items-center justify-center"
                           title="Envoyer un mail direct"
@@ -466,6 +513,11 @@ const TransactionDetailsPage: React.FC = () => {
                       ? (transaction.bonusUsed ? `${transaction.bonusUsed.toLocaleString()} RUB` : 'TOTAL')
                       : `${(transaction.receivedAmount || transaction.amount).toLocaleString()} ${transaction.destinationCurrency}`}
                   </h3>
+                  {(destinationCountryName) && (
+                    <p className="text-[10px] font-black text-[#661489] opacity-40 uppercase tracking-widest mt-1">
+                      Vers le {destinationCountryName}
+                    </p>
+                  )}
                   {transaction.isHybrid && (
                     <p className="text-[9px] font-black text-[#661489] mt-1 opacity-60">
                       + {transaction.paidByCash?.toLocaleString()} {transaction.currency} cash
@@ -563,6 +615,14 @@ const TransactionDetailsPage: React.FC = () => {
                         {transaction.recipientOperator || transaction.operator || transaction.selectedOperator || 'Inconnu'}
                       </p>
                     </div>
+                    {(destinationCountryName) && (
+                      <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                        <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">Pays de destination</p>
+                        <p className="text-[#1D1B20] font-black text-lg tracking-tight uppercase">
+                          {destinationCountryName}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-4">
                     <div className="bg-[#F3EDF7] p-5 rounded-[24px] group flex justify-between items-end">

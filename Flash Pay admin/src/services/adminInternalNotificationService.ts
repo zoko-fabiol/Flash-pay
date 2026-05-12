@@ -24,18 +24,28 @@ export interface AdminNotification {
   createdAt: Timestamp;
   link?: string;
   data?: any;
+  countryCode?: string; // For filtering by agent
 }
 
 export const adminInternalNotificationService = {
   /**
    * Subscribe to recent admin notifications
    */
-  subscribeToNotifications: (callback: (notifications: AdminNotification[]) => void) => {
-    const q = query(
+  subscribeToNotifications: (callback: (notifications: AdminNotification[]) => void, countryCode?: string) => {
+    let q = query(
       collection(db, 'admin_notifications'),
       orderBy('createdAt', 'desc'),
       limit(50)
     );
+
+    if (countryCode) {
+      q = query(
+        collection(db, 'admin_notifications'),
+        where('countryCode', 'in', [countryCode, 'all', null]),
+        orderBy('createdAt', 'desc'),
+        limit(50)
+      );
+    }
 
     return onSnapshot(q, (snapshot) => {
       const notifications = snapshot.docs.map(doc => ({

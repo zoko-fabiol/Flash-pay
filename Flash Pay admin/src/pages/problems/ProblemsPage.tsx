@@ -3,10 +3,12 @@ import {
   collection, 
   onSnapshot, 
   query, 
-  orderBy
+  orderBy,
+  where
 } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import type { ProblemReport } from '../../types';
 import { 
   AlertTriangle, 
@@ -31,14 +33,30 @@ const ProblemsPage: React.FC = () => {
   const [resolutionText, setResolutionText] = useState('Incident résolu et traité par l\'administration.');
   const [resolvingId, setResolvingId] = useState<string | null>(null);
 
+  const { profile } = useAuth();
+  const isAgent = (profile?.adminRole as any) === 'agent';
+  const assignedCountry = profile?.assignedCountry;
+
   useEffect(() => {
-    const q = query(collection(db, 'problem_reports'), orderBy('createdAt', 'desc'));
+    let q = query(collection(db, 'problem_reports'), orderBy('createdAt', 'desc'));
+    
+    if (isAgent && assignedCountry) {
+      q = query(
+        collection(db, 'problem_reports'),
+        where('countryCode', '==', assignedCountry),
+        orderBy('createdAt', 'desc')
+      );
+    }
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setProblems(snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) })) as ProblemReport[]);
       setLoading(false);
+    }, (err) => {
+      console.error('Error fetching problems:', err);
+      setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAgent, assignedCountry]);
 
   const handleResolve = async () => {
     if (!resolvingId) return;

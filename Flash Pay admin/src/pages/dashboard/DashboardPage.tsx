@@ -27,6 +27,7 @@ import {
 import { collection, query, where, onSnapshot, Timestamp, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { Transaction, ProblemReport } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 
 const asDate = (value: any): Date | null => {
   if (!value) return null;
@@ -85,6 +86,10 @@ const DashboardPage: React.FC = () => {
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [popularRoutes, setPopularRoutes] = useState<{name: string, count: number}[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const { profile } = useAuth();
+  
+  const isAgent = (profile?.adminRole as any) === 'agent';
+  const assignedCountry = profile?.assignedCountry;
 
   useEffect(() => {
     const getRangeQuery = () => {
@@ -121,11 +126,21 @@ const DashboardPage: React.FC = () => {
 
     const { start: rangeStart, end: rangeEnd } = getRangeQuery();
     
-    const qMain = query(
+    let qMain = query(
       collection(db, 'transactions'),
       where('createdAt', '>=', Timestamp.fromDate(rangeStart)),
       where('createdAt', '<=', Timestamp.fromDate(rangeEnd))
     );
+
+    if (isAgent && assignedCountry) {
+      // Create a more specific query for agents
+      qMain = query(
+        collection(db, 'transactions'),
+        where('destinationCountry', '==', assignedCountry),
+        where('createdAt', '>=', Timestamp.fromDate(rangeStart)),
+        where('createdAt', '<=', Timestamp.fromDate(rangeEnd))
+      );
+    }
 
     const unsubMain = onSnapshot(qMain, (snapshot) => {
       const txs = snapshot.docs.map(doc => doc.data() as Transaction);
@@ -184,11 +199,20 @@ const DashboardPage: React.FC = () => {
       }
     });
 
-    const qRecent = query(
+    let qRecent = query(
       collection(db, 'transactions'),
       orderBy('createdAt', 'desc'),
-      limit(5)
+      limit(10)
     );
+    
+    if (isAgent && assignedCountry) {
+      qRecent = query(
+        collection(db, 'transactions'),
+        where('destinationCountry', '==', assignedCountry),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      );
+    }
     const unsubRecent = onSnapshot(qRecent, (snapshot) => {
       const txs = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) } as Transaction));
       setRecentTransactions(txs);
@@ -206,10 +230,20 @@ const DashboardPage: React.FC = () => {
     });
 
     const unsubUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
+      // For agents, we might not want to show total global users, or maybe we do. 
+      // Keeping it global for now as it's a general health metric.
       setStats(prev => ({ ...prev, activeUsers: snapshot.size }));
     });
 
-    const qAlerts = query(collection(db, 'problem_reports'), where('status', '==', 'pending'));
+    let qAlerts = query(collection(db, 'problem_reports'), where('status', '==', 'pending'));
+    
+    if (isAgent && assignedCountry) {
+      qAlerts = query(
+        collection(db, 'problem_reports'), 
+        where('status', '==', 'pending'),
+        where('countryCode', '==', assignedCountry)
+      );
+    }
     const unsubAlerts = onSnapshot(qAlerts, (snapshot) => {
       const alertRows = snapshot.docs
         .map(doc => ({ id: doc.id, ...(doc.data() as any) } as ProblemReport))

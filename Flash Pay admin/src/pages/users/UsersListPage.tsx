@@ -241,9 +241,24 @@ const UsersListPage: React.FC = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex flex-col gap-1.5">
-                        <div className="flex items-center gap-2 text-xs text-[#1D1B20] font-bold">
+                        <div className="flex items-center gap-2 text-xs text-[#1D1B20] font-bold group/mailitem">
                           <Mail size={12} className="text-[#661489]" /> 
-                          {user.email ? <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a> : 'Pas d\'email'}
+                          {user.email ? (
+                            <>
+                              <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(user.email);
+                                  toast.success('Email copié !');
+                                }}
+                                className="p-1 opacity-0 group-hover/mailitem:opacity-100 hover:bg-[#EADDFF] rounded text-[#661489] transition-all"
+                                title="Copier l'email"
+                              >
+                                <Copy size={10} />
+                              </button>
+                            </>
+                          ) : 'Pas d\'email'}
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-[#49454F] font-medium opacity-60">
                           <Phone size={12} className="text-[#661489]/40" /> 

@@ -496,6 +496,7 @@ export const userService = {
         status: 'pending',
         workflowStatus: 'pending',
         corridor: validation.isRussianCorridor ? 'russia' : 'international',
+        countryCode: formData.countryOfDeparture || 'all',
         submittedAt: Timestamp.now(),
         history: [{
           action: 'submitted',
@@ -566,7 +567,8 @@ export const userService = {
           priority: 'normal',
           read: false,
           createdAt: Timestamp.now(),
-          link: `/admin/kyc`
+          link: `/admin/kyc`,
+          countryCode: (formData as any).countryOfDepartureCode || formData.countryOfDeparture || 'all'
         });
       } catch (err) {
         console.error('Failed to notify admin of KYC submission:', err);
@@ -1436,10 +1438,48 @@ export const transactionService = {
         priority: isLarge ? 'high' : 'normal',
         read: false,
         createdAt: Timestamp.now(),
-        link: `/admin/queue/${docRef.id}`
+        link: `/admin/queue/${docRef.id}`,
+        countryCode: transactionData.destinationCountry || transactionData.toCountry || 'all'
       });
     } catch (err) {
       console.error('Failed to notify admin of transaction:', err);
+    }
+
+    // Notify Admin via Email
+    try {
+      const adminsQuery = query(collection(db, 'users'), where('isAdmin', '==', true));
+      const adminsSnapshot = await getDocs(adminsQuery);
+      
+      const countryCode = transactionData.destinationCountry || transactionData.toCountry;
+      const recipients: string[] = [];
+      
+      adminsSnapshot.docs.forEach(adminDoc => {
+        const admin = adminDoc.data() as any;
+        if (admin.adminRole === 'agent') {
+          if (admin.assignedCountry === countryCode && admin.adminPermissions?.receiveCountryEmails !== false) {
+            recipients.push(admin.email);
+          }
+        } else if (admin.adminPermissions?.receiveOrderEmails !== false) {
+          recipients.push(admin.email);
+        }
+      });
+
+      if (recipients.length > 0) {
+        const htmlBody = emailService.getAdminTransferTemplate({
+          amount: transactionData.amount,
+          currency: transactionData.currency,
+          clientName: transactionData.clientName || 'Client Inconnu',
+          receiverName: transactionData.recipientName || 'Destinataire',
+          country: countryCode || 'N/A',
+          txId: docRef.id
+        });
+        
+        for (const email of recipients) {
+          await emailService.sendEmail(email, `[Flash Pay] Nouveau Transfert - ${countryCode}`, htmlBody);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to send admin email notification:', err);
     }
 
     return docRef.id;
@@ -1527,12 +1567,27 @@ async function generateUniqueReferralCode(): Promise<string> {
 }
 // Support Service
 export const supportService = {
-  async submitTicket(userId: string, data: { description: string; type?: string; transactionId?: string }) {
+  async submitTicket(userId: string, data: { description: string; type?: string; transactionId?: string; countryCode?: string }) {
+    let countryCode = data.countryCode || 'all';
+    
+    // Auto-detect country code from transaction if possible
+    if (data.transactionId && data.transactionId !== 'N/A' && !data.countryCode) {
+      try {
+        const txDoc = await getDoc(doc(db, 'transactions', data.transactionId));
+        if (txDoc.exists()) {
+          countryCode = txDoc.data().destinationCountry || 'all';
+        }
+      } catch (err) {
+        console.error('Failed to fetch transaction for support ticket:', err);
+      }
+    }
+
     const docRef = await addDoc(collection(db, 'problem_reports'), {
       userId,
       ...data,
       type: data.type || 'Anomalie',
       status: 'pending',
+      countryCode,
       createdAt: Timestamp.now(),
     });
 
@@ -1560,7 +1615,8 @@ export const supportService = {
         priority: 'normal',
         read: false,
         createdAt: Timestamp.now(),
-        link: `/admin/problems` // Adjust link if needed
+        link: `/admin/problems`,
+        countryCode: 'all' // Support tickets are global by default unless tied to a country-specific transaction
       });
     } catch (err) {
       console.error('Failed to notify admin of support ticket:', err);

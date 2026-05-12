@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { adminInternalNotificationService, type AdminNotification } from '../services/adminInternalNotificationService';
+import { useAuth } from './AuthContext';
 
 interface AdminNotificationContextType {
   notifications: AdminNotification[];
@@ -14,11 +15,15 @@ const AdminNotificationContext = createContext<AdminNotificationContextType | un
 
 export const AdminNotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const { profile } = useAuth();
 
   useEffect(() => {
-    const unsubscribe = adminInternalNotificationService.subscribeToNotifications(setNotifications);
+    // If user is an agent, only subscribe to notifications for their assigned country
+    const countryFilter = profile?.adminRole === 'agent' ? profile?.assignedCountry : undefined;
+    
+    const unsubscribe = adminInternalNotificationService.subscribeToNotifications(setNotifications, countryFilter);
     return () => unsubscribe();
-  }, []);
+  }, [profile?.adminRole, profile?.assignedCountry]);
 
   const unreadCount = useMemo(() => 
     notifications.filter(n => !n.read).length, 

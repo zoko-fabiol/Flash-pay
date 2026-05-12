@@ -50,6 +50,8 @@ const AccessControlPage: React.FC = () => {
   const [newAdminRole, setNewAdminRole] = useState<UserProfile['adminRole']>('restricted');
   const [creatingAdmin, setCreatingAdmin] = useState(false);
   const [resettingPassword, setResettingPassword] = useState('');
+  const [countries, setCountries] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState('');
 
   useEffect(() => {
     const unsubscribe = onSnapshot(query(collection(db, 'users'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -75,12 +77,20 @@ const AccessControlPage: React.FC = () => {
   }, [selectedAdminId]);
 
   useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'countries'), (snap) => {
+      setCountries(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
     if (!selectedAdminId) return;
 
     const selectedAdmin = admins.find((admin) => admin.id === selectedAdminId);
     if (!selectedAdmin) return;
 
     setSelectedRole(selectedAdmin.adminRole || 'super');
+    setSelectedCountry(selectedAdmin.assignedCountry || '');
     setPermissions(mergeAdminPermissions(selectedAdmin.adminPermissions));
   }, [admins, selectedAdminId]);
 
@@ -115,6 +125,7 @@ const AccessControlPage: React.FC = () => {
       await updateDoc(doc(db, 'users', selectedAdminId), {
         isAdmin: true,
         adminRole: selectedRole,
+        assignedCountry: (selectedRole as any) === 'agent' ? selectedCountry : null,
         adminPermissions: permissions,
         updatedAt: Timestamp.now(),
       });
@@ -230,9 +241,10 @@ const AccessControlPage: React.FC = () => {
               onChange={(e) => setNewAdminRole(e.target.value as UserProfile['adminRole'])}
               className="w-full bg-white border border-[#CAC4D0] rounded-[20px] px-5 py-3.5 text-sm font-bold text-[#1D1B20] outline-none"
             >
-              <option value="super">Administrateur complet</option>
-              <option value="restricted">Accès restreint</option>
-              <option value="email-only">Notifications seulement</option>
+               <option value="super">Administrateur complet</option>
+               <option value="agent">Agent par pays</option>
+               <option value="restricted">Accès restreint</option>
+               <option value="email-only">Notifications seulement</option>
             </select>
           </div>
           <div className="flex items-end">
@@ -335,20 +347,58 @@ const AccessControlPage: React.FC = () => {
           </div>
 
           {selectedAdmin && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {(['super', 'restricted', 'email-only'] as const).map((role) => (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {(['super', 'restricted', 'email-only'] as const).map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => applyPreset(role as any)}
+                    className={`rounded-[22px] border px-4 py-4 text-left transition-all ${(selectedRole as any) === role ? 'bg-[#661489] text-white border-[#661489]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
+                  >
+                    <div className="text-[10px] font-black uppercase tracking-widest opacity-60">Profil</div>
+                    <div className="font-black text-sm mt-1">
+                      {role === 'super' ? 'Complet' : role === 'restricted' ? 'Restreint' : 'Emails seulement'}
+                    </div>
+                  </button>
+                ))}
                 <button
-                  key={role}
-                  onClick={() => applyPreset(role)}
-                  className={`rounded-[22px] border px-4 py-4 text-left transition-all ${selectedRole === role ? 'bg-[#661489] text-white border-[#661489]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
+                  key="agent"
+                  onClick={() => applyPreset('agent' as any)}
+                  className={`rounded-[22px] border px-4 py-4 text-left transition-all ${(selectedRole as any) === 'agent' ? 'bg-[#661489] text-white border-[#661489]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
                 >
                   <div className="text-[10px] font-black uppercase tracking-widest opacity-60">Profil</div>
-                  <div className="font-black text-sm mt-1">
-                    {role === 'super' ? 'Complet' : role === 'restricted' ? 'Restreint' : 'Emails seulement'}
-                  </div>
+                  <div className="font-black text-sm mt-1">Agent Pays</div>
                 </button>
-              ))}
+              </div>
+
+              {(selectedRole as any) === 'agent' && (
+            <div className="space-y-4 p-6 bg-[#F3EDF7] rounded-[24px] border border-[#EADDFF] animate-in slide-in-from-top duration-500">
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#661489]">Assignation du Pays (Max 1 par pays)</label>
+              <select
+                value={selectedCountry}
+                onChange={(e) => {
+                  const countryCode = e.target.value;
+                  // Check if another agent is already assigned to this country
+                  const existingAgent = admins.find(a => a.adminRole === 'agent' && a.assignedCountry === countryCode && a.id !== selectedAdminId);
+                  if (existingAgent) {
+                    toast.error(`Un agent (${existingAgent.email}) est déjà assigné à ce pays.`);
+                    return;
+                  }
+                  setSelectedCountry(countryCode);
+                }}
+                className="w-full bg-white border border-[#EADDFF] rounded-[20px] px-5 py-4 text-[#1D1B20] font-bold outline-none"
+              >
+                <option value="">Choisir un pays...</option>
+                {countries.map(c => (
+                  <option key={c.id} value={c.code}>{c.name} ({c.code})</option>
+                ))}
+              </select>
+              <p className="text-[9px] font-bold text-[#661489] opacity-60 uppercase tracking-widest italic">
+                Note: L'agent ne verra que les transactions et stats de ce pays.
+              </p>
             </div>
+          )}
+            </>
           )}
 
           <div className="space-y-4">
@@ -419,6 +469,21 @@ const AccessControlPage: React.FC = () => {
               className="m3-checkbox h-7 w-7"
             />
           </label>
+
+          {(selectedRole as any) === 'agent' && (
+            <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#F3EDF7] hover:bg-[#EADDFF] hover:border-[#661489]/30 transition-all cursor-pointer group">
+              <div>
+                <p className="text-sm font-black text-[#1D1B20]">Recevoir les emails de son pays</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">L'agent sera notifié par mail pour chaque transaction de son pays</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={permissions.receiveCountryEmails ?? false}
+                onChange={(e) => setPermissions((current) => ({ ...current, receiveCountryEmails: e.target.checked }))}
+                className="m3-checkbox h-7 w-7"
+              />
+            </label>
+          )}
 
           <button
             onClick={saveAdminAccess}

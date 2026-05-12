@@ -4,10 +4,12 @@ import {
   collection, 
   query, 
   orderBy, 
-  onSnapshot
+  onSnapshot,
+  where
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { Transaction, TransactionStatus } from '../../types';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Search, 
   Filter, 
@@ -15,8 +17,10 @@ import {
   Clock,
   ArrowUpRight,
   MoreVertical,
-  Globe
+  Globe,
+  Copy
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const StatusBadge = ({ status }: { status: TransactionStatus }) => {
   const styles: Record<string, string> = {
@@ -50,9 +54,21 @@ const TransactionQueuePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<TransactionStatus | 'all'>('all');
+  const { profile } = useAuth();
+
+  const isAgent = (profile?.adminRole as any) === 'agent';
+  const assignedCountry = profile?.assignedCountry;
 
   useEffect(() => {
-    const q = query(collection(db, 'transactions'), orderBy('createdAt', 'desc'));
+    let q = query(collection(db, 'transactions'), orderBy('createdAt', 'desc'));
+    
+    if (isAgent && assignedCountry) {
+      q = query(
+        collection(db, 'transactions'), 
+        where('destinationCountry', '==', assignedCountry),
+        orderBy('createdAt', 'desc')
+      );
+    }
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const txs = snapshot.docs.map(doc => ({
@@ -183,7 +199,20 @@ const TransactionQueuePage: React.FC = () => {
                             <a href={`tel:${tx.clientPhone}`} className="text-[#661489] text-[10px] font-bold hover:underline">{tx.clientPhone}</a>
                           )}
                           {tx.clientEmail && (
-                            <a href={`mailto:${tx.clientEmail}`} className="text-[#49454F] text-[10px] font-bold opacity-60 hover:underline">{tx.clientEmail}</a>
+                            <div className="flex items-center gap-1">
+                              <a href={`mailto:${tx.clientEmail}`} className="text-[#49454F] text-[10px] font-bold opacity-60 hover:underline">{tx.clientEmail}</a>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(tx.clientEmail!);
+                                  toast.success('Email copié !');
+                                }}
+                                className="p-1 hover:bg-[#EADDFF] rounded text-[#661489] transition-colors"
+                                title="Copier l'email"
+                              >
+                                <Copy size={10} />
+                              </button>
+                            </div>
                           )}
                           {!tx.clientPhone && !tx.clientEmail && <span className="text-[#49454F] text-[10px] font-bold opacity-60">Pas de contact</span>}
                         </div>

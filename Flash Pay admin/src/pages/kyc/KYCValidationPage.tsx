@@ -5,8 +5,10 @@ import {
   onSnapshot, 
   query, 
   orderBy,
+  where
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useAuth } from '../../context/AuthContext';
 import type { KYCRequest } from '../../types';
 import { adminService } from '../../services/adminService';
 import ImageLightbox from '../../components/ui/ImageLightbox';
@@ -39,8 +41,21 @@ const KYCValidationPage: React.FC = () => {
   const [rejectionReason, setRejectionReason] = useState('');
   const [isActionLoading, setIsActionLoading] = useState(false);
 
+  const { profile } = useAuth();
+  const isAgent = (profile?.adminRole as any) === 'agent';
+  const assignedCountry = profile?.assignedCountry;
+
   useEffect(() => {
-    const q = query(collection(db, 'kyc_requests'), orderBy('submittedAt', 'desc'));
+    let q = query(collection(db, 'kyc_requests'), orderBy('submittedAt', 'desc'));
+
+    if (isAgent && assignedCountry) {
+      q = query(
+        collection(db, 'kyc_requests'),
+        where('countryCode', '==', assignedCountry),
+        orderBy('submittedAt', 'desc')
+      );
+    }
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -48,9 +63,12 @@ const KYCValidationPage: React.FC = () => {
       })) as KYCRequest[];
       setRequests(data);
       setLoading(false);
+    }, (err) => {
+      console.error('Error fetching KYC requests:', err);
+      setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAgent, assignedCountry]);
 
   const handleReview = async (id: string, status: 'approved' | 'rejected') => {
     setIsActionLoading(true);

@@ -73,6 +73,7 @@ export interface Transaction {
   narration?: string;
   route?: string;
   country?: string;
+  destinationCountryCode?: string; // For filtering
   adminNotes?: string;
   problemFlags?: ProblemFlag[];
   // Transaction calculation fields (snapshots at transaction time)
@@ -171,11 +172,12 @@ export interface UserProfile {
   email: string;
   emailVerified: boolean;
   isAdmin: boolean;
-  adminRole?: 'super' | 'restricted' | 'email-only';
+  adminRole?: 'super' | 'restricted' | 'email-only' | 'agent';
   adminPermissions?: AdminPermissions;
   kycStatus: KYCStatus;
   statut_kyc?: 'Standard' | 'Pending' | 'Expert' | 'Rejected';
   kyc?: KYCState;
+  assignedCountry?: string; // For agents
 }
 
 export type AdminSectionKey =
@@ -197,6 +199,8 @@ export interface AdminPermissions {
   sections?: Partial<Record<AdminSectionKey, boolean>>;
   actions?: Partial<Record<AdminActionKey, boolean>>;
   receiveOrderEmails?: boolean;
+  receiveCountryEmails?: boolean; // For agents
+  assignedCountry?: string;
 }
 
 export interface RussianBank {

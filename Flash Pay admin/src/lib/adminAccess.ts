@@ -47,6 +47,8 @@ export const DEFAULT_ADMIN_PERMISSIONS: Required<AdminPermissions> = {
   sections: DEFAULT_SECTION_PERMISSIONS,
   actions: DEFAULT_ACTION_PERMISSIONS,
   receiveOrderEmails: true,
+  receiveCountryEmails: false,
+  assignedCountry: '',
 };
 
 export const buildPresetPermissions = (role: UserProfile['adminRole']): AdminPermissions => {
@@ -98,6 +100,31 @@ export const buildPresetPermissions = (role: UserProfile['adminRole']): AdminPer
     };
   }
 
+  if (role === 'agent') {
+    return {
+      sections: {
+        dashboard: true,
+        queue: true,
+        users: false,
+        kyc: false,
+        countries: false,
+        settings: false,
+        problems: true,
+        notifications: true,
+        analytics: false,
+        security: false,
+        webhooks: false,
+      },
+      actions: {
+        add: false,
+        edit: true,
+        delete: false,
+      },
+      receiveOrderEmails: false,
+      receiveCountryEmails: true,
+    };
+  }
+
   return DEFAULT_ADMIN_PERMISSIONS;
 };
 
@@ -111,6 +138,7 @@ export const mergeAdminPermissions = (permissions?: AdminPermissions) => ({
     ...(permissions?.actions || {}),
   },
   receiveOrderEmails: permissions?.receiveOrderEmails ?? true,
+  receiveCountryEmails: permissions?.receiveCountryEmails ?? false,
 });
 
 export const canAccessAdminSection = (profile: UserProfile | null | undefined, section: AdminSectionKey) => {
