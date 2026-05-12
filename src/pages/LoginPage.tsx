@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Mail, Lock } from 'lucide-react';
+import { Zap, Mail, Lock, Fingerprint } from 'lucide-react';
 import { Error } from '../components/UI';
 import { useLanguage } from '../context/LanguageContext';
+import { biometricService } from '../services/biometricService';
+import { useEffect } from 'react';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +16,37 @@ export const LoginPage: React.FC = () => {
   const { login, resetPassword } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const [resetSent, setResetSent] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(localStorage.getItem('biometric_enabled') === 'true');
+
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const available = await biometricService.isAvailable();
+      setBiometricAvailable(available);
+      
+      // Auto-trigger if enabled
+      if (available && biometricEnabled) {
+        handleBiometricLogin();
+      }
+    };
+    checkBiometric();
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    setError('');
+    const credentials = await biometricService.getCredentials();
+    if (credentials) {
+      setLoading(true);
+      try {
+        await login(credentials.email, credentials.password);
+        navigate('/');
+      } catch (err: any) {
+        setError(err.message || t('login_error'));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +168,17 @@ export const LoginPage: React.FC = () => {
             >
               {loading ? t('connecting') : t('login')}
             </button>
+
+            {biometricAvailable && biometricEnabled && (
+              <button
+                type="button"
+                onClick={handleBiometricLogin}
+                className="w-full mt-4 flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-primary/20 text-primary font-black hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-bottom-2 duration-500"
+              >
+                <Fingerprint size={24} />
+                Connecter avec l'empreinte
+              </button>
+            )}
           </form>
 
           <div className="text-center mt-6 text-sm text-slate-500 font-medium">

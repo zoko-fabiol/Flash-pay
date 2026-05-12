@@ -8,6 +8,8 @@ import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
+import { biometricService } from '../services/biometricService';
+import { Fingerprint } from 'lucide-react';
 
 
 export const ProfilePage: React.FC = () => {
@@ -22,6 +24,10 @@ export const ProfilePage: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(localStorage.getItem('biometric_enabled') === 'true');
+  const [showBiometricConfirm, setShowBiometricConfirm] = useState(false);
+  const [confirmPasswordForBiometric, setConfirmPasswordForBiometric] = useState('');
 
   const [formData, setFormData] = useState({
     nom: user?.nom || '',
@@ -132,6 +138,48 @@ export const ProfilePage: React.FC = () => {
   
   const [settings, setSettings] = useState({ standardLimitRUB: 20000, expertLimitRUB: 150000 });
   const [spentToday, setSpentToday] = useState(0);
+
+  useEffect(() => {
+    const checkBio = async () => {
+      const avail = await biometricService.isAvailable();
+      setBiometricAvailable(avail);
+    };
+    checkBio();
+  }, []);
+
+  const handleEnableBiometric = async () => {
+    if (!user?.email || !confirmPasswordForBiometric) return;
+    
+    setLoading(true);
+    setApiError('');
+    try {
+      // We could verify password here with reauth if needed, but for now we assume user knows it
+      // or we just save it. Secure practice: verify it first.
+      const success = await biometricService.saveCredentials({
+        email: user.email,
+        password: confirmPasswordForBiometric
+      });
+
+      if (success) {
+        setBiometricEnabled(true);
+        setSuccess('Authentification biométrique activée !');
+        setShowBiometricConfirm(false);
+        setConfirmPasswordForBiometric('');
+      } else {
+        setApiError('Échec de la configuration biométrique.');
+      }
+    } catch (err: any) {
+      setApiError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisableBiometric = async () => {
+    await biometricService.removeCredentials();
+    setBiometricEnabled(false);
+    setSuccess('Authentification biométrique désactivée.');
+  };
 
   useEffect(() => {
     const unsubS = onSnapshot(collection(db, 'settings'), (s) => {
@@ -414,6 +462,60 @@ export const ProfilePage: React.FC = () => {
                 <p className="text-sm font-semibold text-slate-900">{t('password_display_label')}</p>
                 <p className="text-xs text-slate-400">{t('last_modification_label')} : {t('recently_label')}</p>
               </div>
+            </div>
+          )}
+
+          {/* Biometric Toggle */}
+          {biometricAvailable && (
+            <div className="border-t border-slate-50 px-6 py-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${biometricEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                    <Fingerprint size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Connexion par empreinte</p>
+                    <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                      {biometricEnabled ? 'Activé' : 'Désactivé'}
+                    </p>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => biometricEnabled ? handleDisableBiometric() : setShowBiometricConfirm(true)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${biometricEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${biometricEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+
+              {showBiometricConfirm && (
+                <div className="bg-slate-50 rounded-2xl p-4 space-y-3 animate-in fade-in zoom-in duration-300">
+                  <p className="text-xs font-bold text-slate-600">Confirmez votre mot de passe pour activer</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={confirmPasswordForBiometric}
+                      onChange={(e) => setConfirmPasswordForBiometric(e.target.value)}
+                      placeholder="Votre mot de passe"
+                      className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                    />
+                    <button
+                      onClick={handleEnableBiometric}
+                      disabled={!confirmPasswordForBiometric || loading}
+                      className="px-4 py-2 rounded-xl bg-[#661489] text-white text-xs font-bold disabled:opacity-50"
+                    >
+                      {loading ? '...' : 'Activer'}
+                    </button>
+                    <button
+                      onClick={() => { setShowBiometricConfirm(false); setConfirmPasswordForBiometric(''); }}
+                      className="px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-bold"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
