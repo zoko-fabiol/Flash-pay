@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { Notification } from '../types/notifications';
 import { notificationService } from '../services/notificationService';
 import { useAuth } from './AuthContext';
-import { getCurrentFCMToken, requestNotificationPermissionFromUser } from '../utils/pushNotifications';
+import { getCurrentPushToken, requestNotificationPermissionFromUser } from '../utils/pushNotifications';
 
 type NotificationContextType = {
   notifications: Notification[];
@@ -111,7 +111,7 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return false;
     }
 
-    const token = await getCurrentFCMToken();
+    const token = await getCurrentPushToken();
     if (!token) {
       return false;
     }
