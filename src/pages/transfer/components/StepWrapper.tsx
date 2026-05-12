@@ -21,11 +21,8 @@ export const StepWrapper: React.FC<StepWrapperProps> = ({
   nextLabel
 }) => {
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="mb-10 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{title}</h2>
-        {description && <p className="text-[#49454F] mt-3 font-medium text-lg">{description}</p>}
-      </div>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
+      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{title}</h2>
 
       {children}
 

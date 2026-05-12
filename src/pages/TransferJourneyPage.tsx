@@ -144,6 +144,16 @@ const TransferJourneyPage: React.FC = () => {
     };
   }, []);
 
+  // Scroll to top on step change
+  useEffect(() => {
+    const mainContainer = document.querySelector('main');
+    if (mainContainer) {
+      mainContainer.scrollTo(0, 0);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [currentStep]);
+
   useEffect(() => {
     if (!transferData.transferType) {
       navigate('/transfer-step1', { replace: true });
@@ -529,7 +539,7 @@ const TransferJourneyPage: React.FC = () => {
                 <input
                   value={transferData.narration || ''}
                   onChange={(event) => updateTransferData({ narration: event.target.value })}
-                  placeholder="Cadeau, scolarité, anniversaire..."
+                  placeholder="Anniversaire, Cadeau, Scolarité..."
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none placeholder:text-slate-400"
                 />
               </label>

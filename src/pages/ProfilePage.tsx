@@ -150,15 +150,18 @@ export const ProfilePage: React.FC = () => {
       
       const q = query(
         collection(db, 'transactions'),
-        where('userId', '==', user.id),
-        where('createdAt', '>=', Timestamp.fromDate(today))
+        where('userId', '==', user.id)
       );
 
       const unsubT = onSnapshot(q, (snapshot) => {
         let total = 0;
+        const todayStart = today.getTime();
+        
         snapshot.docs.forEach(doc => {
           const d = doc.data();
-          if (d.status !== 'failed' && d.status !== 'cancelled') {
+          const txDate = d.createdAt?.toMillis?.() || 0;
+          
+          if (txDate >= todayStart && d.status !== 'failed' && d.status !== 'cancelled') {
              let amountRUB = 0;
              if (d.type === 'russia-africa') {
                amountRUB = d.amount || 0;
@@ -185,6 +188,8 @@ export const ProfilePage: React.FC = () => {
     : settings.standardLimitRUB;
   
   const remainingLimit = Math.max(0, totalLimit - spentToday);
+
+  const [showTerms, setShowTerms] = useState(false);
 
   return (
     <Layout>
@@ -442,7 +447,10 @@ export const ProfilePage: React.FC = () => {
             <p className="font-bold text-slate-900 text-sm">{t('contact_support')}</p>
             <p className="text-xs text-slate-400">{t('support_desc')}</p>
           </button>
-          <button className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left">
+          <button 
+            onClick={() => setShowTerms(true)}
+            className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left"
+          >
             <Star size={20} className="text-[#661489]" />
             <p className="font-bold text-slate-900 text-sm">{t('about')}</p>
             <p className="text-xs text-slate-400">{t('legal_desc')}</p>
@@ -460,6 +468,88 @@ export const ProfilePage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* ── Terms of Service Popup ── */}
+      {showTerms && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+          <div 
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" 
+            onClick={() => setShowTerms(false)}
+          />
+          <div className="relative w-full max-w-2xl max-h-[85vh] overflow-hidden bg-white rounded-[32px] shadow-2xl flex flex-col animate-in zoom-in slide-in-from-bottom-4 duration-300">
+            {/* Modal Header */}
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">{t('terms_of_use')}</h2>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{t('last_updated')}</p>
+              </div>
+              <button 
+                onClick={() => setShowTerms(false)}
+                className="w-10 h-10 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+              <div className="prose prose-slate max-w-none">
+                <section className="mb-8">
+                  <h3 className="text-lg font-black text-slate-800 mb-3">{t('terms_section1_title')}</h3>
+                  <p className="text-slate-600 leading-relaxed text-sm">
+                    {t('terms_section1_content')}
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h3 className="text-lg font-black text-slate-800 mb-3">{t('terms_section2_title')}</h3>
+                  <p className="text-slate-600 leading-relaxed text-sm">
+                    {t('terms_section2_content')}
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h3 className="text-lg font-black text-slate-800 mb-3">{t('terms_section3_title')}</h3>
+                  <p className="text-slate-600 leading-relaxed text-sm">
+                    {t('terms_section3_content')}
+                  </p>
+                </section>
+
+                <section className="mb-8">
+                  <h3 className="text-lg font-black text-slate-800 mb-3">{t('terms_section4_title')}</h3>
+                  <p className="text-slate-600 leading-relaxed text-sm">
+                    {t('terms_section4_content')}
+                  </p>
+                </section>
+                
+                <section className="mb-8 pt-6 border-t border-slate-100">
+                  <h3 className="text-lg font-black text-slate-800 mb-3">{t('privacy_policy')}</h3>
+                  <p className="text-slate-600 leading-relaxed text-sm mb-4">
+                    {t('privacy_section1_content')}
+                  </p>
+                  <h4 className="text-sm font-bold text-slate-800 mb-2">{t('privacy_section2_title')}</h4>
+                  <ul className="list-disc pl-5 space-y-1 text-sm text-slate-600">
+                    <li>{t('privacy_section2_item1')}</li>
+                    <li>{t('privacy_section2_item2')}</li>
+                    <li>{t('privacy_section2_item3')}</li>
+                    <li>{t('privacy_section2_item4')}</li>
+                  </ul>
+                </section>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+              <button 
+                onClick={() => setShowTerms(false)}
+                className="px-8 py-3 rounded-2xl bg-[#661489] text-white font-bold text-sm shadow-lg shadow-[#661489]/20 hover:bg-[#2D0723] transition"
+              >
+                {t('close') || 'Fermer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };

@@ -7,6 +7,18 @@ import { TransferWizardProvider } from './context/TransferWizardContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+
+// --- Scroll To Top Handler ---
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 // Pages
 import { LoginPage } from './pages/LoginPage';
@@ -120,6 +132,7 @@ function AppRoutes() {
 
   return (
     <>
+      <ScrollToTop />
       <AndroidBackHandler />
       <PushNotificationHandler />
       <Routes>

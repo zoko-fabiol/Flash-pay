@@ -62,11 +62,8 @@ const flagImageFor = (code?: string) => {
 
 const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previousStep }: any) => {
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="mb-10 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{t('choose_transfer_method')}</h2>
-        <p className="text-[#49454F] mt-3 font-medium text-lg">{t('choose_transfer_method_desc')}</p>
-      </div>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
+      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('choose_transfer_method')}</h2>
 
       <div className="grid gap-6">
         <button
@@ -123,7 +120,6 @@ export const TransferWizardPage: React.FC = () => {
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [payWithBonus, setPayWithBonus] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(20 * 60); // 20 minutes
-  const timerRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [savedContacts, setSavedContacts] = useState<any[]>([]);
   const [personalContacts, setPersonalContacts] = useState<any[]>([]);
@@ -183,34 +179,47 @@ export const TransferWizardPage: React.FC = () => {
     [banks]
   );
 
-  // Payment timer - starts/resets when entering a payment step
+  const isPaymentStep = useMemo(
+    () => (transferData.transferType === 'russia-africa' && currentStep === 6) ||
+           (transferData.transferType === 'africa-russia' && currentStep === 5) ||
+           (transferData.transferType === 'africa-africa' && currentStep === 8),
+    [transferData.transferType, currentStep]
+  );
+
+  // Timer effect - countdown when on payment step
   useEffect(() => {
-    const isPaymentStep = 
-      (transferData.transferType === 'russia-africa' && currentStep === 8) ||
-      (transferData.transferType === 'africa-russia' && currentStep === 7) ||
-      (transferData.transferType === 'africa-africa' && currentStep === 8);
+    if (!isPaymentStep) return;
 
-    if (isPaymentStep) {
-      setTimerSeconds(20 * 60);
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setTimerSeconds(prev => {
-          if (prev <= 1) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            toast.error(t('payment_timeout_msg'));
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    // Set initial time when entering payment step
+    const startTime = Date.now();
+    setTimerSeconds(20 * 60);
+
+    // Start countdown interval
+    const interval = setInterval(() => {
+      const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+      const remaining = Math.max(0, (20 * 60) - elapsedSeconds);
+      
+      setTimerSeconds(remaining);
+      
+      if (remaining <= 0) {
+        clearInterval(interval);
+        toast.error(t('payment_timeout_msg'));
+      }
+    }, 500); // Update every 500ms for smooth display
+    
+    return () => clearInterval(interval);
+  }, [isPaymentStep, t]);
+
+  // Scroll to top on step change
+  useEffect(() => {
+    // Try to scroll the main layout container first (which has overflow-auto)
+    const mainContainer = document.querySelector('main');
+    if (mainContainer) {
+      mainContainer.scrollTo(0, 0);
     } else {
-      if (timerRef.current) clearInterval(timerRef.current);
+      window.scrollTo(0, 0);
     }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [currentStep, transferData.transferType]);
+  }, [currentStep]);
 
   const formatTimer = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -986,7 +995,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-8 px-4 flex flex-col items-center">
+            <div className="max-w-xl mx-auto py-8 pt-[0.5mm] px-4 flex flex-col items-center">
               {/* Airplane Illustration Area */}
               <div className="relative w-full h-48 mb-8 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent rounded-[40px]" />
@@ -1234,7 +1243,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-8 px-4 flex flex-col items-center">
+            <div className="max-w-xl mx-auto py-8 pt-[0.5mm] px-4 flex flex-col items-center">
               {/* Airplane Illustration Area */}
               <div className="relative w-full h-48 mb-8 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent rounded-[40px]" />
@@ -1523,7 +1532,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-8 px-4 flex flex-col items-center">
+            <div className="max-w-xl mx-auto py-8 pt-[0.5mm] px-4 flex flex-col items-center">
               {/* Airplane Illustration Area */}
               <div className="relative w-full h-48 mb-8 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent rounded-[40px]" />

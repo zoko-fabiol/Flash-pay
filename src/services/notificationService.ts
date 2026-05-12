@@ -151,14 +151,13 @@ export const notificationService = {
     const countSnapshot = await getCountFromServer(unreadQuery);
     const subCollectionCount = countSnapshot.data().count;
 
-    // Count unread from broadcasts
-    const unreadBroadcastQuery = query(
+    // Count unread from broadcasts (query only by userId to avoid index requirement)
+    const broadcastQuery = query(
       collection(db, 'notifications'),
-      where('userId', '==', userId),
-      where('read', '==', false)
+      where('userId', '==', userId)
     );
-    const broadcastCountSnapshot = await getCountFromServer(unreadBroadcastQuery);
-    const broadcastCount = broadcastCountSnapshot.data().count;
+    const broadcastSnapshot = await getDocs(broadcastQuery);
+    const broadcastCount = broadcastSnapshot.docs.filter(d => d.data().read === false && !d.data().deletedAt).length;
 
     return subCollectionCount + broadcastCount;
   },
@@ -381,14 +380,13 @@ export const notificationService = {
   },
 
   subscribeToUnreadCount(userId: string, callback: (count: number) => void): Unsubscribe {
-    // Count unread from sub-collection
+    // Count unread from sub-collection (single field 'read' is fine here as it's a sub-collection)
     const unreadQuery = query(userNotificationsCollection(userId), where('read', '==', false));
 
-    // Count unread from broadcasts (query without orderBy to avoid index requirement)
-    const unreadBroadcastQuery = query(
+    // For broadcasts, query only by userId and filter 'read' in memory to avoid composite index
+    const broadcastQuery = query(
       collection(db, 'notifications'),
-      where('userId', '==', userId),
-      where('read', '==', false)
+      where('userId', '==', userId)
     );
 
     let subCollectionCount = 0;
@@ -402,8 +400,12 @@ export const notificationService = {
       callback(broadcastCount);
     });
 
-    const unsubscribeBroadcast = onSnapshot(unreadBroadcastQuery, (snapshot) => {
-      broadcastCount = snapshot.docs.filter((docSnap) => !docSnap.data().deletedAt).length;
+    const unsubscribeBroadcast = onSnapshot(broadcastQuery, (snapshot) => {
+      // Filter unread and not deleted in memory
+      broadcastCount = snapshot.docs.filter((docSnap) => {
+        const d = docSnap.data();
+        return d.read === false && !d.deletedAt;
+      }).length;
       callback(subCollectionCount + broadcastCount);
     }, (err) => {
       console.error('Error counting unread broadcast notifications:', err);

@@ -100,11 +100,8 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="mb-10 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{t('bulk_recipients_list')}</h2>
-        <p className="text-[#49454F] mt-3 font-medium text-lg">{t('bulk_recipients_desc')}</p>
-      </div>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
+      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('bulk_recipients_list')}</h2>
       
       {/* Summary Bar - Premium Design */}
       <div className="mb-10 bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.04)] overflow-hidden">

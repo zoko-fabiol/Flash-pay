@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL de votre script Google Apps Script (À remplacer par l'URL obtenue à l'étape 1)
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwqP0JcmDq3Piw5bsyss_IqkPJG01E7gvIP82whH3HOk61GiuMiPwjkbKS3-_0TB8UOPw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyquLPwMLLu8i7c27Htlw8lBV94HcHcWDTpE9bxJe2KBFBbd3LG6mBk1J_I-TpQF3myuA/exec';
 
 export const emailService = {
   /**

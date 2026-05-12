@@ -63,11 +63,8 @@ export const OperatorSelectionStep: React.FC<OperatorSelectionStepProps> = ({
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="mb-10 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">Opérateur(s)</h2>
-        <p className="text-[#49454F] mt-3 font-medium text-lg">Veuillez sélectionner l'opérateur pour les numéros non reconnus.</p>
-      </div>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
+      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('operator_selection_title')}</h2>
       
       <div className="space-y-8">
         {recipientsToProcess.map((r: any, i: number) => (

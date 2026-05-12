@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export const PrivacyPolicyPage: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-white p-6 md:p-12">
@@ -11,50 +13,50 @@ export const PrivacyPolicyPage: React.FC = () => {
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 text-slate-500 font-bold mb-8 hover:text-slate-800 transition"
       >
-        <ChevronLeft size={20} /> Retour
+        <ChevronLeft size={20} /> {t('back')}
       </button>
 
       <div className="max-w-3xl mx-auto prose prose-slate">
-        <h1 className="text-3xl font-black text-slate-900 mb-6">Politique de Confidentialité</h1>
-        <p className="text-slate-500 mb-4 italic">Dernière mise à jour : 7 Mai 2026</p>
+        <h1 className="text-3xl font-black text-slate-900 mb-6">{t('privacy_policy')}</h1>
+        <p className="text-slate-500 mb-4 italic">{t('last_updated')}</p>
         
         <section className="mb-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">1. Introduction</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-4">{t('privacy_section1_title')}</h2>
           <p className="text-slate-600 leading-relaxed">
-            Flash Pay s'engage à protéger la vie privée de ses utilisateurs. Cette politique explique comment nous collectons, utilisons et protégeons vos données personnelles.
+            {t('privacy_section1_content')}
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">2. Données collectées</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-4">{t('privacy_section2_title')}</h2>
           <p className="text-slate-600 leading-relaxed">
-            Nous collectons les données suivantes nécessaires au fonctionnement du service et à la conformité légale :
+            {t('privacy_section2_content')}
           </p>
           <ul className="list-disc pl-5 mt-2 space-y-2 text-slate-600">
-            <li>Informations d'identité (Nom, Prénom, Email, Téléphone).</li>
-            <li>Documents de vérification (KYC) : Photos de pièces d'identité et selfies.</li>
-            <li>Données de transaction (Montants, bénéficiaires, dates).</li>
-            <li>Informations sur l'appareil (pour la sécurité et les notifications push).</li>
+            <li>{t('privacy_section2_item1')}</li>
+            <li>{t('privacy_section2_item2')}</li>
+            <li>{t('privacy_section2_item3')}</li>
+            <li>{t('privacy_section2_item4')}</li>
           </ul>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">3. Utilisation des données</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-4">{t('privacy_section3_title')}</h2>
           <p className="text-slate-600 leading-relaxed">
-            Vos données sont utilisées exclusivement pour :
+            {t('privacy_section3_content')}
           </p>
           <ul className="list-disc pl-5 mt-2 space-y-2 text-slate-600">
-            <li>Exécuter vos transferts d'argent.</li>
-            <li>Vérifier votre identité (Lutte contre la fraude et le blanchiment).</li>
-            <li>Vous envoyer des notifications de statut de transaction.</li>
-            <li>Assurer le support client.</li>
+            <li>{t('privacy_section3_item1')}</li>
+            <li>{t('privacy_section3_item2')}</li>
+            <li>{t('privacy_section3_item3')}</li>
+            <li>{t('privacy_section3_item4')}</li>
           </ul>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">4. Suppression des données</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-4">{t('privacy_section4_title')}</h2>
           <p className="text-slate-600 leading-relaxed">
-            Conformément aux règles du Google Play Store, vous pouvez demander la suppression de votre compte et de vos données personnelles à tout moment via les paramètres de votre profil dans l'application.
+            {t('privacy_section4_content')}
           </p>
         </section>
       </div>

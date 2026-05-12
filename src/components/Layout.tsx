@@ -15,6 +15,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const location = useLocation();
   const { t } = useLanguage();
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
 
   const mobileTabs = React.useMemo(() => [
     { path: '/', label: t('menu_dashboard'), icon: Home },
@@ -38,8 +45,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         
-        <main className="flex-1 overflow-auto pb-28 lg:pb-6">
-          <div className="container mx-auto p-4 max-w-7xl">
+        <main ref={scrollContainerRef} className="flex-1 overflow-auto pb-28 lg:pb-6">
+          <div className={`container mx-auto px-4 pb-4 max-w-7xl ${location.pathname.startsWith('/transfer') ? 'pt-0' : 'pt-4'}`}>
             {children}
           </div>
         </main>

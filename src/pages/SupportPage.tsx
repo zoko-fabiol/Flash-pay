@@ -24,14 +24,20 @@ export const SupportPage: React.FC = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Use problem_reports for consistency with supportService.submitTicket
     const q = query(
-      collection(db, 'support_tickets'),
-      where('userId', '==', user.id),
-      orderBy('createdAt', 'desc')
+      collection(db, 'problem_reports'),
+      where('userId', '==', user.id)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setTickets(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort in memory to avoid requiring a composite index
+      setTickets(docs.sort((a, b) => {
+        const t1 = (a as any).createdAt?.toMillis?.() || 0;
+        const t2 = (b as any).createdAt?.toMillis?.() || 0;
+        return t2 - t1;
+      }));
       setLoadingTickets(false);
     }, (err) => {
       console.error('Error listening to tickets:', err);

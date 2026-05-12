@@ -137,26 +137,12 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   const depAccount = sourceCountry?.operators?.find((a: any) => a.name === transferData.selectedOperator);
 
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="mb-8 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{t('make_payment_title') || 'Effectuer le paiement'}</h2>
-        <p className="text-[#49454F] mt-3 font-medium text-lg">{t('payment_instructions') || 'Suivez les instructions pour finaliser votre transfert.'}</p>
-      </div>
-
-      {/* Timer Alert */}
-      <div className="bg-[#F5E8FF] rounded-[32px] p-6 border border-[#661489]/10 mb-8 flex items-start gap-4">
-        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#661489] shrink-0 shadow-sm">
-          <Info size={24} />
-        </div>
-        <div className="flex-1">
-          <p className="text-[#661489] font-bold text-sm leading-tight mb-1">
-            {t('payment_timer_msg_generic') || 'Effectuez le paiement sur les coordonnées ci-dessous et envoyez le reçu.'}
-          </p>
-          <p className="text-xs text-[#661489]/70 font-semibold italic">{t('timer_20_min') || 'Vous avez 20 minutes pour effectuer le paiement.'}</p>
-        </div>
-        <div className="flex items-center gap-2 text-[#661489] font-black bg-white px-4 py-2 rounded-2xl shadow-sm">
-          <Clock size={18} />
-          <span className={timerSeconds < 120 ? 'text-red-500' : ''}>{formatTimer(timerSeconds)}</span>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
+      <div className="flex items-center gap-4 mb-8">
+        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('make_payment_title') || 'Effectuer le paiement'}</h2>
+        <div className="flex items-center gap-3 text-[#661489] font-black bg-[#F5E8FF] px-5 py-2 rounded-full text-lg border-2 border-[#661489]/20 shadow-md">
+          <Clock size={24} />
+          <span className={timerSeconds < 120 ? 'text-rose-600 animate-pulse' : ''}>{formatTimer(timerSeconds)}</span>
         </div>
       </div>
 
@@ -216,38 +202,41 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
-             <div className="flex items-center gap-5 mb-8">
-               <div className="w-20 h-20 rounded-[28px] bg-slate-50 flex items-center justify-center text-brand font-black overflow-hidden border border-slate-100 shadow-inner">
-                 {depAccount?.logo ? (
-                  <img src={depAccount.logo} alt={transferData.selectedOperator} className="w-full h-full object-contain p-3" />
-                 ) : (
-                  <Smartphone size={40} className="text-slate-300" />
-                 )}
-                </div>
-                <div className="flex-1 min-w-0">
-                   <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{t('account_details')}</p>
-                   <p className="text-3xl font-black text-slate-900 truncate">{depAccount?.depositNumber || depAccount?.number || t('not_configured')}</p>
-                </div>
-             </div>
-
-             <div className="grid grid-cols-2 gap-8 pb-8 mb-8 border-b border-slate-50">
-               <div>
-                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{t('account_holder')}</p>
-                 <p className="text-sm font-black text-slate-900">{depAccount?.depositHolder || depAccount?.holder || 'FLASH PAY'}</p>
-               </div>
-               <div>
-                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{t('operator') || 'Opérateur'}</p>
-                 <p className="text-sm font-black text-slate-900">{transferData.selectedOperator || 'N/A'}</p>
-               </div>
-             </div>
-             
-             <button 
+          <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
+            <div className="mb-4 flex justify-between items-center">
+              <span className="bg-[#661489] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+                {t('mobile_deposit') || 'DÉPÔT MOBILE'}
+              </span>
+              <button 
                 onClick={() => { navigator.clipboard.writeText(depAccount?.depositNumber || depAccount?.number || ''); toast.success(t('copied')); }}
-                className="w-full py-5 rounded-[24px] bg-brand text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-brand/20 hover:scale-[1.02] transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#661489]/5 text-[#661489] font-black text-[10px] uppercase tracking-widest hover:bg-[#661489]/10 transition-all"
               >
-                 <Copy size={18} /> {t('copy_coordinates') || 'Copier les coordonnées'}
+                <Copy size={12} /> {t('copy')}
               </button>
+            </div>
+            <div className="flex items-start gap-5">
+              <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#661489] shrink-0 overflow-hidden border border-slate-100">
+                {depAccount?.logo ? (
+                  <img src={depAccount.logo} alt={transferData.selectedOperator} className="w-full h-full object-contain p-2" />
+                ) : (
+                  <Smartphone size={32} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">{t('deposit_number') || 'Numéro de dépôt'}</p>
+                <p className="text-2xl font-black text-slate-900 truncate">{depAccount?.depositNumber || depAccount?.number || t('not_configured')}</p>
+                <div className="flex items-center gap-6 mt-3">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">{t('operator') || 'Opérateur'}</p>
+                    <p className="text-xs font-black text-slate-900">{transferData.selectedOperator || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">{t('holder') || 'Titulaire'}</p>
+                    <p className="text-xs font-black text-slate-900">{depAccount?.depositHolder || depAccount?.holder || 'FLASH PAY'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -326,20 +315,20 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
               onChange={(e) => setProofFile(e.target.files?.[0] || null)}
               accept="image/*"
             />
-            <div className={`w-full py-12 rounded-[40px] border-4 border-dashed transition-all flex flex-col items-center justify-center gap-4 ${proofFile ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 hover:border-brand/40 hover:bg-brand/5'}`}>
+            <div className={`w-full py-6 rounded-[32px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-3 ${proofFile ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-white hover:border-brand hover:bg-brand/5'}`}>
               {proofFile ? (
                 <>
-                  <CheckCircle2 className="text-emerald-500" size={48} />
-                  <p className="text-emerald-700 font-black text-lg">{proofFile.name}</p>
-                  <p className="text-xs text-emerald-600 font-bold uppercase tracking-widest">Cliquer pour changer</p>
+                  <CheckCircle2 className="text-emerald-500" size={32} />
+                  <p className="text-emerald-700 font-black text-sm">{proofFile.name}</p>
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Cliquer pour changer</p>
                 </>
               ) : (
                 <>
-                  <div className="flex flex-col items-center gap-2 text-brand">
-                     <CloudUpload size={48} />
-                     <p className="font-black text-xl">{t('download_receipt') || 'Télécharger le reçu'}</p>
+                  <div className="flex flex-col items-center gap-1 text-brand">
+                     <CloudUpload size={32} />
+                     <p className="font-black text-lg">{t('download_receipt') || 'Télécharger le reçu'}</p>
                   </div>
-                  <p className="text-xs text-slate-400 font-black uppercase tracking-widest">{t('max_5mo') || 'Formats JPG, PNG • Max 5 Mo'}</p>
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{t('max_5mo') || 'Formats JPG, PNG • Max 5 Mo'}</p>
                 </>
               )}
             </div>

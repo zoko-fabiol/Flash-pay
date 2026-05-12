@@ -105,11 +105,8 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="mb-10 text-center">
-        <h2 className="text-4xl font-black text-[#1D1B20] tracking-tight">{t('amount_selection')}</h2>
-        <p className="text-[#49454F] mt-3 font-medium text-lg">{t('amount_selection_desc')}</p>
-      </div>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
+      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('amount_selection')}</h2>
 
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-10 space-y-8">
         <div className="space-y-4">

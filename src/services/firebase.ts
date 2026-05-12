@@ -6,6 +6,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendEmailVerification,
+  sendPasswordResetEmail,
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
@@ -160,6 +161,10 @@ export const authService = {
 
   async logout() {
     await signOut(auth);
+  },
+
+  async resetPassword(email: string) {
+    await sendPasswordResetEmail(auth, email);
   },
 
   onAuthStateChanged(callback: (user: FirebaseUser | null) => void) {
@@ -1524,20 +1529,27 @@ export const supportService = {
   async getUserTickets(userId: string) {
     const q = query(
       collection(db, 'problem_reports'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', userId)
     );
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const tickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    // Sort in memory by createdAt descending
+    return tickets.sort((a, b) => {
+      const t1 = a.createdAt?.toMillis?.() || 0;
+      const t2 = b.createdAt?.toMillis?.() || 0;
+      return t2 - t1;
+    });
   }
 };
 
 // Contact Service
 export const contactService = {
   async getUserContacts(userId: string) {
-    const q = query(collection(db, 'contacts'), where('userId', '==', userId), orderBy('name', 'asc'));
+    const q = query(collection(db, 'contacts'), where('userId', '==', userId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    const contacts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+    // Sort in memory to avoid requiring a composite index
+    return contacts.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   },
 
   async addContact(userId: string, contactData: { name: string; phone: string; operator: string; countryCode: string }) {

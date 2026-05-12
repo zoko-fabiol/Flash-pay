@@ -11,18 +11,38 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, resetPassword } = useAuth();
   const { t, language, setLanguage } = useLanguage();
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setResetSent(false);
     setLoading(true);
     try {
       await login(email, password);
       navigate('/');
     } catch (err: any) {
       setError(err.message || t('login_error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError(t('enter_email_first'));
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    try {
+      await resetPassword(email);
+      setResetSent(true);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -59,6 +79,14 @@ export const LoginPage: React.FC = () => {
         {/* Card */}
         <div className="premium-card p-10 bg-white/80 backdrop-blur-xl border-white/50">
           {error && <Error message={error} onDismiss={() => setError('')} />}
+          {resetSent && (
+            <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3 animate-in fade-in zoom-in duration-300">
+              <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                <Mail size={16} />
+              </div>
+              {t('reset_link_sent')}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -77,7 +105,16 @@ export const LoginPage: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('password')}</label>
+              <div className="flex justify-between items-center">
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('password')}</label>
+                <button 
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-[10px] font-bold text-primary hover:underline underline-offset-2 uppercase tracking-wider"
+                >
+                  {t('forgot_password')}
+                </button>
+              </div>
               <div className="relative">
                 <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -86,7 +123,7 @@ export const LoginPage: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full pl-12 pr-4 py-4 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-slate-900 transition-all bg-white/50"
-                  required
+                  required={!resetSent}
                 />
               </div>
             </div>
@@ -100,12 +137,13 @@ export const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          <div className="text-center mt-[3.5mm] text-sm text-slate-500 font-medium">
+          <div className="text-center mt-6 text-sm text-slate-500 font-medium">
             {t('no_account')}{' '}
             <button onClick={() => navigate('/signup')} className="text-primary font-bold hover:underline underline-offset-4">
               {t('signup')}
             </button>
           </div>
+        </div>
 
           <div className="mt-8 text-center opacity-60">
             <p className="text-[10px] text-slate-400 leading-relaxed font-medium uppercase tracking-widest">
@@ -113,7 +151,6 @@ export const LoginPage: React.FC = () => {
               {' • '}
               <button onClick={() => navigate('/privacy-policy')} type="button" className="hover:text-primary transition">{t('privacy_policy')}</button>
             </p>
-          </div>
         </div>
       </div>
     </div>

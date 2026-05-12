@@ -64,7 +64,7 @@ export async function sendBroadcastDirect(
 
     // Send emails to opted-in users (if enabled)
     if (options.sendEmail && recipients.length > 0) {
-      await fetch('https://script.google.com/macros/s/AKfycbxMM0PgmUvuAyJ-5BP4R36u5aHbhSKF-OrwtmeW-ULdHJ3qzNOmM6_hI8Yopb65aAL6OQ/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbyquLPwMLLu8i7c27Htlw8lBV94HcHcWDTpE9bxJe2KBFBbd3LG6mBk1J_I-TpQF3myuA/exec', {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },

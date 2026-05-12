@@ -14,6 +14,7 @@ interface AuthContextType {
   signup: (email: string, password: string, nom: string, tel: string, ref?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -104,6 +105,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      setError(null);
+      await authService.resetPassword(email);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
   const clearError = () => setError(null);
 
   return (
@@ -116,6 +127,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signup,
       login,
       logout,
+      resetPassword,
       clearError,
     }}>
       {children}
