@@ -20,15 +20,19 @@ export const initializePushNotifications = async (userId?: string) => {
         return;
       }
 
-      await OneSignalWeb.init({
-        appId: ONESIGNAL_APP_ID,
-        allowLocalhostAsSecureOrigin: true,
-      });
+      try {
+        await OneSignalWeb.init({
+          appId: ONESIGNAL_APP_ID,
+          allowLocalhostAsSecureOrigin: true,
+        });
 
-      if (userId) {
-        await OneSignalWeb.login(userId);
+        if (userId) {
+          await OneSignalWeb.login(userId);
+        }
+        console.log('✅ OneSignal Web Initialized');
+      } catch (webError) {
+        console.warn('⚠️ OneSignal Web Push not fully configured in dashboard:', webError);
       }
-      console.log('✅ OneSignal Web Initialized');
     } else {
       // --- NATIVE IMPLEMENTATION (Android/iOS) ---
       OneSignal.initialize(ONESIGNAL_APP_ID);
