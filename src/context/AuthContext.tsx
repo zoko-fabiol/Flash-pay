@@ -101,6 +101,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       await authService.logout();
+      // Clear referral preference on logout to ensure it reappears on next login
+      sessionStorage.removeItem('hide_referral_card');
       setUser(null);
       setFirebaseUser(null);
     } catch (err: any) {
