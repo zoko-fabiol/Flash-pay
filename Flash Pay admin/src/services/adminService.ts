@@ -161,6 +161,17 @@ export const adminService = {
                   createdAt: Timestamp.now(),
                   updatedAt: Timestamp.now()
                 });
+
+                // --- ONESIGNAL PUSH ---
+                try {
+                  await oneSignalService.sendNotificationToUser(
+                    userId,
+                    'Points gagnés ! 🎁',
+                    `Vous avez gagné ${pointsToEarn} points de fidélité.`
+                  );
+                } catch (pushErr) {
+                  console.error('Failed push for points:', pushErr);
+                }
               }
             } catch (ptsErr) {
               console.error('Failed to award loyalty points:', ptsErr);
@@ -239,6 +250,17 @@ export const adminService = {
                   updatedAt: Timestamp.now(),
                   link: '/partners'
                 });
+
+                // --- ONESIGNAL PUSH ---
+                try {
+                  await oneSignalService.sendNotificationToUser(
+                    referrerId,
+                    'Bonus de parrainage ! 💰',
+                    `Félicitations ! Vous avez reçu ${bonusAmount} RUB grâce à un ami.`
+                  );
+                } catch (pushErr) {
+                  console.error('Failed push for referral bonus:', pushErr);
+                }
               }
             }
           }

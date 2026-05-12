@@ -595,6 +595,12 @@ export const userService = {
           link: `/admin/kyc`,
           countryCode: (formData as any).countryOfDepartureCode || formData.countryOfDeparture || 'all'
         });
+
+        // --- PUSH TO ADMINS ---
+        await userService.notifyAdminsViaPush(
+          'Dossier KYC reçu 📄',
+          `Un nouveau dossier d'identité attend votre vérification.`
+        );
       } catch (err) {
         console.error('Failed to notify admin of KYC submission:', err);
       }
@@ -1656,6 +1662,12 @@ export const supportService = {
         link: `/admin/problems`,
         countryCode: 'all' // Support tickets are global by default unless tied to a country-specific transaction
       });
+
+      // --- PUSH TO ADMINS ---
+      await userService.notifyAdminsViaPush(
+        'Nouveau ticket support 🎫',
+        `Un utilisateur a signalé un problème : ${data.type || 'Anomalie'}.`
+      );
     } catch (err) {
       console.error('Failed to notify admin of support ticket:', err);
     }
