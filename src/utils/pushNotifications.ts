@@ -70,7 +70,7 @@ export const initializePushNotifications = async (userId?: string) => {
 export async function requestNotificationPermissionFromUser(): Promise<boolean> {
   try {
     const permission = await OneSignal.Notifications.requestPermission(true);
-    return permission === 'granted';
+    return permission;
   } catch (error) {
     console.error('❌ Error requesting notification permission:', error);
     return false;
