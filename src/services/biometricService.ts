@@ -14,7 +14,15 @@ export const biometricService = {
    * Checks if biometric authentication is available on this device
    */
   async isAvailable(): Promise<boolean> {
-    if (Capacitor.isNativePlatform()) {
+    const isNative = Capacitor.isNativePlatform();
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone || false;
+    
+    // Only allow if native app OR installed PWA
+    if (!isNative && !isStandalone) {
+      return false;
+    }
+
+    if (isNative) {
       try {
         const result = await NativeBiometric.isAvailable();
         return result.isAvailable;
@@ -112,6 +120,13 @@ export const biometricService = {
         };
       } else {
         // WebAuthn "Authentication" for PWA
+        // First check if we have something stored locally, otherwise WebAuthn will show "No credentials"
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) {
+          console.warn('No biometric credentials stored in localStorage for this PWA.');
+          return null;
+        }
+
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
 
@@ -122,8 +137,6 @@ export const biometricService = {
           }
         });
 
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (!stored) return null;
         return JSON.parse(atob(stored));
       }
     } catch (error: any) {

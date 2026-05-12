@@ -77,7 +77,9 @@ const t = (key: keyof typeof copy.fr) => {
 
 export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
   const [isLocked, setIsLocked] = useState(() => {
-    return localStorage.getItem('app_lock_enabled') === 'true';
+    const isNative = Capacitor.isNativePlatform();
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone || false;
+    return (isNative || isStandalone) && localStorage.getItem('app_lock_enabled') === 'true';
   });
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -161,7 +163,14 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
         setShowPasswordForm(false);
         setPassword('');
       } else {
-        setError(t('biometric_auth_failed'));
+        // Only show error if we actually have credentials but authentication failed/was cancelled
+        const hasLocalCreds = !!localStorage.getItem('flash_pay_biometric_creds') || Capacitor.isNativePlatform();
+        if (hasLocalCreds) {
+          setError(t('biometric_auth_failed'));
+        } else {
+          // No credentials set up on this device/browser yet
+          setShowPasswordForm(true);
+        }
       }
     } catch (err) {
       setError(t('biometric_auth_error'));
