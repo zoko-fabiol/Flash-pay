@@ -266,6 +266,7 @@ export const userService = {
         mode: 'no-cors', // Important for GAS
         body: JSON.stringify({
           action: 'notifyAdmins',
+          adminAppId: import.meta.env.VITE_ADMIN_ONESIGNAL_APP_ID,
           title,
           body,
           payload
