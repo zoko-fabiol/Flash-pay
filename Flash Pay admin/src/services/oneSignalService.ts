@@ -12,6 +12,7 @@ export const oneSignalService = {
    */
   async sendNotificationToUser(userId: string, title: string, body: string, data: any = {}) {
     try {
+      console.log(`[OneSignal] Sending notification via proxy...`);
       const response = await fetch('/.netlify/functions/onesignal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -24,8 +25,12 @@ export const oneSignalService = {
       });
 
       return await response.json();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending notification via Netlify:', error);
+      // Fallback message to help debugging
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        console.warn('[OneSignal] The proxy function might be missing or blocked by CORS. Check if Netlify Functions are deployed.');
+      }
       throw error;
     }
   },

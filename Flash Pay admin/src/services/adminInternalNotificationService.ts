@@ -53,6 +53,11 @@ export const adminInternalNotificationService = {
         ...doc.data()
       })) as AdminNotification[];
       callback(notifications);
+    }, (error) => {
+      console.error('Firestore subscription error (Admin Notifications):', error);
+      if (error.code === 'failed-precondition') {
+        console.warn('Missing Index: Please check the console log link to create the required Firestore composite index.');
+      }
     });
   },
 

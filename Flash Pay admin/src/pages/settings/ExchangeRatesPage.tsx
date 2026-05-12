@@ -130,12 +130,16 @@ const ExchangeRatesPage: React.FC = () => {
         const expLimit = settingsDoc.expertLimitRUB || 150000;
         const bonus = settingsDoc.referralBonusRUB || 500;
         const emails = settingsDoc.notificationEmails || [];
-        setEditingLimit(limit.toString());
-        setEditingStandardLimit(stdLimit.toString());
-        setEditingExpertLimit(expLimit.toString());
-        setEditingReferralBonus(bonus.toString());
-        setEditingEmails(emails);
+        
+        // Ensure we always have strings and handle NaN/undefined
+        setEditingLimit((limit || 0).toString());
+        setEditingStandardLimit((stdLimit || 0).toString());
+        setEditingExpertLimit((expLimit || 0).toString());
+        setEditingReferralBonus((bonus || 0).toString());
+        setEditingEmails(Array.isArray(emails) ? emails : []);
       }
+    }, (error) => {
+      console.error('Error fetching settings:', error);
     });
 
     return () => {
@@ -195,13 +199,13 @@ const ExchangeRatesPage: React.FC = () => {
     if (isNaN(newExpLimit) || newExpLimit <= 0) { toast.error('Limite Expert invalide'); return; }
     if (isNaN(newBonus) || newBonus < 0) { toast.error('Bonus parrainage invalide'); return; }
 
-    setIsSavingSettings(true);
     const t = toast.loading('Mise à jour des paramètres...');
     try {
       await adminService.updateDailyLimit(newLimit, newBonus, newStdLimit, newExpLimit, editingEmails);
       toast.success('Configuration système à jour', { id: t });
-    } catch (err) {
-      toast.error('Échec de la mise à jour', { id: t });
+    } catch (err: any) {
+      console.error('Settings update failed:', err);
+      toast.error(`Échec : ${err.message || 'Erreur inconnue'}`, { id: t });
     } finally {
       setIsSavingSettings(false);
     }
@@ -399,7 +403,13 @@ const ExchangeRatesPage: React.FC = () => {
                     <div>
                        <label className="text-[10px] font-black uppercase tracking-widest text-[#49454F] ml-1 mb-2 block">Marge Opérationnelle (%)</label>
                        <div className="relative">
-                          <input type="number" step="0.1" value={newMarginValue} onChange={e => setNewMarginValue(parseFloat(e.target.value))} className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 px-6 text-xl font-black text-[#1D1B20] outline-none" />
+                          <input 
+                            type="number" 
+                            step="0.1" 
+                            value={isNaN(newMarginValue) ? '' : newMarginValue} 
+                            onChange={e => setNewMarginValue(e.target.value === '' ? 0 : parseFloat(e.target.value))} 
+                            className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 px-6 text-xl font-black text-[#1D1B20] outline-none" 
+                          />
                           <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[#661489] font-black">%</span>
                        </div>
                        <p className="text-[10px] text-[#49454F] font-bold opacity-40 mt-3 italic">* Cette marge s'ajoute au taux de base pour le calcul final.</p>
