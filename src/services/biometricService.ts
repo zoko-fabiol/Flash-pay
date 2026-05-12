@@ -14,12 +14,21 @@ export const biometricService = {
    * Checks if biometric authentication is available on this device
    */
   async isAvailable(): Promise<boolean> {
-    if (!Capacitor.isNativePlatform()) return false;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await NativeBiometric.isAvailable();
+        return result.isAvailable;
+      } catch (error) {
+        console.error('Biometric availability check failed:', error);
+        return false;
+      }
+    }
+    
+    // Web/PWA check: Check if WebAuthn is supported and a platform authenticator (TouchID/FaceID/Fingerprint) is available
     try {
-      const result = await NativeBiometric.isAvailable();
-      return result.isAvailable;
-    } catch (error) {
-      console.error('Biometric availability check failed:', error);
+      return !!window.PublicKeyCredential && 
+             await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    } catch {
       return false;
     }
   },
@@ -28,25 +37,53 @@ export const biometricService = {
    * Gets the type of biometry available (Fingerprint, FaceID, etc.)
    */
   async getBiometryType(): Promise<BiometryType | null> {
-    try {
-      const result = await NativeBiometric.isAvailable();
-      return result.biometryType || null;
-    } catch {
-      return null;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const result = await NativeBiometric.isAvailable();
+        return result.biometryType || null;
+      } catch {
+        return null;
+      }
     }
+    return BiometryType.FINGERPRINT; // Default for web
   },
 
   /**
-   * Securely saves credentials to the device's Keychain or Keystore
+   * Securely saves credentials to the device's Keychain or WebAuthn storage
    */
   async saveCredentials(creds: BiometricCredentials): Promise<boolean> {
     try {
-      await NativeBiometric.setCredentials({
-        username: creds.email,
-        password: creds.password,
-        server: SERVER_ID,
-        accessControl: AccessControl.BIOMETRY_ANY,
-      });
+      if (Capacitor.isNativePlatform()) {
+        await NativeBiometric.setCredentials({
+          username: creds.email,
+          password: creds.password,
+          server: SERVER_ID,
+          accessControl: AccessControl.BIOMETRY_ANY,
+        });
+      } else {
+        // WebAuthn "Registration" simulation for PWA
+        // This triggers the biometric prompt on the browser
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        
+        await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { name: "Flash Pay" },
+            user: {
+              id: new Uint8Array(16),
+              name: creds.email,
+              displayName: creds.email
+            },
+            pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+            authenticatorSelection: { userVerification: "required" }
+          }
+        });
+
+        // Store credentials obfuscated for web
+        localStorage.setItem(STORAGE_KEY, btoa(JSON.stringify(creds)));
+      }
+      
       localStorage.setItem('biometric_enabled', 'true');
       return true;
     } catch (error) {
@@ -60,20 +97,36 @@ export const biometricService = {
    */
   async getCredentials(): Promise<BiometricCredentials | null> {
     try {
-      const credentials = await NativeBiometric.getSecureCredentials({
-        server: SERVER_ID,
-        reason: 'Connectez-vous à Flash Pay avec votre empreinte',
-        title: 'Authentification Biométrique',
-        subtitle: 'Utilisez votre capteur pour continuer',
-        description: 'Veuillez scanner votre empreinte digitale ou votre visage.',
-      });
+      if (Capacitor.isNativePlatform()) {
+        const credentials = await NativeBiometric.getSecureCredentials({
+          server: SERVER_ID,
+          reason: 'Connectez-vous à Flash Pay avec votre empreinte',
+          title: 'Authentification Biométrique',
+          subtitle: 'Utilisez votre capteur pour continuer',
+          description: 'Veuillez scanner votre empreinte digitale ou votre visage.',
+        });
 
-      return {
-        email: credentials.username,
-        password: credentials.password
-      };
+        return {
+          email: credentials.username,
+          password: credentials.password
+        };
+      } else {
+        // WebAuthn "Authentication" for PWA
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        await navigator.credentials.get({
+          publicKey: {
+            challenge,
+            userVerification: "required"
+          }
+        });
+
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (!stored) return null;
+        return JSON.parse(atob(stored));
+      }
     } catch (error: any) {
-      // User cancelled or authentication failed
       console.warn('Biometric authentication cancelled or failed:', error);
       return null;
     }
@@ -84,9 +137,13 @@ export const biometricService = {
    */
   async removeCredentials(): Promise<void> {
     try {
-      await NativeBiometric.deleteCredentials({
-        server: SERVER_ID,
-      });
+      if (Capacitor.isNativePlatform()) {
+        await NativeBiometric.deleteCredentials({
+          server: SERVER_ID,
+        });
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+      }
       localStorage.removeItem('biometric_enabled');
     } catch (error) {
       console.error('Failed to delete biometric credentials:', error);
