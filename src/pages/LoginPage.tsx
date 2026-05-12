@@ -227,7 +227,7 @@ export const LoginPage: React.FC = () => {
             </p>
         </div>
       </div>
-      </div>
+
 
       {/* Biometric Activation Popup */}
       {showBiometricPrompt && (
