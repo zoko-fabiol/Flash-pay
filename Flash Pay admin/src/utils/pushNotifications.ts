@@ -1,7 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import OneSignal from '@onesignal/capacitor-plugin';
 
-const ONESIGNAL_APP_ID = '3b38ca69-e5eb-40a7-8b46-48942086dcb3';
+const ONESIGNAL_APP_ID = '987f03ae-6b3f-49ca-9fd4-da1d6323d31e';
 
 export const initializeAdminPushNotifications = async (adminId?: string) => {
   try {
