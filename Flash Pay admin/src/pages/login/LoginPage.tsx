@@ -1,16 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '../../lib/firebase';
 import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from 'firebase/firestore';
 import { LockProIcon, MessagesProIcon, LoaderProIcon, ArrowRightProIcon, ShieldProIcon, CreditCardProIcon } from '../../components/ui/ProIcons';
+import { Fingerprint } from 'lucide-react';
+import { biometricService } from '../../services/biometricService';
+import { translateFirebaseError } from '../../utils/errorMessages';
+import toast from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [resetSent, setResetSent] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled] = useState(localStorage.getItem('admin_biometric_enabled') === 'true');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const available = await biometricService.isAvailable();
+      setBiometricAvailable(available);
+      
+      if (available && biometricEnabled) {
+        handleBiometricLogin();
+      }
+    };
+    checkBiometric();
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    const creds = await biometricService.getCredentials();
+    if (creds) {
+      setLoading(true);
+      setError('');
+      try {
+        await executeLogin(creds.email, creds.password);
+      } catch (err: any) {
+        setError(translateFirebaseError(err));
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const executeLogin = async (loginEmail: string, loginPass: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPass);
+    const user = userCredential.user;
+    const normalizedEmail = (user.email || loginEmail).toLowerCase();
+
+    // Primary check: canonical document by uid.
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (userDoc.exists() && userDoc.data()?.isAdmin) {
+      // If successful manual login and biometric available but not set, ask to save
+      if (biometricAvailable && !biometricEnabled) {
+        const wantSave = window.confirm("Souhaitez-vous activer l'empreinte pour vos prochaines connexions admin ?");
+        if (wantSave) {
+          await biometricService.saveCredentials({ email: loginEmail, password: loginPass });
+        }
+      }
+      navigate('/dashboard');
+      return;
+    }
+
+    // Fallback for legacy records created by email instead of uid.
+    const byEmailQuery = query(
+      collection(db, 'users'),
+      where('email', '==', normalizedEmail),
+      limit(1)
+    );
+    const byEmailSnapshot = await getDocs(byEmailQuery);
+    const byEmailData = byEmailSnapshot.empty ? null : byEmailSnapshot.docs[0].data();
+
+    if (byEmailData?.isAdmin) {
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          email: normalizedEmail,
+          isAdmin: true,
+          adminRole: byEmailData.adminRole || 'restricted',
+          adminPermissions: byEmailData.adminPermissions,
+          updatedAt: byEmailData.updatedAt || byEmailData.createdAt,
+        },
+        { merge: true }
+      );
+      navigate('/dashboard');
+      return;
+    }
+
+    await auth.signOut();
+    throw { code: 'auth/permission-denied', message: 'Accès refusé. Privilèges insuffisants.' };
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,47 +100,27 @@ const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      const normalizedEmail = (user.email || email).toLowerCase();
-
-      // Primary check: canonical document by uid.
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists() && userDoc.data()?.isAdmin) {
-        navigate('/dashboard');
-        return;
-      }
-
-      // Fallback for legacy records created by email instead of uid.
-      const byEmailQuery = query(
-        collection(db, 'users'),
-        where('email', '==', normalizedEmail),
-        limit(1)
-      );
-      const byEmailSnapshot = await getDocs(byEmailQuery);
-      const byEmailData = byEmailSnapshot.empty ? null : byEmailSnapshot.docs[0].data();
-
-      if (byEmailData?.isAdmin) {
-        await setDoc(
-          doc(db, 'users', user.uid),
-          {
-            email: normalizedEmail,
-            isAdmin: true,
-            adminRole: byEmailData.adminRole || 'restricted',
-            adminPermissions: byEmailData.adminPermissions,
-            updatedAt: byEmailData.updatedAt || byEmailData.createdAt,
-          },
-          { merge: true }
-        );
-        navigate('/dashboard');
-        return;
-      }
-
-      await auth.signOut();
-      setError('Accès refusé. Privilèges insuffisants.');
+      await executeLogin(email, password);
     } catch (err: any) {
       console.error(err);
-      setError('Identifiants invalides ou erreur système.');
+      setError(translateFirebaseError(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error('Veuillez entrer votre email professionnel.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+      toast.success('Lien de réinitialisation envoyé !');
+    } catch (err: any) {
+      setError(translateFirebaseError(err));
     } finally {
       setLoading(false);
     }
@@ -93,6 +155,12 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
+            {resetSent && (
+              <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-center">
+                Vérifiez votre boîte mail pour le lien.
+              </div>
+            )}
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Email professionnel</label>
               <div className="relative group">
@@ -109,7 +177,16 @@ const LoginPage: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Mot de passe</label>
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest opacity-60">Mot de passe</label>
+                <button 
+                  type="button" 
+                  onClick={handleForgotPassword}
+                  className="text-[9px] font-black text-[#661489] uppercase tracking-wider hover:underline"
+                >
+                  Oublié ?
+                </button>
+              </div>
               <div className="relative group">
                 <LockProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#661489] transition-colors" size={20} />
                 <input
@@ -118,12 +195,12 @@ const LoginPage: React.FC = () => {
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                   className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#661489]/10 focus:border-[#661489] transition-all outline-none"
                   placeholder="••••••••"
-                  required
+                  required={!resetSent}
                 />
               </div>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 space-y-4">
               <button
                 type="submit"
                 disabled={loading}
@@ -137,6 +214,18 @@ const LoginPage: React.FC = () => {
                   </>
                 )}
               </button>
+
+              {biometricAvailable && biometricEnabled && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                  className="w-full bg-white border-2 border-[#661489]/20 text-[#661489] font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all transform active:scale-95 hover:bg-[#661489]/5 text-[10px] uppercase tracking-widest"
+                >
+                  <Fingerprint size={20} />
+                  Utiliser l'empreinte
+                </button>
+              )}
             </div>
           </form>
 
@@ -155,4 +244,3 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
-

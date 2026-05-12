@@ -11,6 +11,7 @@ import {
   query,
   where,
   getDocs,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import type { TransactionStatus, ProblemFlag } from '../types';
@@ -138,9 +139,9 @@ export const adminService = {
 
                 // Notify user
                 await addDoc(collection(db, 'notifications', userId, 'items'), {
-                  title: 'Points de fidélité reçus !',
-                  body: `Vous avegagnés! 🎁',
-                  body: `Vous avez gagné ${pointsToEarn} points de fidélité avec ce transfert
+                  title: 'Points de fidélité reçus ! 🎁',
+                  body: `Vous avez gagné ${pointsToEarn} points de fidélité avec ce transfert.`,
+                  type: 'points_earned',
                   priority: 'normal',
                   read: false,
                   createdAt: Timestamp.now(),
@@ -350,10 +351,6 @@ export const adminService = {
       'bonuses.available': increment(5000),
       updatedAt: Timestamp.now(),
     });
-
-    // --- REMOVED REFERRAL REWARD ON KYC ---
-    // User requested to reward ONLY on first transaction.
-    // --------------------------------------
 
     await addDoc(collection(db, 'admin_logs'), {
       adminId: auth.currentUser?.uid,

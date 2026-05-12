@@ -6,6 +6,7 @@ import { db } from '../../lib/firebase';
 import type { Transaction, BulkRecipient, TransactionStatus } from '../../types';
 import { adminService } from '../../services/adminService';
 import jsPDF from 'jspdf';
+import { isNativeApp, downloadPdfNative } from '../../utils/capacitorUtils';
 import { 
   ArrowLeft, 
   ExternalLink, 
@@ -132,7 +133,7 @@ const TransactionDetailsPage: React.FC = () => {
     }
   };
 
-  const handleGeneratePDF = (recipient?: BulkRecipient) => {
+  const handleGeneratePDF = async (recipient?: BulkRecipient) => {
     if (!transaction) return;
     const t_toast = toast.loading('Génération du reçu...');
     
@@ -264,8 +265,16 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       pdf.text('Document généré par Flash Pay Admin.', pageWidth / 2, pageHeight - 15, { align: 'center' });
       
-      pdf.save(`FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}_${transaction.id.substring(0, 8)}.pdf`);
-      toast.success('Reçu généré !', { id: t_toast });
+      const fileName = `FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}_${transaction.id.substring(0, 8)}.pdf`;
+
+      if (isNativeApp()) {
+        const pdfBase64 = pdf.output('datauristring');
+        await downloadPdfNative(pdfBase64, fileName);
+        toast.success('Prêt à partager !', { id: t_toast });
+      } else {
+        pdf.save(fileName);
+        toast.success('Reçu généré !', { id: t_toast });
+      }
     } catch (error) {
       console.error(error);
       toast.error('Erreur de génération', { id: t_toast });
