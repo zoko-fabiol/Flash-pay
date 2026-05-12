@@ -332,16 +332,6 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       {needsProof && (
         <div className="space-y-6">
           <p className="text-brand font-black text-sm uppercase tracking-widest">{payWithBonus ? t('after_paying_remainder') || 'Après le paiement du reste' : t('after_payment') || 'Après le paiement'}</p>
-          <div className="bg-slate-50 rounded-[32px] p-6 flex items-start gap-4 mb-6 border border-slate-100">
-            <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shadow-sm text-brand shrink-0">
-                <Upload size={24} />
-            </div>
-            <p className="text-xs text-slate-500 font-bold leading-relaxed">
-                {payWithBonus 
-                  ? t('pay_remainder_and_upload_generic', { amount: formatNumber(remainder, fromCurrency) }) || `Effectuez le paiement du complément de ${formatNumber(remainder, fromCurrency)}, puis téléchargez la preuve.`
-                  : t('pay_amount_and_upload_generic', { amount: formatNumber(totalToPay, fromCurrency) }) || `Effectuez le paiement de ${formatNumber(totalToPay, fromCurrency)}, puis téléchargez la preuve (capture d'écran du reçu).`}
-            </p>
-          </div>
           
           <label className="block w-full cursor-pointer group">
             <input
