@@ -148,9 +148,24 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         </div>
       </div>
 
+      {/* Instruction Banner */}
+      <div className="bg-[#661489]/5 border border-[#661489]/10 rounded-[24px] p-5 flex items-start gap-4 mb-8">
+        <div className="w-10 h-10 rounded-full bg-[#661489]/10 flex items-center justify-center text-[#661489] shrink-0">
+          <Info size={20} />
+        </div>
+        <div className="flex-1">
+          <p className="text-[14px] font-bold text-[#661489] leading-snug">
+            Payez exactement <span className="font-black underline">{formatNumber(payWithBonus ? remainder : totalToPay, fromCurrency)}</span> sur l'un des numéros ci-dessous puis envoyez la preuve du paiement.
+          </p>
+          <p className="text-[11px] text-slate-500 font-medium mt-1 italic">
+            Vous pouvez utiliser n'importe quel numéro disponible parmi ceux listés.
+          </p>
+        </div>
+      </div>
+
       {/* Payment Information */}
       <div className="space-y-6 mb-8">
-        <p className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('payment_coordinates') || 'Coordonnées de paiement'}</p>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('payment_coordinates') || 'Coordonnées de paiement'}</p>
         
         {transferType === 'russia-africa' ? (
           <div className="space-y-4">
