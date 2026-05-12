@@ -119,7 +119,13 @@ export const EmailVerificationPage: React.FC = () => {
             <ShieldCheck size={40} />
           </div>
           <h1 className="text-3xl font-black text-slate-900 mb-2">Vérification</h1>
-          <p className="text-slate-500 font-medium leading-relaxed">Nous avons envoyé un code à 6 chiffres à l'adresse <br/><span className="text-brand font-bold">{firebaseUser?.email}</span></p>
+          <p className="text-slate-500 font-medium leading-relaxed">
+            Nous avons envoyé un code à 6 chiffres à l'adresse <br/>
+            <span className="text-brand font-bold">{firebaseUser?.email}</span>
+          </p>
+          <p className="text-[11px] text-slate-400 font-bold mt-4 uppercase tracking-wider animate-pulse">
+            {t('check_spam_notice')}
+          </p>
         </div>
 
         <div className="flex justify-between gap-2 mb-10">

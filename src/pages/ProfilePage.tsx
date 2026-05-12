@@ -10,6 +10,7 @@ import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
 import { biometricService } from '../services/biometricService';
 import { Fingerprint } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
 
 
 export const ProfilePage: React.FC = () => {

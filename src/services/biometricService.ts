@@ -1,4 +1,5 @@
-import { NativeBiometric, BiometryType } from '@capgo/capacitor-native-biometric';
+import { NativeBiometric, BiometryType, AccessControl } from '@capgo/capacitor-native-biometric';
+import { Capacitor } from '@capacitor/core';
 
 export interface BiometricCredentials {
   email: string;
@@ -13,6 +14,7 @@ export const biometricService = {
    * Checks if biometric authentication is available on this device
    */
   async isAvailable(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) return false;
     try {
       const result = await NativeBiometric.isAvailable();
       return result.isAvailable;
@@ -43,6 +45,7 @@ export const biometricService = {
         username: creds.email,
         password: creds.password,
         server: SERVER_ID,
+        accessControl: AccessControl.BIOMETRY_ANY,
       });
       localStorage.setItem('biometric_enabled', 'true');
       return true;
@@ -57,7 +60,7 @@ export const biometricService = {
    */
   async getCredentials(): Promise<BiometricCredentials | null> {
     try {
-      const credentials = await NativeBiometric.getCredentials({
+      const credentials = await NativeBiometric.getSecureCredentials({
         server: SERVER_ID,
         reason: 'Connectez-vous à Flash Pay avec votre empreinte',
         title: 'Authentification Biométrique',

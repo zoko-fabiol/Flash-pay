@@ -6,6 +6,7 @@ import { Error } from '../components/UI';
 import { useLanguage } from '../context/LanguageContext';
 import { biometricService } from '../services/biometricService';
 import { useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
