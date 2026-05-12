@@ -15,19 +15,17 @@ export const initializeAdminPushNotifications = async (adminId?: string) => {
         return;
       }
 
-      try {
-        await OneSignalWeb.init({
-          appId: ONESIGNAL_APP_ID,
-          allowLocalhostAsSecureOrigin: true,
-        });
+      await OneSignalWeb.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
+      });
 
-        if (adminId) {
-          await OneSignalWeb.login(adminId);
-        }
-        console.log('✅ OneSignal Admin Web Initialized');
-      } catch (webError) {
-        console.warn('⚠️ OneSignal Admin Web Push not fully configured in dashboard:', webError);
+      if (adminId) {
+        await OneSignalWeb.login(adminId);
+        // We can't add tags as easily via the page SDK init, 
+        // but it's often done via User.addTag if available
       }
+      console.log('✅ OneSignal Admin Web Initialized');
     } else {
       // --- NATIVE IMPLEMENTATION ---
       OneSignal.initialize(ONESIGNAL_APP_ID);
