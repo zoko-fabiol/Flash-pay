@@ -18,6 +18,7 @@ import type { TransactionStatus, ProblemFlag } from '../types';
 
 import { fileToBase64 } from '../lib/imageUtils';
 import { emailService } from './emailService';
+import { oneSignalService } from './oneSignalService';
 
 export const adminService = {
   /**
@@ -87,6 +88,19 @@ export const adminService = {
           link: `/transactions/${transactionId}`,
           data: { transactionId }
         });
+
+        // --- ONESIGNAL PUSH NOTIFICATION ---
+        try {
+          const pushTitle = newStatus === 'completed' ? 'Transfert complété ✓' : 
+                           newStatus === 'failed' ? 'Transfert non traité' : 'Mise à jour Flash Pay';
+          const pushBody = newStatus === 'completed' ? 'Votre argent a bien été reçu par le destinataire.' :
+                          newStatus === 'failed' ? 'Malheureusement, ce transfert n\'a pas pu être traité.' :
+                          'Votre transfert a été mis à jour.';
+          
+          await oneSignalService.sendNotificationToUser(userId, pushTitle, pushBody, { transactionId });
+        } catch (pushErr) {
+          console.error('Failed to send OneSignal push for transaction:', pushErr);
+        }
 
         // Referral Bonus Logic on First Completed Transfer
         if (newStatus === 'completed') {
@@ -360,6 +374,17 @@ export const adminService = {
       notes: adminNote || '',
       timestamp: Timestamp.now(),
     });
+
+    // --- ONESIGNAL PUSH NOTIFICATION ---
+    try {
+      await oneSignalService.sendNotificationToUser(
+        userId, 
+        'Identité validée ✓', 
+        'Votre compte est désormais vérifié et vous avez reçu un bonus !'
+      );
+    } catch (pushErr) {
+      console.error('Failed to send OneSignal push for KYC approval:', pushErr);
+    }
   },
 
   rejectKYC: async (kycRequestId: string, rejectionReason: string, adminNote?: string) => {
@@ -414,6 +439,17 @@ export const adminService = {
       rejectionCount: currentRejectionCount,
       timestamp: Timestamp.now(),
     });
+
+    // --- ONESIGNAL PUSH NOTIFICATION ---
+    try {
+      await oneSignalService.sendNotificationToUser(
+        userId, 
+        'Mise à jour KYC', 
+        `Votre validation d'identité a été refusée : ${rejectionReason}`
+      );
+    } catch (pushErr) {
+      console.error('Failed to send OneSignal push for KYC rejection:', pushErr);
+    }
   },
 
   /**
@@ -444,6 +480,17 @@ export const adminService = {
             updatedAt: Timestamp.now(),
             link: '/support'
           });
+
+          // --- ONESIGNAL PUSH NOTIFICATION ---
+          try {
+            await oneSignalService.sendNotificationToUser(
+              userId, 
+              'Support résolu ✓', 
+              'Votre demande a été traitée par nos agents.'
+            );
+          } catch (pushErr) {
+            console.error('Failed to send OneSignal push for ticket resolution:', pushErr);
+          }
         }
       }
     } catch (err) {

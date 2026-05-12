@@ -32,6 +32,7 @@ import {
   increment,
   serverTimestamp,
 } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
 import {
   getStorage,
   ref,
@@ -215,19 +216,23 @@ export const userService = {
   },
 
   async savePushToken(userId: string, token: string) {
-    const userDoc = await getDoc(doc(db, 'users', userId));
-    if (userDoc.exists()) {
-      const data = userDoc.data();
-      if (data.fcmToken === token && data.pushEnabled === true) {
-        return; // Already up to date, skip write to prevent snapshot loop
-      }
-    }
-    
-    await updateDoc(doc(db, 'users', userId), {
+    // 1. Update user profile for quick reference
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
       fcmToken: token,
       pushEnabled: true,
       updatedAt: serverTimestamp(),
     });
+
+    // 2. Save to dedicated fcm_tokens collection for multi-device support (expected by Cloud Functions)
+    const deviceId = Capacitor.getPlatform() + '_' + (token.substring(0, 10));
+    const tokenRef = doc(db, 'fcm_tokens', userId, 'tokens', token.substring(0, 50)); // Using a safe ID
+    await setDoc(tokenRef, {
+      token: token,
+      platform: Capacitor.getPlatform(),
+      updatedAt: serverTimestamp(),
+      lastSeen: serverTimestamp()
+    }, { merge: true });
   },
 
   async getUserById(userId: string) {
@@ -249,6 +254,26 @@ export const userService = {
       deletionRequestedAt: new Date(),
       status: 'inactive',
     });
+  },
+
+  async notifyAdminsViaPush(title: string, body: string, payload: any = {}) {
+    const GAS_URL = import.meta.env.VITE_GAS_URL;
+    if (!GAS_URL) return;
+
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors', // Important for GAS
+        body: JSON.stringify({
+          action: 'notifyAdmins',
+          title,
+          body,
+          payload
+        })
+      });
+    } catch (err) {
+      console.error('Failed to notify admins via GAS:', err);
+    }
   },
 
   async deductBonus(userId: string, amount: number, reason: string) {
@@ -573,6 +598,12 @@ export const userService = {
       } catch (err) {
         console.error('Failed to notify admin of KYC submission:', err);
       }
+
+      // --- NEW: PUSH NOTIFICATION TO ADMINS ---
+      await userService.notifyAdminsViaPush(
+        'Vérification KYC reçue 👤',
+        'Un nouvel utilisateur a soumis ses documents pour validation.'
+      );
 
       return urls;
     } catch (error) {
@@ -1444,6 +1475,13 @@ export const transactionService = {
     } catch (err) {
       console.error('Failed to notify admin of transaction:', err);
     }
+
+    // --- NEW: PUSH NOTIFICATION TO ADMINS ---
+    await userService.notifyAdminsViaPush(
+      'Nouveau transfert ! 💸',
+      `Un transfert de ${transactionData.amount} ${transactionData.currency} vient d'être initié.`,
+      { transactionId: docRef.id }
+    );
 
     // Notify Admin via Email
     try {

@@ -26,6 +26,8 @@ import type { AdminSectionKey } from './types';
 import { Loading } from './components/ui/Loading';
 import { AdminNotificationProvider } from './context/AdminNotificationContext';
 import { BiometricGuard } from './components/BiometricGuard';
+import { initializeAdminPushNotifications } from './utils/pushNotifications';
+import { useEffect } from 'react';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
   const { user, isAdmin, loading } = useAuth();
@@ -59,6 +61,18 @@ const SectionRoute: React.FC<{ section?: AdminSectionKey; children: React.ReactN
   return <>{children}</>;
 };
 
+const AdminPushNotificationHandler: React.FC = () => {
+  const { user, isAdmin } = useAuth();
+
+  useEffect(() => {
+    if (user?.uid && isAdmin) {
+      initializeAdminPushNotifications(user.uid);
+    }
+  }, [user?.uid, isAdmin]);
+
+  return null;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -79,6 +93,7 @@ function App() {
       />
       <HashRouter>
         <BiometricGuard>
+          <AdminPushNotificationHandler />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             

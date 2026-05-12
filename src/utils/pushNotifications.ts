@@ -1,71 +1,58 @@
-import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { userService } from '../services/firebase';
-import { initializeMessaging, requestNotificationPermission, getFCMToken } from '../config/firebaseMessaging';
+import toast from 'react-hot-toast';
+import OneSignal from '@onesignal/capacitor-plugin';
+import { initializeMessaging, getFCMToken, requestNotificationPermission } from '../config/firebaseMessaging';
+
+const ONESIGNAL_APP_ID = '3b38ca69-e5eb-40a7-8b46-48942086dcb3';
 
 /**
  * Initialize push notifications for both web and native platforms
  */
-export const initializePushNotifications = async (userId: string) => {
-  // Initialize platform-specific push notifications
-  if (Capacitor.isNativePlatform()) {
-    await initializeNativePushNotifications(userId);
-  } else {
-    // Web platform - use Firebase Cloud Messaging
-    await initializeWebPushNotifications(userId);
+export const initializePushNotifications = async (userId?: string) => {
+  if (Capacitor.getPlatform() === 'web') {
+    if (userId) {
+      await initializeWebPushNotifications(userId);
+    }
+    return;
   }
-};
 
-/**
- * Initialize push notifications for native platforms (Android/iOS)
- */
-async function initializeNativePushNotifications(userId: string) {
   try {
-    // Request permission to use push notifications
-    // iOS will prompt a system dialog, Android will check if it's enabled
-    let permStatus = await PushNotifications.checkPermissions();
+    // 1. OneSignal Initialization (Native APK)
+    OneSignal.initialize(ONESIGNAL_APP_ID);
 
-    if (permStatus.receive === 'prompt') {
-      permStatus = await PushNotifications.requestPermissions();
+    // 2. Request Permissions
+    const permission = await OneSignal.Notifications.requestPermission(true);
+    console.log('OneSignal permission:', permission);
+
+    if (userId) {
+      // Link OneSignal subscription to our internal userId
+      OneSignal.login(userId);
+      console.log('OneSignal: User logged in with ID:', userId);
     }
 
-    if (permStatus.receive !== 'granted') {
-      console.log('⚠️ Push notification permission denied.');
-      return;
-    }
-
-    // Remove existing listeners to prevent duplicates
-    await PushNotifications.removeAllListeners();
-
-    // Register with Apple / Google to receive push notifications
-    await PushNotifications.register();
-
-    // On success, we should be able to receive notifications
-    PushNotifications.addListener('registration', async (token) => {
-      console.log('✅ Push registration success (native)');
-      try {
-        // Only update if needed (this prevents loops)
-        await userService.savePushToken(userId, token.value);
-      } catch (err) {
-        console.error('❌ Error saving push token to Firestore:', err);
-      }
-    });
-
-    // Some issue with our setup and push will not work
-    PushNotifications.addListener('registrationError', (error: any) => {
-      console.error('❌ Error on registration:', JSON.stringify(error));
-    });
-
-    // Show us the notification payload if the app is open on our device
-    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('📩 Push received (native):', JSON.stringify(notification));
-    });
-
-    // Method called when tapping on a notification
-    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      console.log('🔔 Push action performed (native):', JSON.stringify(notification));
+    // 3. Foreground Listener
+    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+      console.log('📩 OneSignal foreground notification:', event.getNotification());
+      const notification = event.getNotification();
       
-      const data = notification.notification.data;
+      toast.success(notification.title || 'Nouvelle notification', {
+        duration: 5000,
+        position: 'top-center',
+        style: {
+          background: '#661489',
+          color: '#fff',
+          fontWeight: 'bold',
+          borderRadius: '16px',
+        }
+      });
+    });
+
+    // 4. Action Listener (Tapping notification)
+    OneSignal.Notifications.addEventListener('click', (event) => {
+      console.log('🔔 OneSignal notification clicked:', event);
+      
+      const data = event.notification.additionalData as any;
       const targetPath = data?.deeplink || data?.actionUrl || data?.link;
       
       if (targetPath) {
@@ -78,7 +65,7 @@ async function initializeNativePushNotifications(userId: string) {
   } catch (error) {
     console.error('❌ Error initializing native push notifications:', error);
   }
-}
+};
 
 /**
  * Initialize push notifications for web (FCM)

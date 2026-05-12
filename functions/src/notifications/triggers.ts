@@ -13,19 +13,9 @@ export const onTransactionUpdated = functions.firestore.document('transactions/{
   const userId = after.userId;
   const notif = buildNotificationForTransaction({ id: ctx.params.txId, status: after.status });
 
-  // write in-app notification
+  // write in-app notification (this will trigger onInAppNotificationCreated for push)
   const notifRef = db.collection('notifications').doc(userId).collection('items').doc();
   await notifRef.set({ ...notif, createdAt: Date.now(), read: false });
-
-  // enqueue delivery
-  await db.collection('notification_queue').add({
-    userId,
-    payload: notif,
-    channels: ['fcm'],
-    status: 'pending',
-    scheduledFor: Date.now(),
-    attempts: 0,
-  });
 
   return null;
 });
@@ -38,7 +28,6 @@ export const onKycStatusChanged = functions.firestore.document('kyc/{kycId}').on
   const userId = after.userId;
   const notif = buildNotificationForKyc({ id: ctx.params.kycId, status: after.status });
   await db.collection('notifications').doc(userId).collection('items').doc().set({ ...notif, createdAt: Date.now(), read: false });
-  await db.collection('notification_queue').add({ userId, payload: notif, channels: ['fcm'], status: 'pending', scheduledFor: Date.now(), attempts: 0 });
   return null;
 });
 
@@ -48,6 +37,31 @@ export const onReferralReward = functions.firestore.document('referrals/{refId}'
   const userId = data.userId;
   const notif = buildNotificationForReferral({ id: ctx.params.refId, amount: data.amount });
   await db.collection('notifications').doc(userId).collection('items').doc().set({ ...notif, createdAt: Date.now(), read: false });
-  await db.collection('notification_queue').add({ userId, payload: notif, channels: ['fcm'], status: 'pending', scheduledFor: Date.now(), attempts: 0 });
   return null;
 });
+
+/**
+ * Universal Push Trigger: Any in-app notification added to a user's items 
+ * will automatically enqueue a push notification delivery.
+ */
+export const onInAppNotificationCreated = functions.firestore
+  .document('notifications/{userId}/items/{notifId}')
+  .onCreate(async (snap, ctx) => {
+    const data = snap.data();
+    if (!data) return;
+    const userId = ctx.params.userId;
+
+    // Enqueue for FCM delivery
+    await db.collection('notification_queue').add({
+      userId,
+      payload: {
+        title: data.title,
+        body: data.body,
+        data: data.data || {}
+      },
+      channels: ['fcm'],
+      status: 'pending',
+      scheduledFor: Date.now(),
+      attempts: 0,
+    });
+  });
