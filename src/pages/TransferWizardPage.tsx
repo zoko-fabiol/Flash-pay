@@ -416,6 +416,7 @@ export const TransferWizardPage: React.FC = () => {
       (c.transferType === type || (type === 'africa-africa' && c.transferType === 'russia-russia')) && 
       (
         !currency || 
+        !c.currency || // Allow rules without a specific currency to act as default
         c.currency === currency || 
         (type === 'africa-africa' && (currency === 'XAF' || currency === 'XOF') && (c.currency === 'XAF' || c.currency === 'XOF'))
       ) &&
