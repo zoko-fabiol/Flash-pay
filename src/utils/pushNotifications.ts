@@ -10,53 +10,55 @@ const ONESIGNAL_APP_ID = '3b38ca69-e5eb-40a7-8b46-48942086dcb3';
  */
 export const initializePushNotifications = async (userId?: string) => {
   try {
-    // 1. OneSignal Initialization (Works for BOTH Web and Native via the same plugin)
-    OneSignal.initialize(ONESIGNAL_APP_ID);
+    const isWeb = Capacitor.getPlatform() === 'web';
 
-    // 2. Request Permissions / Register
-    if (Capacitor.getPlatform() === 'web') {
-      // On web, we use OneSignal's sliding prompt or native prompt
-      await OneSignal.Notifications.requestPermission(true);
+    if (isWeb) {
+      // --- WEB IMPLEMENTATION ---
+      const OneSignalWeb = (window as any).OneSignal;
+      if (!OneSignalWeb) {
+        console.warn('OneSignal Web SDK not loaded yet');
+        return;
+      }
+
+      await OneSignalWeb.init({
+        appId: ONESIGNAL_APP_ID,
+        allowLocalhostAsSecureOrigin: true,
+      });
+
+      if (userId) {
+        await OneSignalWeb.login(userId);
+      }
+      console.log('✅ OneSignal Web Initialized');
     } else {
+      // --- NATIVE IMPLEMENTATION (Android/iOS) ---
+      OneSignal.initialize(ONESIGNAL_APP_ID);
       await OneSignal.Notifications.requestPermission(true);
-    }
 
-    if (userId) {
-      OneSignal.login(userId);
-      console.log('✅ OneSignal: User logged in with ID:', userId);
-    }
+      if (userId) {
+        OneSignal.login(userId);
+      }
 
-    // 3. Foreground Listener
-    OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
-      const notification = event.getNotification();
-      console.log('📩 Foreground notification:', notification);
-      
-      toast.success(notification.title || 'Nouvelle notification', {
-        duration: 5000,
-        position: 'top-center',
-        style: {
-          background: '#661489',
-          color: '#fff',
-          fontWeight: 'bold',
-          borderRadius: '16px',
+      // Foreground Listener (Native only)
+      OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => {
+        const notification = event.getNotification();
+        toast.success(notification.title || 'Nouvelle notification', {
+          duration: 5000,
+          position: 'top-center',
+          style: { background: '#661489', color: '#fff', fontWeight: 'bold', borderRadius: '16px' }
+        });
+      });
+
+      // Action Listener (Native only)
+      OneSignal.Notifications.addEventListener('click', (event) => {
+        const data = event.notification.additionalData as any;
+        const targetPath = data?.deeplink || data?.actionUrl || data?.link;
+        if (targetPath) {
+          window.location.hash = `#${targetPath.startsWith('/') ? targetPath : `/${targetPath}`}`;
+        } else if (data?.transactionId || data?.transferId) {
+          window.location.hash = `#/transactions/${data.transactionId || data.transferId}`;
         }
       });
-    });
-
-    // 4. Action Listener
-    OneSignal.Notifications.addEventListener('click', (event) => {
-      console.log('🔔 Notification clicked:', event);
-      const data = event.notification.additionalData as any;
-      const targetPath = data?.deeplink || data?.actionUrl || data?.link;
-      
-      if (targetPath) {
-        const cleanPath = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
-        window.location.hash = `#${cleanPath}`;
-      } else if (data?.transactionId || data?.transferId) {
-        window.location.hash = `#/transactions/${data.transactionId || data.transferId}`;
-      }
-    });
-
+    }
   } catch (error) {
     console.error('❌ Error initializing OneSignal:', error);
   }
