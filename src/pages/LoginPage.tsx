@@ -20,7 +20,12 @@ export const LoginPage: React.FC = () => {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(localStorage.getItem('biometric_enabled') === 'true');
   const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
-  const [isNative] = useState(Capacitor.isNativePlatform());
+  const [isInstallable] = useState(
+    Capacitor.isNativePlatform() || 
+    window.matchMedia('(display-mode: standalone)').matches || 
+    (window.navigator as any).standalone || 
+    false
+  );
 
   useEffect(() => {
     const checkBiometric = async () => {
@@ -60,7 +65,7 @@ export const LoginPage: React.FC = () => {
       await login(email, password);
       
       // Check if we should ask for biometric activation
-      if (isNative && biometricAvailable && !biometricEnabled && localStorage.getItem('biometric_asked') !== 'true') {
+      if (isInstallable && biometricAvailable && !biometricEnabled && localStorage.getItem('biometric_asked') !== 'true') {
         setShowBiometricPrompt(true);
       } else {
         navigate('/');
@@ -264,6 +269,9 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
       )}
+      <div className="fixed bottom-4 left-0 right-0 text-center text-[10px] text-gray-400 pointer-events-none opacity-50">
+        v1.1 - Biometric Fix
+      </div>
     </div>
   );
 };
