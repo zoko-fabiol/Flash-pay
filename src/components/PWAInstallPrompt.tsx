@@ -65,9 +65,9 @@ export const PWAInstallPrompt: React.FC = () => {
               </button>
               <button 
                 onClick={() => setDismissed(true)}
-                className="p-2 text-slate-300 hover:text-slate-500 transition-colors"
+                className="text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest px-2"
               >
-                <X size={18} />
+                {t('ignore') || 'Ignorer'}
               </button>
             </div>
           </div>
