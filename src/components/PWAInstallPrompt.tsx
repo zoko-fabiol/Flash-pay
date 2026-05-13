@@ -4,16 +4,30 @@ import { usePWAInstall } from '../context/PWAInstallContext';
 import { useLanguage } from '../context/LanguageContext';
 import { deviceService } from '../services/deviceService';
 
-const APK_URL = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.0.0/FlashPay-debug-1.0.2.apk';
-
 export const PWAInstallPrompt: React.FC = () => {
   const { canInstall, installApp, isInstalled } = usePWAInstall();
   const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [latestApkUrl, setLatestApkUrl] = useState<string | null>(null);
 
   const isIOS = deviceService.isIOS();
   const isAndroid = deviceService.isAndroid();
+
+  useEffect(() => {
+    if (isAndroid) {
+      // Fetch the latest release info from GitHub API
+      fetch('https://api.github.com/repos/zoko-fabiol/Flash-pay/releases/latest')
+        .then(res => res.json())
+        .then(data => {
+          const apkAsset = data.assets.find((asset: any) => asset.name.endsWith('.apk'));
+          if (apkAsset) {
+            setLatestApkUrl(apkAsset.browser_download_url);
+          }
+        })
+        .catch(err => console.error('Failed to fetch latest APK:', err));
+    }
+  }, [isAndroid]);
 
   // On native platforms (APK already installed), we don't show the prompt
   if (deviceService.isNative() || isInstalled || dismissed) return null;
@@ -23,8 +37,13 @@ export const PWAInstallPrompt: React.FC = () => {
 
   const handleInstallClick = () => {
     if (isAndroid) {
-      // Pour Android, on télécharge l'APK
-      window.location.href = APK_URL;
+      // Pour Android, on télécharge l'APK le plus récent détecté via l'API GitHub
+      if (latestApkUrl) {
+        window.location.href = latestApkUrl;
+      } else {
+        // Fallback si l'API n'a pas encore répondu ou a échoué
+        window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/latest';
+      }
     } else if (isIOS) {
       // Pour iOS, on affiche le guide (car pas d'install auto)
       setShowIOSGuide(true);
