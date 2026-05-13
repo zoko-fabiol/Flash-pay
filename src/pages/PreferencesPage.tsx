@@ -3,10 +3,11 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
-import { Bell, Mail, Save, Loader, CheckCircle2, Type } from 'lucide-react';
+import { Bell, Mail, Save, Loader, CheckCircle2, Type, Smartphone, Download } from 'lucide-react';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
+import { deviceService } from '../services/deviceService';
 
 interface UserPreferences {
   language: string;
@@ -127,6 +128,31 @@ export const PreferencesPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Native Version Card (Android only) */}
+        {deviceService.isAndroid() && !deviceService.isNative() && (
+          <div className="rounded-[32px] bg-gradient-to-br from-[#661489] to-[#4D0F67] border border-white/20 shadow-xl overflow-hidden p-6 text-white relative">
+            <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
+                <Smartphone size={24} />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-black text-lg">Flash Pay pour Android</h2>
+                <p className="text-white/80 text-xs font-medium mt-1 leading-relaxed">
+                  Profitez d'une expérience plus fluide et de notifications natives en installant l'application officielle.
+                </p>
+                <button
+                  onClick={() => window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.0.0/FlashPay-debug-1.0.2.apk'}
+                  className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white text-[#661489] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                >
+                  <Download size={14} />
+                  Télécharger l'APK
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Communication Card */}
         <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
