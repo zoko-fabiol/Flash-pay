@@ -41,8 +41,8 @@ export const PWAInstallPrompt: React.FC = () => {
       if (latestApkUrl) {
         window.location.href = latestApkUrl;
       } else {
-        // Fallback si l'API n'a pas encore répondu ou a échoué
-        window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/latest';
+        // Au lieu de rediriger vers GitHub, on affiche un message d'erreur discret
+        alert("Le téléchargement est temporairement indisponible. Veuillez réessayer plus tard.");
       }
     } else if (isIOS) {
       // Pour iOS, on affiche le guide (car pas d'install auto)
