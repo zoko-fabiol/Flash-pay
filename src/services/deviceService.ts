@@ -9,11 +9,11 @@ class DeviceService {
   }
 
   isIOS(): boolean {
-    return this.getPlatform() === 'ios';
+    return this.getPlatform() === 'ios' || this.getMobileOperatingSystem() === 'iOS';
   }
 
   isAndroid(): boolean {
-    return this.getPlatform() === 'android';
+    return this.getPlatform() === 'android' || this.getMobileOperatingSystem() === 'Android';
   }
 
   isNative(): boolean {
