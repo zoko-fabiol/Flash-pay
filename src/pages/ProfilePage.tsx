@@ -4,13 +4,15 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { userService, authService, db } from '../services/firebase';
 import { collection, query, where, onSnapshot, Timestamp } from 'firebase/firestore';
 import { Layout } from '../components/Layout';
-import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star, User, Zap, ShieldCheck } from 'lucide-react';
+import { Mail, Phone, Calendar, ChevronRight, Shield, Gift, Settings, HelpCircle, LogOut, Check, X, Pencil, Star, User, Zap, ShieldCheck, Fingerprint, Lock, Key } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
 import { biometricService } from '../services/biometricService';
-import { Fingerprint, Lock } from 'lucide-react';
+
 import { Capacitor } from '@capacitor/core';
+import { pinService } from '../services/pinService';
+import { PinModal } from '../components/PinModal';
 
 
 export const ProfilePage: React.FC = () => {
@@ -31,6 +33,10 @@ export const ProfilePage: React.FC = () => {
   const [showBiometricConfirm, setShowBiometricConfirm] = useState(false);
   const [referralReward, setReferralReward] = useState(500);
   const [appLockEnabled, setAppLockEnabled] = useState(localStorage.getItem('app_lock_enabled') === 'true');
+  const [pinEnabled, setPinEnabled] = useState(pinService.isEnabled());
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinModalMode, setPinModalMode] = useState<'set' | 'verify'>('set');
+  const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
     const unsubSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
@@ -201,6 +207,21 @@ export const ProfilePage: React.FC = () => {
     await biometricService.removeCredentials();
     setBiometricEnabled(false);
     setSuccess('Authentification biométrique désactivée.');
+  };
+
+  const handlePinSuccess = (pin?: string) => {
+    if (pinModalMode === 'set' && pin) {
+      pinService.setPin(pin);
+      setPinEnabled(true);
+      setSuccess('Code PIN activé !');
+    } else if (pinModalMode === 'verify') {
+      // Logic for changing PIN or disabling
+      pinService.removePin();
+      setPinEnabled(false);
+      setAppLockEnabled(false);
+      setSuccess('Code PIN désactivé.');
+    }
+    setShowPinModal(false);
   };
 
   useEffect(() => {
@@ -522,87 +543,153 @@ export const ProfilePage: React.FC = () => {
             </div>
           )}
 
-          {/* Biometric Toggle */}
-          {biometricAvailable && (
-            <div className="border-t border-slate-50 px-6 py-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${biometricEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
-                    <Fingerprint size={18} />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{t('biometric_login')}</p>
-                    <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
-                      {biometricEnabled ? t('enabled') : t('disabled')}
-                    </p>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => biometricEnabled ? handleDisableBiometric() : setShowBiometricConfirm(true)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${biometricEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${biometricEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-              {showBiometricConfirm && (
-                <div className="bg-slate-50 rounded-2xl p-4 space-y-3 animate-in fade-in zoom-in duration-300">
-                  <p className="text-xs font-bold text-slate-600">{t('confirm_password_to_activate')}</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      value={confirmPasswordForBiometric}
-                      onChange={(e) => setConfirmPasswordForBiometric(e.target.value)}
-                      placeholder={t('password_placeholder_generic')}
-                      className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
-                    />
+          {/* Security Toggles (Biometric for APK, PIN for PWA) */}
+          {isNative ? (
+            <>
+              {biometricAvailable && (
+                <div className="border-t border-slate-50 px-6 py-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${biometricEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                        <Fingerprint size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{t('biometric_login')}</p>
+                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                          {biometricEnabled ? t('enabled') : t('disabled')}
+                        </p>
+                      </div>
+                    </div>
+                    
                     <button
-                      onClick={handleEnableBiometric}
-                      disabled={!confirmPasswordForBiometric || loading}
-                      className="px-4 py-2 rounded-xl bg-[#661489] text-white text-xs font-bold disabled:opacity-50"
+                      onClick={() => biometricEnabled ? handleDisableBiometric() : setShowBiometricConfirm(true)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${biometricEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
                     >
-                      {loading ? '...' : t('activate')}
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${biometricEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
+                  </div>
+
+                  {showBiometricConfirm && (
+                    <div className="bg-slate-50 rounded-2xl p-4 space-y-3 animate-in fade-in zoom-in duration-300">
+                      <p className="text-xs font-bold text-slate-600">{t('confirm_password_to_activate')}</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          value={confirmPasswordForBiometric}
+                          onChange={(e) => setConfirmPasswordForBiometric(e.target.value)}
+                          placeholder={t('password_placeholder_generic')}
+                          className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                        />
+                        <button
+                          onClick={handleEnableBiometric}
+                          disabled={!confirmPasswordForBiometric || loading}
+                          className="px-4 py-2 rounded-xl bg-[#661489] text-white text-xs font-bold disabled:opacity-50"
+                        >
+                          {loading ? '...' : t('activate')}
+                        </button>
+                        <button
+                          onClick={() => { setShowBiometricConfirm(false); setConfirmPasswordForBiometric(''); }}
+                          className="px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-bold"
+                        >
+                          {t('cancel')}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              {biometricAvailable && (
+                <div className="border-t border-slate-50 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                        <Lock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{t('app_lock_title')}</p>
+                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                          {appLockEnabled ? t('enabled') : t('disabled')}
+                        </p>
+                      </div>
+                    </div>
+                    
                     <button
-                      onClick={() => { setShowBiometricConfirm(false); setConfirmPasswordForBiometric(''); }}
-                      className="px-4 py-2 rounded-xl bg-slate-200 text-slate-600 text-xs font-bold"
+                      onClick={() => {
+                        const newValue = !appLockEnabled;
+                        setAppLockEnabled(newValue);
+                        localStorage.setItem('app_lock_enabled', String(newValue));
+                      }}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
                     >
-                      {t('cancel')}
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
                   </div>
                 </div>
               )}
-            </div>
-          )}
-          {/* App Lock Toggle */}
-          {biometricAvailable && (
-            <div className="border-t border-slate-50 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
-                    <Lock size={18} />
+            </>
+          ) : (
+            <>
+              {/* PIN Code Settings for PWA */}
+              <div className="border-t border-slate-50 px-6 py-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${pinEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                      <Key size={18} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{t('pin_login')}</p>
+                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                        {pinEnabled ? t('enabled') : t('disabled')}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{t('app_lock_title')}</p>
-                    <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
-                      {appLockEnabled ? t('enabled') : t('disabled')}
-                    </p>
+                  
+                  <button
+                    onClick={() => {
+                      if (pinEnabled) {
+                        setPinModalMode('verify');
+                        setShowPinModal(true);
+                      } else {
+                        setPinModalMode('set');
+                        setShowPinModal(true);
+                      }
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${pinEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pinEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {pinEnabled && (
+                <div className="border-t border-slate-50 px-6 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                        <Lock size={18} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{t('app_lock_pin_title')}</p>
+                        <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">
+                          {appLockEnabled ? t('enabled') : t('disabled')}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        const newValue = !appLockEnabled;
+                        setAppLockEnabled(newValue);
+                        pinService.setAppLockEnabled(newValue);
+                      }}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
                   </div>
                 </div>
-                
-                <button
-                  onClick={() => {
-                    const newValue = !appLockEnabled;
-                    setAppLockEnabled(newValue);
-                    localStorage.setItem('app_lock_enabled', String(newValue));
-                  }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </div>
 
@@ -737,6 +824,14 @@ export const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+      {/* PIN Modal */}
+      {showPinModal && (
+        <PinModal 
+          mode={pinModalMode} 
+          onSuccess={handlePinSuccess} 
+          onCancel={() => setShowPinModal(false)} 
+        />
       )}
     </Layout>
   );

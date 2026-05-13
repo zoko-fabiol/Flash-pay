@@ -67,7 +67,7 @@ export const SignupPage: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] glass-effect shadow-premium mb-6 overflow-hidden border border-white/50">
-            <img src="/logo.png" alt="Flash Pay Logo" className="w-full h-full object-cover" />
+            <img src="/icon.png" alt="Flash Pay Logo" className="w-full h-full object-cover scale-110" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Flash Pay</h1>
           <p className="text-slate-500 mt-2 font-medium">{t('signup_desc')}</p>

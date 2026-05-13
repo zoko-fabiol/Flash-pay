@@ -17,8 +17,8 @@ export const biometricService = {
     const isNative = Capacitor.isNativePlatform();
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone || false;
     
-    // Only allow if native app OR installed PWA
-    if (!isNative && !isStandalone) {
+    // Strictly only allow on native platform (APK/iOS)
+    if (!isNative) {
       return false;
     }
 

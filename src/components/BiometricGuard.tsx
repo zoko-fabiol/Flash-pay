@@ -3,8 +3,10 @@ import { biometricService } from '../services/biometricService';
 import { authService, auth } from '../services/firebase';
 import { Capacitor } from '@capacitor/core';
 import { Loading } from './UI';
-import { Fingerprint, Lock, KeyRound, LogOut } from 'lucide-react';
+import { Fingerprint, Lock, KeyRound, LogOut, Key } from 'lucide-react';
 import { translateFirebaseError } from '../utils/errorMessages';
+import { pinService } from '../services/pinService';
+import { PinModal } from './PinModal';
 
 interface BiometricGuardProps {
   children: React.ReactNode;
@@ -36,6 +38,7 @@ const copy = {
     inactivity_locked: 'Session expirée après 2 minutes d\'inactivité.',
     lock_app: 'Verrouiller l\'app',
     back_to_biometric: 'Retour à l\'empreinte',
+    unlock_with_pin: 'Déverrouiller avec PIN',
   },
   en: {
     biometric_auth_failed: 'Authentication failed. Please try again.',
@@ -52,6 +55,7 @@ const copy = {
     inactivity_locked: 'Session expired after 2 minutes of inactivity.',
     lock_app: 'Lock app',
     back_to_biometric: 'Back to biometric',
+    unlock_with_pin: 'Unlock with PIN',
   },
   ru: {
     biometric_auth_failed: 'Аутентификация не удалась. Повторите попытку.',
@@ -68,6 +72,7 @@ const copy = {
     inactivity_locked: 'Сеанс истек через 2 минуты неактивности.',
     lock_app: 'Заблокировать приложение',
     back_to_biometric: 'Вернуться к отпечатку',
+    unlock_with_pin: 'Разблокировать с помощью ПИН',
   },
 } as const;
 
@@ -80,8 +85,12 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
   const [isLocked, setIsLocked] = useState(() => {
     const isNative = Capacitor.isNativePlatform();
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone || false;
-    return (isNative || isStandalone) && localStorage.getItem('app_lock_enabled') === 'true';
+    const biometricLock = localStorage.getItem('app_lock_enabled') === 'true';
+    const pinLock = pinService.isAppLockEnabled();
+    return (isNative && biometricLock) || (!isNative && pinLock);
   });
+  const [showPinModal, setShowPinModal] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -106,13 +115,17 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
         // App came back to foreground
         if (pageVisibilityRef.current) {
           const hiddenTime = new Date().getTime() - new Date(pageVisibilityRef.current).getTime();
-          if (hiddenTime > INACTIVITY_TIMEOUT && localStorage.getItem('app_lock_enabled') === 'true') {
+          if (hiddenTime > INACTIVITY_TIMEOUT && (localStorage.getItem('app_lock_enabled') === 'true' || pinService.isAppLockEnabled())) {
             setIsLocked(true);
             setInactivityMessage(t('inactivity_locked'));
             setShowPasswordForm(false);
             setError(null);
-            // Start biometric auth immediately
-            handleAuthenticate();
+            // Start auth immediately
+            if (isNative) {
+              handleAuthenticate();
+            } else {
+              setShowPinModal(true);
+            }
           }
         }
         pageVisibilityRef.current = null;
@@ -136,7 +149,11 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
         setIsLocked(true);
         setInactivityMessage(t('inactivity_locked'));
         setShowPasswordForm(false);
-        handleAuthenticate();
+        if (isNative) {
+          handleAuthenticate();
+        } else {
+          setShowPinModal(true);
+        }
       }, INACTIVITY_TIMEOUT);
     };
 
@@ -217,8 +234,21 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
     setPassword('');
   };
 
+  const handlePinUnlock = (pin?: string) => {
+    if (pin && pinService.verifyPin(pin)) {
+      setIsLocked(false);
+      setShowPinModal(false);
+    } else {
+      setError('Code PIN incorrect');
+    }
+  };
+
   if (!isLocked) {
     return <>{children}</>;
+  }
+
+  if (showPinModal && !isNative) {
+    return <PinModal mode="verify" onSuccess={handlePinUnlock} title={t('biometric_lock_title')} />;
   }
 
   return (
@@ -247,7 +277,7 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
           <>
             {/* Biometric Button */}
             <button
-              onClick={handleAuthenticate}
+              onClick={() => isNative ? handleAuthenticate() : setShowPinModal(true)}
               disabled={isAuthenticating}
               className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#661489] rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50"
             >
@@ -255,7 +285,7 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
                 <div className="w-5 h-5 border-2 border-[#661489] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <Fingerprint size={20} />
+                  {isNative ? <Fingerprint size={20} /> : <Key size={20} />}
                   {t('unlock')}
                 </>
               )}
@@ -325,7 +355,7 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
                 }}
                 className="w-full py-3 bg-white/20 hover:bg-white/30 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-95"
               >
-                {t('back_to_biometric')}
+                {isNative ? t('back_to_biometric') : 'Retour'}
               </button>
             </form>
           </>

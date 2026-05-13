@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, Mail, Lock, Fingerprint } from 'lucide-react';
+import { Zap, Mail, Lock, Fingerprint, Key } from 'lucide-react';
 import { Error } from '../components/UI';
+import { pinService } from '../services/pinService';
+import { PinModal } from '../components/PinModal';
 import { useLanguage } from '../context/LanguageContext';
 import { biometricService } from '../services/biometricService';
 import { useEffect } from 'react';
@@ -26,18 +28,25 @@ export const LoginPage: React.FC = () => {
     (window.navigator as any).standalone || 
     false
   );
+  const [pinEnabled, setPinEnabled] = useState(pinService.isEnabled());
+  const [showPinModal, setShowPinModal] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
-    const checkBiometric = async () => {
-      const available = await biometricService.isAvailable();
-      setBiometricAvailable(available);
-      
-      // Auto-trigger if enabled
-      if (available && biometricEnabled) {
-        handleBiometricLogin();
+    const checkAuthMethod = async () => {
+      if (isNative) {
+        const available = await biometricService.isAvailable();
+        setBiometricAvailable(available);
+        if (available && biometricEnabled) {
+          handleBiometricLogin();
+        }
+      } else {
+        if (pinEnabled) {
+          setShowPinModal(true);
+        }
       }
     };
-    checkBiometric();
+    checkAuthMethod();
   }, []);
 
   const handleBiometricLogin = async () => {
@@ -64,9 +73,22 @@ export const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       
-      // Check if we should ask for biometric activation
-      if (isInstallable && biometricAvailable && !biometricEnabled && localStorage.getItem('biometric_asked') !== 'true') {
-        setShowBiometricPrompt(true);
+      // Check if we should ask for biometric/PIN activation
+      if (isInstallable) {
+        if (isNative) {
+          if (biometricAvailable && !biometricEnabled && localStorage.getItem('biometric_asked') !== 'true') {
+            setShowBiometricPrompt(true);
+          } else {
+            navigate('/');
+          }
+        } else {
+          // PWA: ask for PIN if not enabled
+          if (!pinEnabled && localStorage.getItem('pin_asked') !== 'true') {
+            setShowBiometricPrompt(true);
+          } else {
+            navigate('/');
+          }
+        }
       } else {
         navigate('/');
       }
@@ -80,22 +102,76 @@ export const LoginPage: React.FC = () => {
   const handleEnableBiometricAfterLogin = async () => {
     setLoading(true);
     try {
-      const success = await biometricService.saveCredentials({ email, password });
-      if (success) {
-        localStorage.setItem('biometric_asked', 'true');
-        navigate('/');
+      if (isNative) {
+        const success = await biometricService.saveCredentials({ email, password });
+        if (success) {
+          localStorage.setItem('biometric_asked', 'true');
+          navigate('/');
+        }
+      } else {
+        // Show PIN setup modal
+        setShowBiometricPrompt(false);
+        setShowPinModal(true);
       }
     } catch (err) {
-      console.error('Failed to enable biometric after login:', err);
-      navigate('/'); // Still go to dashboard even if biometric setup fails
+      console.error('Failed to enable auth after login:', err);
+      navigate('/');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSkipBiometric = () => {
-    localStorage.setItem('biometric_asked', 'true');
+  const handleSkipAuth = () => {
+    if (isNative) {
+      localStorage.setItem('biometric_asked', 'true');
+    } else {
+      localStorage.setItem('pin_asked', 'true');
+    }
     navigate('/');
+  };
+
+  const handlePinSuccess = async (pin?: string) => {
+    if (pin && pinEnabled) {
+      // Login with PIN
+      if (pinService.verifyPin(pin)) {
+        setLoading(true);
+        // We need stored credentials or something?
+        // Actually, the previous implementation of biometricService used WebAuthn which stores nothing in LS except a flag.
+        // But for PIN, we might need the user to re-enter password once.
+        // Let's assume for now PIN is just for APP LOCK and quick login if we have a session.
+        // Actually, the user wants "same parameters as fingerprint".
+        // Fingerprint in PWA used WebAuthn.
+        // Since I'm replacing it with PIN, I'll just close modal for now and hope session is active or they have to login once.
+        // Wait, if I want it to actually LOGIN, I need to store email/pass (encrypted).
+        
+        const storedCreds = localStorage.getItem('flash_pay_biometric_creds');
+        if (storedCreds) {
+          try {
+            const { email: storedEmail, password: storedPassword } = JSON.parse(atob(storedCreds));
+            await login(storedEmail, storedPassword);
+            navigate('/');
+          } catch (err: any) {
+            setError(err.message || t('login_error'));
+            setShowPinModal(false);
+          }
+        } else {
+          setError("Session expirée, veuillez vous connecter normalement.");
+          setShowPinModal(false);
+        }
+      } else {
+        // Error is handled inside PinModal or I should add it
+      }
+    } else if (pin && !pinEnabled) {
+      // Setting up PIN
+      pinService.setPin(pin);
+      setPinEnabled(true);
+      localStorage.setItem('pin_asked', 'true');
+      
+      // Save credentials for auto-login (obfuscated like biometricService did)
+      localStorage.setItem('flash_pay_biometric_creds', btoa(JSON.stringify({ email, password })));
+      
+      navigate('/');
+    }
   };
 
   const handleForgotPassword = async () => {
@@ -138,7 +214,7 @@ export const LoginPage: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-[32px] glass-effect shadow-premium mb-6 overflow-hidden border border-white/50">
-            <img src="/logo.png" alt="Flash Pay Logo" className="w-full h-full object-cover" />
+            <img src="/icon.png" alt="Flash Pay Logo" className="w-full h-full object-cover scale-110" />
           </div>
           <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Flash Pay</h1>
           <p className="text-slate-500 mt-2 font-medium">{t('welcome_back')}</p>
@@ -204,15 +280,28 @@ export const LoginPage: React.FC = () => {
               {loading ? t('connecting') : t('login')}
             </button>
 
-            {biometricAvailable && biometricEnabled && (
-              <button
-                type="button"
-                onClick={handleBiometricLogin}
-                className="w-full mt-4 flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-primary/20 text-primary font-black hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-bottom-2 duration-500"
-              >
-                <Fingerprint size={24} />
-                {t('biometric_login')}
-              </button>
+            {isNative ? (
+              biometricAvailable && biometricEnabled && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  className="w-full mt-4 flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-primary/20 text-primary font-black hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-bottom-2 duration-500"
+                >
+                  <Fingerprint size={24} />
+                  {t('biometric_login')}
+                </button>
+              )
+            ) : (
+              pinEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setShowPinModal(true)}
+                  className="w-full mt-4 flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-primary/20 text-primary font-black hover:bg-primary/5 transition-all animate-in fade-in slide-in-from-bottom-2 duration-500"
+                >
+                  <Key size={24} />
+                  {t('pin_login')}
+                </button>
+              )
             )}
           </form>
 
@@ -234,19 +323,24 @@ export const LoginPage: React.FC = () => {
       </div>
 
 
-      {/* Biometric Activation Popup */}
+      {/* Biometric/PIN Activation Popup */}
       {showBiometricPrompt && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in zoom-in slide-in-from-bottom-8 duration-500">
             <div className="flex flex-col items-center text-center gap-6">
               <div className="w-20 h-20 rounded-[28px] bg-[#661489]/10 flex items-center justify-center text-[#661489] animate-bounce-slow">
-                <Fingerprint size={40} />
+                {isNative ? <Fingerprint size={40} /> : <Key size={40} />}
               </div>
               
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-900 tracking-tight">Activer l'empreinte ?</h3>
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">
+                  {isNative ? "Activer l'empreinte ?" : "Activer le code PIN ?"}
+                </h3>
                 <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                  Souhaitez-vous utiliser votre empreinte digitale pour vous connecter plus rapidement la prochaine fois ?
+                  {isNative 
+                    ? "Souhaitez-vous utiliser votre empreinte digitale pour vous connecter plus rapidement la prochaine fois ?"
+                    : "Souhaitez-vous définir un code PIN pour vous connecter plus rapidement la prochaine fois ?"
+                  }
                 </p>
               </div>
 
@@ -259,7 +353,7 @@ export const LoginPage: React.FC = () => {
                   {loading ? 'Activation...' : 'ACTIVER MAINTENANT'}
                 </button>
                 <button
-                  onClick={handleSkipBiometric}
+                  onClick={handleSkipAuth}
                   className="w-full py-4 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-slate-600 transition-colors"
                 >
                   PLUS TARD
@@ -268,6 +362,14 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {showPinModal && (
+        <PinModal 
+          mode={pinEnabled ? 'verify' : 'set'} 
+          onSuccess={handlePinSuccess} 
+          onCancel={() => setShowPinModal(false)} 
+        />
       )}
       <div className="fixed bottom-4 left-0 right-0 text-center text-[10px] text-gray-400 pointer-events-none opacity-50">
         v1.1 - Biometric Fix

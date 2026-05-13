@@ -45,6 +45,7 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { Loading } from './components/UI';
 import { initializePushNotifications } from './utils/pushNotifications';
 import { BiometricGuard } from './components/BiometricGuard';
+import { deviceService } from './services/deviceService';
 
 // ─── Android Back Button Handler ────────────────────────────────────────────
 const AndroidBackHandler: React.FC = () => {
