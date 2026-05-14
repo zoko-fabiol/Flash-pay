@@ -150,34 +150,22 @@ export const TransferWizardPage: React.FC = () => {
     
     let list = [];
     if (originCode === 'RU') {
-      // La Russie peut envoyer vers tous les pays africains configurés
-      // On inclut aussi la Russie pour permettre à l'utilisateur de cliquer dessus et d'inverser le transfert
-      list = [...countries];
-      if (!list.some(c => c.code === 'RU')) {
-        list.push({ code: 'RU', name: 'Russie', currency: 'RUB' });
-      }
+      // Russia sends to any African country
+      list = countries.filter(c => c.code !== 'RU');
     } else {
-      // Un pays africain envoie vers les destinations autorisées + la Russie
+      // African country sends to its allowed destinations + Russia
       const allowed = origin?.allowedDestinations || [];
       const canSendToRussia = origin?.canSendToRussia !== false;
       
       list = countries.filter(c => c.code !== originCode && allowed.includes(c.code));
-      
-      // Ajouter la Russie si elle est autorisée et pas déjà dans la liste
-      if (canSendToRussia && !list.some(c => c.code === 'RU')) {
+      if (canSendToRussia) {
         const ruObj = countries.find(c => c.code === 'RU') || { code: 'RU', name: 'Russie', currency: 'RUB' };
-        list.push(ruObj);
+        if (!list.some(c => c.code === 'RU')) list.push(ruObj);
       }
     }
 
-    // Tri : Russie en tête si l'envoyeur est africain, puis alphabétique
-    return [...list].sort((a, b) => {
-      if (originCode !== 'RU') {
-        if (a.code === 'RU') return -1;
-        if (b.code === 'RU') return 1;
-      }
-      return (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
-    });
+    // Strictly alphabetical sort as requested
+    return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
   }, [transferData.originCountry, countries, senderCountries]);
 
   const sortedBanks = useMemo(
@@ -342,10 +330,12 @@ export const TransferWizardPage: React.FC = () => {
     }
   }, [transferData.originCountry, updateTransferData]);
 
-  // Initialisation automatique du destinataire par défaut
+  // Initialisation/Mise à jour automatique du destinataire par défaut
   useEffect(() => {
-    if (transferData.originCountry && !transferData.destinationCountry && recipientCountries.length > 0) {
-      const firstDest = recipientCountries[0];
+    // Si pas de destination, ou si destination == origine (problème), on prend le premier de la liste alphabétique
+    if (transferData.originCountry && (!transferData.destinationCountry || transferData.destinationCountry === transferData.originCountry) && recipientCountries.length > 0) {
+      const firstDest = recipientCountries[0]; // recipientCountries est déjà trié alphabétiquement
+      
       const type = transferData.originCountry === 'RU' ? 'russia-africa' : (firstDest.code === 'RU' ? 'africa-russia' : 'africa-africa');
       updateTransferData({
         destinationCountry: firstDest.code,
