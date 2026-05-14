@@ -154,6 +154,38 @@ export const PreferencesPage: React.FC = () => {
           </div>
         )}
 
+        {/* Notifications Card */}
+        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-6 pb-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#661489]/10 flex items-center justify-center text-[#661489]">
+              <Bell size={18} />
+            </div>
+            <h2 className="font-black text-slate-900">{t('notifications')}</h2>
+          </div>
+          <div className="p-6">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+              <div>
+                <p className="text-slate-900 font-black text-sm">{t('push_notifications')}</p>
+                <p className="text-slate-500 text-[10px] font-medium">{t('push_notif_desc')}</p>
+              </div>
+              <button
+                onClick={async () => {
+                  const { requestNotificationPermissionFromUser } = await import('../utils/pushNotifications');
+                  const granted = await requestNotificationPermissionFromUser();
+                  if (granted) {
+                    toast.success(t('notifications_enabled') || 'Notifications activées');
+                  } else {
+                    toast.error(t('notifications_denied') || 'Accès refusé');
+                  }
+                }}
+                className="px-5 py-2.5 bg-[#661489] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all"
+              >
+                {t('activate')}
+              </button>
+            </div>
+          </div>
+        </div>
+
 
         {/* Save */}
         <div className="flex gap-4 pt-4">

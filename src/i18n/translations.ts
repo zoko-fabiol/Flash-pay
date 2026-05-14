@@ -519,6 +519,8 @@ export const translations: Record<string, Record<string, string>> = {
     "notification_support_body": "Votre ticket de support a bien été enregistré.",
     "notification_support_resolution_title": "Ticket résolu",
     "notification_support_resolution_body": "Votre demande de support a été traitée.",
+    "notifications_enabled": "Notifications activées !",
+    "notifications_denied": "Accès aux notifications refusé.",
   },
   en: {
     "dashboard": "Dashboard",
@@ -1035,6 +1037,8 @@ export const translations: Record<string, Record<string, string>> = {
     "notification_support_body": "Your support ticket has been recorded.",
     "notification_support_resolution_title": "Ticket resolved",
     "notification_support_resolution_body": "Your support request has been processed.",
+    "notifications_enabled": "Notifications enabled!",
+    "notifications_denied": "Notification access denied.",
   },
   ru: {
     "deposit_method_desc": "Каким оператором вы будете платить?",

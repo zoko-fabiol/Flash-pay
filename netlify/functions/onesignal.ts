@@ -29,6 +29,13 @@ const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) =
       return { statusCode: 400, body: 'Missing app_id' };
     }
 
+    // Select the correct REST API Key
+    // If it's the admin app, try to use the admin key if available
+    let apiKey = ONESIGNAL_REST_API_KEY;
+    if (appId === process.env.VITE_ADMIN_ONESIGNAL_APP_ID && process.env.ADMIN_ONESIGNAL_REST_API_KEY) {
+      apiKey = process.env.ADMIN_ONESIGNAL_REST_API_KEY;
+    }
+
     const oneSignalBody: any = {
       app_id: appId,
       headings: { en: payload.title, fr: payload.title },
@@ -49,7 +56,7 @@ const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) =
       method: 'POST',
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Basic ${ONESIGNAL_REST_API_KEY}`
+        'Authorization': `Basic ${apiKey}`
       },
       body: JSON.stringify(oneSignalBody)
     });
