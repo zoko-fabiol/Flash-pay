@@ -51,6 +51,8 @@ export interface User {
   address?: string;
   city?: string;
   postalCode?: string;
+  countryCode?: string;
+  isOnboardingComplete?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -12,8 +12,9 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   emailVerificationSent: boolean;
-  signup: (email: string, password: string, nom: string, tel: string, ref?: string) => Promise<void>;
+  signup: (email: string, password: string, nom: string, tel: string, countryCode: string, ref?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
@@ -89,10 +90,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
   }, []);
 
-  const signup = async (email: string, password: string, nom: string, tel: string, ref?: string) => {
+  const signup = async (email: string, password: string, nom: string, tel: string, countryCode: string, ref?: string) => {
     try {
       setError(null);
       await authService.signup(email, password, { nom, tel, ref });
+      
+      // Update the country code immediately
+      const fbUser = authService.auth.currentUser;
+      if (fbUser) {
+        await userService.updateUserProfile(fbUser.uid, { 
+          countryCode,
+          isOnboardingComplete: true 
+        });
+      }
+      
       setEmailVerificationSent(true);
     } catch (err: any) {
       const friendlyError = translateFirebaseError(err);
@@ -105,6 +116,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setError(null);
       const fbUser = await authService.login(email, password);
+      const userData = await userService.getUserData(fbUser.uid);
+      setUser(userData as User);
+      setFirebaseUser(fbUser);
+    } catch (err: any) {
+      const friendlyError = translateFirebaseError(err);
+      setError(friendlyError);
+      throw new Error(friendlyError);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    try {
+      setError(null);
+      const fbUser = await authService.loginWithGoogle();
       const userData = await userService.getUserData(fbUser.uid);
       setUser(userData as User);
       setFirebaseUser(fbUser);
@@ -150,6 +175,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       emailVerificationSent,
       signup,
       login,
+      loginWithGoogle,
       logout,
       resetPassword,
       clearError,

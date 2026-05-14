@@ -16,7 +16,7 @@ export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login, resetPassword } = useAuth();
+  const { login, loginWithGoogle, resetPassword } = useAuth();
   const { t, language, setLanguage } = useLanguage();
   const [resetSent, setResetSent] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
@@ -304,6 +304,35 @@ export const LoginPage: React.FC = () => {
               )
             )}
           </form>
+          
+          <div className="relative my-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-100"></div>
+            </div>
+            <div className="relative flex justify-center text-xs uppercase tracking-widest font-black">
+              <span className="bg-white px-4 text-slate-400">{t('or_separator') || 'OU'}</span>
+            </div>
+          </div>
+
+          <button
+            onClick={async () => {
+              setLoading(true);
+              setError('');
+              try {
+                await loginWithGoogle();
+                navigate('/');
+              } catch (err: any) {
+                setError(err.message || t('login_error'));
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+          >
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+            Continuer avec Google
+          </button>
 
           <div className="text-center mt-6 text-sm text-slate-500 font-medium">
             {t('no_account')}{' '}

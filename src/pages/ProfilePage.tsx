@@ -9,6 +9,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { Error, Success } from '../components/UI';
 import { notificationService } from '../services/notificationService';
 import { biometricService } from '../services/biometricService';
+import { CountrySelector } from '../components/CountrySelector';
+import { MapPin } from 'lucide-react';
 
 import { Capacitor } from '@capacitor/core';
 import { pinService } from '../services/pinService';
@@ -65,6 +67,7 @@ export const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     nom: user?.nom || '',
     tel: user?.tel || '',
+    countryCode: user?.countryCode || '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -462,6 +465,24 @@ export const ProfilePage: React.FC = () => {
                   />
                 ) : (
                   <p className="text-sm font-semibold text-slate-900">{user?.tel || '—'}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-4 px-6 py-4">
+              <div className="w-9 h-9 rounded-xl bg-slate-50 flex items-center justify-center shrink-0">
+                <MapPin size={16} className="text-slate-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{t('departure_country') || 'Pays de résidence'}</p>
+                {editing ? (
+                  <div className="mt-1">
+                    <CountrySelector 
+                      value={formData.countryCode} 
+                      onChange={(code) => setFormData(prev => ({ ...prev, countryCode: code }))} 
+                    />
+                  </div>
+                ) : (
+                  <p className="text-sm font-semibold text-slate-900">{formData.countryCode || '—'}</p>
                 )}
               </div>
             </div>

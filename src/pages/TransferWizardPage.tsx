@@ -322,13 +322,16 @@ export const TransferWizardPage: React.FC = () => {
   // Initialisation des valeurs par défaut pour éviter les problèmes de sélection directe
   useEffect(() => {
     if (!transferData.originCountry) {
+      const defaultOrigin = user?.countryCode || 'RU';
+      const isRussia = defaultOrigin === 'RU';
+      
       updateTransferData({
-        originCountry: 'RU',
-        originCurrency: 'RUB',
-        transferType: 'russia-africa'
+        originCountry: defaultOrigin,
+        originCurrency: isRussia ? 'RUB' : (countries.find(c => c.code === defaultOrigin)?.currency || 'XAF'),
+        transferType: isRussia ? 'russia-africa' : 'africa-russia'
       });
     }
-  }, [transferData.originCountry, updateTransferData]);
+  }, [transferData.originCountry, user?.countryCode, countries, updateTransferData]);
 
   // Initialisation/Mise à jour automatique du destinataire par défaut
   useEffect(() => {

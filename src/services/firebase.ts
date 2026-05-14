@@ -10,6 +10,8 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  GoogleAuthProvider,
+  signInWithPopup,
   type Auth,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -223,6 +225,44 @@ export const authService = {
   async login(email: string, password: string) {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
+  },
+
+  async loginWithGoogle() {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    
+    // Check if user document exists
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      // New user via Google!
+      // We create a partial profile and they will be redirected to Onboarding
+      const referralCode = await generateUniqueReferralCode();
+      await setDoc(doc(db, 'users', user.uid), {
+        id: user.uid,
+        email: user.email,
+        nom: user.displayName || '',
+        tel: '',
+        countryCode: '', // To be filled in Onboarding
+        referralCode,
+        referredBy: null,
+        referralStatus: 'none',
+        referralStats: { invited: 0, rewarded: 0, pending: 0 },
+        statut_kyc: 'Standard',
+        kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
+        solde_bonus: 0,
+        solde_points: 0,
+        emailVerified: true, // Google accounts are verified
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isOnboardingComplete: false, // Flag for redirection
+        referredUsers: [],
+        referralRewards: [],
+      });
+    }
+    
+    return user;
   },
 
   async logout() {

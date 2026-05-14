@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, User, Mail, Phone, Lock, Hash } from 'lucide-react';
+import { Zap, User, Mail, Phone, Lock, Hash, MapPin } from 'lucide-react';
 import { Error } from '../components/UI';
 import { useLanguage } from '../context/LanguageContext';
+import { CountrySelector } from '../components/CountrySelector';
 
 export const SignupPage: React.FC = () => {
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
   const [tel, setTel] = useState('');
+  const [countryCode, setCountryCode] = useState('');
   const [password, setPassword] = useState('');
   const [refCode, setRefCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,10 +27,14 @@ export const SignupPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!countryCode) {
+      setError('Veuillez choisir votre pays');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
-      await signup(email, password, nom, tel, refCode);
+      await signup(email, password, nom, tel, countryCode, refCode);
       navigate('/email-verification');
     } catch (err: any) {
       setError(err.message || t('signup_error'));
@@ -41,8 +47,6 @@ export const SignupPage: React.FC = () => {
     { icon: User,  label: t('full_name'),    type: 'text',     value: nom,      onChange: setNom,      placeholder: t('full_name'),    required: true },
     { icon: Mail,  label: t('email'),         type: 'email',    value: email,    onChange: setEmail,    placeholder: 'votre@email.com', required: true },
     { icon: Phone, label: t('phone_number'), type: 'tel',      value: tel,      onChange: setTel,      placeholder: '+7 / +237',       required: true },
-    { icon: Lock,  label: t('password'),     type: 'password', value: password, onChange: setPassword, placeholder: '••••••••',        required: true },
-    { icon: Hash,  label: t('referral_code_optional'), type: 'text', value: refCode, onChange: setRefCode, placeholder: t('optional_code'), required: false },
   ];
 
   return (
@@ -94,6 +98,41 @@ export const SignupPage: React.FC = () => {
                 </div>
               </div>
             ))}
+
+            <CountrySelector 
+              value={countryCode} 
+              onChange={setCountryCode} 
+              label={t('departure_country') || 'Pays de résidence'} 
+            />
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('password')}</label>
+              <div className="relative">
+                <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-12 pr-4 py-3.5 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-slate-900 transition-all bg-white/50"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t('referral_code_optional')}</label>
+              <div className="relative">
+                <Hash size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={refCode}
+                  onChange={(e) => setRefCode(e.target.value)}
+                  placeholder={t('optional_code')}
+                  className="w-full pl-12 pr-4 py-3.5 border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-medium text-slate-900 transition-all bg-white/50"
+                />
+              </div>
+            </div>
 
             <button
               type="submit"
