@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
 import { onSnapshot, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { authService, userService, db } from '../services/firebase';
+import { auth, authService, userService, db } from '../services/firebase';
 import { translateFirebaseError } from '../utils/errorMessages';
 import type { User } from '../types';
 
@@ -96,7 +96,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await authService.signup(email, password, { nom, tel, ref });
       
       // Update the country code immediately
-      const fbUser = authService.auth.currentUser;
+      const fbUser = auth.currentUser;
       if (fbUser) {
         await userService.updateUserProfile(fbUser.uid, { 
           countryCode,
