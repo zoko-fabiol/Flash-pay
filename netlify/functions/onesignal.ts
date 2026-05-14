@@ -11,29 +11,33 @@ const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) =
 
   const DEFAULT_APP_ID = process.env.ONESIGNAL_APP_ID;
   const ONESIGNAL_REST_API_KEY = process.env.ONESIGNAL_REST_API_KEY;
-
-  if (!ONESIGNAL_REST_API_KEY) {
-    return { 
-      statusCode: 500, 
-      body: JSON.stringify({ error: 'OneSignal REST API Key missing' }) 
-    };
-  }
+  const ADMIN_ONESIGNAL_REST_API_KEY = process.env.ADMIN_ONESIGNAL_REST_API_KEY;
+  const ADMIN_APP_ID = process.env.VITE_ADMIN_ONESIGNAL_APP_ID;
 
   try {
     const payload = JSON.parse(event.body || '{}');
-    
-    // Use the provided app_id or the default one
     const appId = payload.app_id || DEFAULT_APP_ID;
 
     if (!appId) {
-      return { statusCode: 400, body: 'Missing app_id' };
+      return { statusCode: 400, body: JSON.stringify({ error: 'Missing app_id' }) };
     }
 
     // Select the correct REST API Key
-    // If it's the admin app, try to use the admin key if available
     let apiKey = ONESIGNAL_REST_API_KEY;
-    if (appId === process.env.VITE_ADMIN_ONESIGNAL_APP_ID && process.env.ADMIN_ONESIGNAL_REST_API_KEY) {
-      apiKey = process.env.ADMIN_ONESIGNAL_REST_API_KEY;
+    
+    // If it's the admin app, prioritize the admin key
+    if (appId === ADMIN_APP_ID && ADMIN_APP_ID) {
+      apiKey = ADMIN_ONESIGNAL_REST_API_KEY || ONESIGNAL_REST_API_KEY;
+    }
+
+    if (!apiKey) {
+      return { 
+        statusCode: 500, 
+        body: JSON.stringify({ 
+          error: 'OneSignal REST API Key missing',
+          details: `Neither ONESIGNAL_REST_API_KEY nor ADMIN_ONESIGNAL_REST_API_KEY found for appId: ${appId}`
+        }) 
+      };
     }
 
     const oneSignalBody: any = {
