@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
 import { Bell, Mail, Save, Loader, CheckCircle2, Type, Smartphone, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useLanguage } from '../context/LanguageContext';
