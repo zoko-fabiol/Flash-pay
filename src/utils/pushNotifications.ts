@@ -114,9 +114,36 @@ export const initializePushNotifications = async (userId?: string) => {
  * Request notification permission from user manually
  */
 export async function requestNotificationPermissionFromUser(): Promise<boolean> {
+  const isWeb = Capacitor.getPlatform() === 'web';
+  
   try {
-    const permission = await OneSignal.Notifications.requestPermission(true);
-    return permission;
+    if (isWeb) {
+      // Check if already denied at browser level
+      if (Notification.permission === 'denied') {
+        toast.error("Permissions bloquées. Veuillez les autoriser dans les paramètres de votre navigateur (cadenas à côté de l'URL).", { duration: 6000 });
+        return false;
+      }
+      
+      const OneSignalWeb = (window as any).OneSignal;
+      if (OneSignalWeb) {
+        // OneSignal 16+ use showNativePrompt
+        if (OneSignalWeb.Notifications?.requestPermission) {
+          await OneSignalWeb.Notifications.requestPermission();
+        } else {
+          // Fallback to older SDK method
+          await OneSignalWeb.showNativePrompt();
+        }
+        return Notification.permission === 'granted';
+      }
+      
+      // Fallback if OneSignal not loaded
+      const result = await Notification.requestPermission();
+      return result === 'granted';
+    } else {
+      // Native (Android/iOS)
+      const permission = await OneSignal.Notifications.requestPermission(true);
+      return permission;
+    }
   } catch (error) {
     console.error('❌ Error requesting notification permission:', error);
     return false;

@@ -144,7 +144,7 @@ export const PreferencesPage: React.FC = () => {
                   Profitez d'une expérience plus fluide et de notifications natives en installant l'application officielle.
                 </p>
                 <button
-                  onClick={() => window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.0.1/FlashPay-debug-1.0.2.apk'}
+                  onClick={() => window.location.href = '/.netlify/functions/latest-apk'}
                   className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white text-[#661489] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                 >
                   <Download size={14} />
@@ -165,9 +165,26 @@ export const PreferencesPage: React.FC = () => {
           </div>
           <div className="p-6">
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-              <div>
-                <p className="text-slate-900 font-black text-sm">{t('push_notifications')}</p>
-                <p className="text-slate-500 text-[10px] font-medium">{t('push_notif_desc')}</p>
+              <div className="flex items-center gap-3">
+                {Notification.permission === 'granted' ? (
+                  <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                    <CheckCircle2 size={16} />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                    <Bell size={16} />
+                  </div>
+                )}
+                <div>
+                  <p className="text-slate-900 font-black text-sm">{t('push_notifications')}</p>
+                  <p className="text-slate-500 text-[10px] font-medium">
+                    {Notification.permission === 'granted' 
+                      ? (t('notifications_active') || 'Vous recevez les alertes') 
+                      : (Notification.permission === 'denied' 
+                          ? (t('notifications_blocked') || 'Bloquées par le navigateur')
+                          : t('push_notif_desc'))}
+                  </p>
+                </div>
               </div>
               <button
                 onClick={async () => {
@@ -175,13 +192,16 @@ export const PreferencesPage: React.FC = () => {
                   const granted = await requestNotificationPermissionFromUser();
                   if (granted) {
                     toast.success(t('notifications_enabled') || 'Notifications activées');
-                  } else {
-                    toast.error(t('notifications_denied') || 'Accès refusé');
                   }
                 }}
-                className="px-5 py-2.5 bg-[#661489] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all"
+                disabled={Notification.permission === 'granted'}
+                className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all ${
+                  Notification.permission === 'granted'
+                    ? 'bg-emerald-500 text-white cursor-default'
+                    : 'bg-[#661489] text-white active:scale-95'
+                }`}
               >
-                {t('activate')}
+                {Notification.permission === 'granted' ? (t('active') || 'Activé') : t('activate')}
               </button>
             </div>
           </div>

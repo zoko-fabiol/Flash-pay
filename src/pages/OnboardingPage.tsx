@@ -26,7 +26,8 @@ export const OnboardingPage: React.FC = () => {
       setCountryCode(user.countryCode || '');
       
       // If onboarding is already complete, go to dashboard
-      if (user.isOnboardingComplete) {
+      const isProfileIncomplete = user.isOnboardingComplete === false || !user.countryCode || !user.tel;
+      if (!isProfileIncomplete) {
         navigate('/');
       }
     }

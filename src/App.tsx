@@ -8,6 +8,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { deviceService } from './services/deviceService';
 
 // --- Scroll To Top Handler ---
 const ScrollToTop = () => {
@@ -21,6 +22,7 @@ const ScrollToTop = () => {
 };
 
 // Pages
+import { WelcomePage } from './pages/WelcomePage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { OnboardingPage } from './pages/OnboardingPage';
@@ -46,7 +48,6 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { Loading } from './components/UI';
 import { initializePushNotifications } from './utils/pushNotifications';
 import { BiometricGuard } from './components/BiometricGuard';
-import { deviceService } from './services/deviceService';
 
 // ─── Android Back Button Handler ────────────────────────────────────────────
 const AndroidBackHandler: React.FC = () => {
@@ -119,14 +120,17 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   }
 
   if (!user) {
-    return <Navigate to="/login" />;
+    const isMobile = deviceService.getMobileOperatingSystem() !== 'unknown';
+    return <Navigate to={isMobile ? "/welcome" : "/login"} />;
   }
 
   if ((user as any).isPending || user.emailVerified === false) {
     return <Navigate to="/email-verification" />;
   }
 
-  if (user.isOnboardingComplete === false) {
+  const isProfileIncomplete = user.isOnboardingComplete === false || !user.countryCode || !user.tel;
+
+  if (isProfileIncomplete) {
     return <Navigate to="/onboarding" />;
   }
 
@@ -148,6 +152,7 @@ function AppRoutes() {
       <PushNotificationHandler />
       <Routes>
         {/* Auth Routes */}
+        <Route path="/welcome" element={user ? <Navigate to="/" /> : <WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/onboarding" element={
