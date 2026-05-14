@@ -162,13 +162,13 @@ export const TransactionDetailPage: React.FC = () => {
       pdf.text('Montant envoye:', margin + 6, y);
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(40, 40, 40);
-      pdf.text(`${formatNum(sendAmt)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 6, y, { align: 'right' });
+      pdf.text(`${formatNum(sendAmt)} ${transaction.currency}`, margin + 6, y);
       
       y += 8;
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 100, 100);
       pdf.text('Taux de change:', margin + 6, y);
-      pdf.text(`1 RUB = ${rate.toFixed(2)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 6, y, { align: 'right' });
+      pdf.text(`1 ${transaction.currency} = ${rate.toFixed(2)} ${transaction.destinationCurrency}`, pageWidth - margin - 6, y, { align: 'right' });
       
       y += 12;
       pdf.setFontSize(isBulkRec ? 12 : 11);
@@ -176,7 +176,7 @@ export const TransactionDetailPage: React.FC = () => {
       pdf.text('NET A RECEVOIR:', margin + 6, y);
       pdf.setFontSize(isBulkRec ? 15 : 13);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(`${formatNum(recvAmt)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 6, y, { align: 'right' });
+      pdf.text(`${formatNum(recvAmt)} ${transaction.destinationCurrency}`, pageWidth - margin - 6, y, { align: 'right' });
 
       y += 22;
 

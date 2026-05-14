@@ -68,8 +68,8 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
     ? { code: 'RU', currency: 'RUB', name: 'Russie' }
     : countries.find(c => c.code === transferData.destinationCountry);
 
-  const fromCurrency = currentSender?.currency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
-  const toCurrency = currentRecipient?.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
+  const fromCurrency = currentSender?.currency || transferData.originCurrency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
+  const toCurrency = currentRecipient?.currency || transferData.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
 
   const foundRate = rates.find((r: any) => 
     r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
@@ -141,6 +141,12 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
       <div className="flex items-center gap-4 mb-8">
+        <button 
+          onClick={previousStep}
+          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
         <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('make_payment_title') || 'Effectuer le paiement'}</h2>
         <div className="flex items-center gap-3 text-[#661489] font-black bg-[#F5E8FF] px-5 py-2 rounded-full text-lg border-2 border-[#661489]/20 shadow-md">
           <Clock size={24} />
@@ -170,7 +176,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         {transferType === 'russia-africa' ? (
           <div className="space-y-4">
             {banks.length === 0 ? (
-              <div className="bg-amber-50 rounded-[32px] p-8 border border-amber-200 text-center">
+              <div className="bg-amber-50 rounded-[32px] p-6 border border-amber-200 text-center">
                 <p className="text-amber-700 font-bold">{t('no_banks_configured') || 'Aucune banque configurée.'}</p>
               </div>
             ) : (
@@ -268,7 +274,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
 
       {/* Bonus & Points Payment Option */}
       {totalDiscountAvailableRUB > 0 && (
-        <div className={`p-8 rounded-[32px] border-2 transition-all mb-8 ${payWithBonus ? 'border-brand bg-brand/5 ring-4 ring-brand/5' : 'border-slate-100 bg-white hover:border-brand/30'}`}>
+        <div className={`p-6 rounded-[32px] border-2 transition-all mb-8 ${payWithBonus ? 'border-brand bg-brand/5 ring-4 ring-brand/5' : 'border-slate-100 bg-white hover:border-brand/30'}`}>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="p-4 bg-brand/10 rounded-2xl text-brand">
@@ -361,14 +367,11 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         </div>
       )}
 
-      <div className="mt-12 flex flex-col-reverse sm:flex-row gap-4">
-        <button onClick={previousStep} className="w-full sm:flex-1 px-8 py-5 rounded-full border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
-          <ChevronLeft size={24} /> {t('back')}
-        </button>
+      <div className="mt-4 flex flex-col sm:flex-row gap-4">
         <button
           onClick={handleSubmit}
           disabled={!isStepValid}
-          className="w-full sm:flex-[2] px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-slate-900 text-white shadow-xl hover:bg-black disabled:opacity-40 disabled:bg-slate-400"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-slate-900 text-white shadow-xl hover:bg-black disabled:opacity-40 disabled:bg-slate-400"
         >
           {isSubmitting ? <><Zap className="animate-pulse" size={24} /> {t('processing') || 'Traitement...'}</> : <>{t('confirm_payment') || 'Confirmer le paiement'} <ArrowRight size={24} /></>}
         </button>

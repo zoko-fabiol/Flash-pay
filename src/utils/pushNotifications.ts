@@ -1,9 +1,12 @@
 import { Capacitor } from '@capacitor/core';
-import { userService } from '../services/firebase';
+import { notificationService } from '../services/notificationService';
 import toast from 'react-hot-toast';
 import OneSignal from '@onesignal/capacitor-plugin';
 
 const ONESIGNAL_APP_ID = '3b38ca69-e5eb-40a7-8b46-48942086dcb3';
+
+let webInitialized = false;
+let nativeInitialized = false;
 
 /**
  * Initialize push notifications for both web and native platforms
@@ -20,10 +23,20 @@ export const initializePushNotifications = async (userId?: string) => {
         return;
       }
 
+      // Guard against double initialization (React StrictMode / HMR)
+      if (webInitialized) {
+        console.log('✅ OneSignal Web already initialized, skipping');
+        if (userId) {
+          try { await OneSignalWeb.login(userId); } catch (_) {}
+        }
+        return;
+      }
+
       await OneSignalWeb.init({
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: true,
       });
+      webInitialized = true;
 
       if (userId) {
         await OneSignalWeb.login(userId);
@@ -31,11 +44,37 @@ export const initializePushNotifications = async (userId?: string) => {
       console.log('✅ OneSignal Web Initialized');
     } else {
       // --- NATIVE IMPLEMENTATION (Android/iOS) ---
+      // Guard against double initialization
+      if (nativeInitialized) {
+        console.log('✅ OneSignal Native already initialized, skipping');
+        if (userId) {
+          try { OneSignal.login(userId); } catch (_) {}
+        }
+        return;
+      }
+
       OneSignal.initialize(ONESIGNAL_APP_ID);
-      await OneSignal.Notifications.requestPermission(true);
+      nativeInitialized = true;
+      
+      // Request permission from user
+      const hasPermission = await OneSignal.Notifications.requestPermission(true);
+      console.log('🔔 Permission requested, granted:', hasPermission);
 
       if (userId) {
         OneSignal.login(userId);
+
+        // ✅ CRITICAL FIX: Register the OneSignal token in Firestore
+        // This allows Cloud Functions to find and send notifications to this device
+        try {
+          const token = await getCurrentPushToken();
+          const platform = Capacitor.getPlatform() as 'android' | 'ios';
+          if (token) {
+            await notificationService.registerFCMToken(userId, token, platform);
+            console.log(`✅ ${platform} FCM token registered:`, token.substring(0, 20) + '...');
+          }
+        } catch (err) {
+          console.warn('⚠️ Could not register native FCM token:', err);
+        }
       }
 
       // Foreground Listener (Native only)
@@ -58,9 +97,16 @@ export const initializePushNotifications = async (userId?: string) => {
           window.location.hash = `#/transactions/${data.transactionId || data.transferId}`;
         }
       });
+
+      console.log('✅ OneSignal Native Initialized');
     }
-  } catch (error) {
-    console.error('❌ Error initializing OneSignal:', error);
+  } catch (error: any) {
+    // Silently handle "already initialized" errors
+    if (error?.message?.includes('already initialized') || error?.message?.includes('Can only be used on')) {
+      console.warn('⚠️ OneSignal init skipped:', error.message);
+    } else {
+      console.error('❌ Error initializing OneSignal:', error);
+    }
   }
 };
 

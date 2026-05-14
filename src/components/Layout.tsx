@@ -45,7 +45,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         
-        <main ref={scrollContainerRef} className="flex-1 overflow-auto pb-28 lg:pb-6">
+        <main ref={scrollContainerRef} className="flex-1 overflow-auto pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pb-6">
           <div className={`container mx-auto px-4 pb-4 max-w-7xl ${location.pathname.startsWith('/transfer') ? 'pt-0' : 'pt-4'}`}>
             {children}
           </div>

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User as FirebaseUser } from 'firebase/auth';
-import { onSnapshot, doc } from 'firebase/firestore';
+import { onSnapshot, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { authService, userService, db } from '../services/firebase';
 import { translateFirebaseError } from '../utils/errorMessages';
 import type { User } from '../types';
@@ -42,19 +42,37 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (fbUser) {
         // Listen to user document in real-time
-        unsubUser = onSnapshot(doc(db, 'users', fbUser.uid), (docSnap) => {
+        unsubUser = onSnapshot(doc(db, 'users', fbUser.uid), async (docSnap) => {
           if (docSnap.exists()) {
             const userData = { id: docSnap.id, ...docSnap.data() } as User;
             setUser(prevUser => {
-              // Simple check to avoid re-render if data is identical
-              // (Comparing stringified versions is a quick way for flat objects)
-              if (JSON.stringify(prevUser) === JSON.stringify(userData)) {
-                return prevUser;
-              }
+              if (JSON.stringify(prevUser) === JSON.stringify(userData)) return prevUser;
               return userData;
             });
+            setLoading(false);
+          } else {
+            // Check if they are stuck in pending_users (created during the 5-hour window)
+            try {
+              const pendingRef = doc(db, 'pending_users', fbUser.uid);
+              const pendingSnap = await getDoc(pendingRef);
+              if (pendingSnap.exists()) {
+                // Migrate them to users immediately
+                const pendingData = pendingSnap.data();
+                await setDoc(doc(db, 'users', fbUser.uid), {
+                  ...pendingData,
+                  emailVerified: false,
+                  updatedAt: new Date()
+                });
+                await deleteDoc(pendingRef);
+                // After migration, the onSnapshot on 'users' will trigger again naturally!
+                return;
+              }
+            } catch (err) {
+              console.error('Migration check failed:', err);
+            }
+            setUser(null);
+            setLoading(false);
           }
-          setLoading(false);
         }, (err) => {
           console.error('Error listening to user data:', err);
           setLoading(false);

@@ -6,8 +6,15 @@ const ONESIGNAL_APP_ID = '987f03ae-6b3f-49ca-9fd4-da1d6323d31e';
 export const initializeAdminPushNotifications = async (adminId?: string) => {
   try {
     const isWeb = Capacitor.getPlatform() === 'web';
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     if (isWeb) {
+      // Skip OneSignal on localhost — it's restricted to production domains
+      if (isLocalhost) {
+        console.log('⏭️ OneSignal skipped on localhost (not whitelisted).');
+        return;
+      }
+
       // --- WEB IMPLEMENTATION ---
       const OneSignalWeb = (window as any).OneSignal;
       if (!OneSignalWeb) {

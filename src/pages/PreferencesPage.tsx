@@ -154,31 +154,6 @@ export const PreferencesPage: React.FC = () => {
           </div>
         )}
 
-        {/* Communication Card */}
-        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
-          <div className="px-6 pt-6 pb-3 border-b border-slate-100">
-            <h2 className="font-black text-slate-900">{t('communication')}</h2>
-          </div>
-
-          <div className="divide-y divide-slate-50">
-            {/* Promotional emails */}
-            <div className="flex items-center justify-between px-6 py-6">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-[#F5E8FF] flex items-center justify-center shrink-0">
-                  <Mail size={18} className="text-[#661489]" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900 text-sm">{t('promo_emails')}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{t('promo_emails_desc')}</p>
-                </div>
-              </div>
-              <Toggle
-                value={preferences.promotionalEmails}
-                onChange={() => setPreferences({ ...preferences, promotionalEmails: !preferences.promotionalEmails })}
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Save */}
         <div className="flex gap-4 pt-4">

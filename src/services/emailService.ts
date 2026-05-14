@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL de votre script Google Apps Script
-const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbyquLPwMLLu8i7c27Htlw8lBV94HcHcWDTpE9bxJe2KBFBbd3LG6mBk1J_I-TpQF3myuA/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzZv4O7fcvbN-s_3kzD_RT43B4kW48nF9CKig_EKXtsF6G-D8jsDR5oqOPaul8Fb3hXWA/exec';
 
 export const emailService = {
   /**

@@ -246,6 +246,9 @@ const UsersListPage: React.FC = () => {
                           {user.email ? (
                             <>
                               <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a>
+                              {user.emailVerified === false && (
+                                <span className="bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded-md text-[8px] uppercase tracking-wider ml-2">Non vérifié</span>
+                              )}
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();

@@ -38,11 +38,16 @@ export const ProfilePage: React.FC = () => {
   const [pinModalMode, setPinModalMode] = useState<'set' | 'verify'>('set');
   const isNative = Capacitor.isNativePlatform();
 
+  const [pointsCurrency, setPointsCurrency] = useState('RUB');
+  const [pointsRedemptionRate, setPointsRedemptionRate] = useState(1000);
+
   useEffect(() => {
     const unsubSettings = onSnapshot(collection(db, 'settings'), (snapshot) => {
       if (!snapshot.empty) {
         const data = snapshot.docs[0].data();
         if (data.referralBonusRUB) setReferralReward(data.referralBonusRUB);
+        if (data.pointsCurrency) setPointsCurrency(data.pointsCurrency);
+        if (data.pointsRedemptionRate) setPointsRedemptionRate(data.pointsRedemptionRate);
       }
     });
     return () => unsubSettings();
@@ -164,7 +169,7 @@ export const ProfilePage: React.FC = () => {
   const kycColor = getKycColor();
   const initials = (user?.nom || 'U').split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
   
-  const [settings, setSettings] = useState({ standardLimitRUB: 20000, expertLimitRUB: 150000 });
+  const [settings, setSettings] = useState({ standardLimitRUB: 20000, expertLimitRUB: 150000, pointsCurrency: 'RUB', pointsRedemptionRate: 1000 });
   const [spentToday, setSpentToday] = useState(0);
 
   useEffect(() => {
@@ -231,6 +236,8 @@ export const ProfilePage: React.FC = () => {
         setSettings({
           standardLimitRUB: data.standardLimitRUB || 20000,
           expertLimitRUB: data.expertLimitRUB || 150000,
+          pointsCurrency: data.pointsCurrency || 'RUB',
+          pointsRedemptionRate: data.pointsRedemptionRate || 1000,
         });
       }
     });
@@ -382,7 +389,7 @@ export const ProfilePage: React.FC = () => {
               </div>
               <div>
                   <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">{t('loyalty_points')}</h3>
-                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">1000 pts = 1 RUB</p>
+                 <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{settings.pointsRedemptionRate} pts = 1 {settings.pointsCurrency}</p>
               </div>
            </div>
 

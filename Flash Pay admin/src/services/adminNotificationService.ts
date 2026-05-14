@@ -22,7 +22,7 @@ export async function sendBroadcastDirect(
   options: BroadcastOptions = { sendEmail: true, sendNotification: true }
 ): Promise<{ sent: number; failed: number }> {
   try {
-    const GAS_URL = import.meta.env.VITE_GAS_URL;
+    const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbxMM0PgmUvuAyJ-5BP4R36u5aHbhSKF-OrwtmeW-ULdHJ3qzNOmM6_hI8Yopb65aAL6OQ/exec';
     const usersRef = collection(db, 'users');
     const usersSnap = await getDocs(usersRef);
 
@@ -36,11 +36,8 @@ export async function sendBroadcastDirect(
 
       if (userId) allUserIds.push(userId);
 
-      const hasOptIn = (data.preferences?.promotionalEmails === true) || 
-             (data.preferences?.emailOptIn === true) || 
-             (data.emailOptIn === true);
-      
-      if (hasOptIn && userEmail) {
+      // Send to every user that has an email address
+      if (userEmail) {
         emailRecipients.push(userEmail);
       }
     });
@@ -55,24 +52,21 @@ export async function sendBroadcastDirect(
     }
 
     // 2. Send Emails via Google Apps Script (GAS)
-    if (options.sendEmail && emailRecipients.length > 0) {
-      const GAS_URL = import.meta.env.VITE_GAS_URL;
-      if (GAS_URL) {
-        try {
-          await fetch(GAS_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'broadcastEmail',
-              title,
-              body,
-              recipients: emailRecipients
-            })
-          });
-        } catch (err) {
-          console.error('Email broadcast failed:', err);
-        }
+    if (options.sendEmail && emailRecipients.length > 0 && GAS_URL) {
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            title,
+            body,
+            recipients: emailRecipients,
+            logoUrl: 'https://flash-pay.site/logo.png'
+          })
+        });
+      } catch (err) {
+        console.error('Email broadcast failed:', err);
       }
     }
 

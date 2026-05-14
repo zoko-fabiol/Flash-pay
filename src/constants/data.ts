@@ -2,6 +2,7 @@ import type { Country, Settings } from '../types';
 
 export const COUNTRIES: Country[] = [
   {
+    code: 'CM',
     name: 'Cameroun',
     dialCode: '+237',
     operators: [
@@ -10,6 +11,7 @@ export const COUNTRIES: Country[] = [
     ],
   },
   {
+    code: 'CI',
     name: 'Côte d\'Ivoire',
     dialCode: '+225',
     operators: [
@@ -19,6 +21,7 @@ export const COUNTRIES: Country[] = [
     ],
   },
   {
+    code: 'SN',
     name: 'Sénégal',
     dialCode: '+221',
     operators: [

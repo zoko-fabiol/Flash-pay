@@ -41,9 +41,23 @@ export const onTransactionConfirmed = functions.firestore
         return null;
       }
 
+      const amountText = `${amount} ${currency}`;
+      const subject = `Flash Pay - Transfert ${after?.status === 'completed' ? 'complété' : 'confirmé'}`;
+      const body = `
+        <div style="font-family: Arial, Helvetica, sans-serif; color: #111; line-height: 1.6;">
+          <h2 style="margin: 0 0 12px; color: #661489;">Votre transfert a été ${after?.status === 'completed' ? 'complété' : 'confirmé'}</h2>
+          <p style="margin: 0 0 12px;">Bonjour ${userName},</p>
+          <p style="margin: 0 0 12px;">Nous vous confirmons que votre transfert de <strong>${amountText}</strong> vers <strong>${recipientName}</strong> a bien été traité.</p>
+          <p style="margin: 0 0 12px;">Référence transaction: <strong>${transactionId}</strong></p>
+          <p style="margin: 0;">Date: <strong>${new Date(transferDate).toLocaleString('fr-FR')}</strong></p>
+        </div>
+      `;
+
       // Build email content
       const emailData = {
         type: 'transfer_confirmation',
+        title: subject,
+        body,
         recipients: [userEmail],
         data: {
           transactionId,

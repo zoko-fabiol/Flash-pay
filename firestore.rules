@@ -84,11 +84,19 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ─── Notification Preferences (User) ────────────────────────────────
+    // ─── Notification Preferences & Profiles (User) ────────────────────
     match /users/{userId} {
+      // Users can read their own profile
+      allow read: if isUser(userId);
       // Users can update their notification preferences
       allow update: if isUser(userId) && 
                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notificationPreferences']);
+    }
+
+    // ─── Pending Users (Registration) ───────────────────────────────────
+    match /pending_users/{userId} {
+      allow read: if isUser(userId) || isAdmin();
+      allow write: if isUser(userId) || isAdmin();
     }
 
     // ─── Default Deny ──────────────────────────────────────────────────

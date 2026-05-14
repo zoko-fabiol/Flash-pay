@@ -22,6 +22,7 @@ interface SummaryStepProps {
   nextStep: () => void;
   previousStep: () => void;
   user: any;
+  countries: any[];
 }
 
 export const SummaryStep: React.FC<SummaryStepProps> = ({
@@ -33,19 +34,21 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
   formatNumber,
   nextStep,
   previousStep,
-  user
+  user,
+  countries
 }) => {
+  const countriesList = countries || [];
   const currentSender = (transferData.originCountry === 'RU' || !transferData.originCountry) 
     ? { code: 'RU', currency: 'RUB', name: 'Russie' }
-    : (transferData.senderCountries || []).find((c: any) => c.code === transferData.originCountry);
+    : countriesList.find((c: any) => c.code === transferData.originCountry);
 
   const currentRecipient = (transferData.destinationCountry === 'RU')
     ? { code: 'RU', currency: 'RUB', name: 'Russie' }
-    : (transferData.recipientCountries || []).find((c: any) => c.code === transferData.destinationCountry);
+    : countriesList.find((c: any) => c.code === transferData.destinationCountry);
 
-  // Fallbacks if not found in passed lists (should be available in transferData though)
-  const fromCurrency = currentSender?.currency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
-  const toCurrency = currentRecipient?.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
+  // Use currency from database, fallback to transferData if not found
+  const fromCurrency = currentSender?.currency || transferData.originCurrency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
+  const toCurrency = currentRecipient?.currency || transferData.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
 
   const foundRate = rates.find((r: any) => 
     r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
@@ -95,11 +98,19 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
-      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('verify_details') || 'Vérifier les détails'}</h2>
+      <div className="flex items-center gap-4 mb-6">
+        <button 
+          onClick={previousStep}
+          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('verify_details') || 'Vérifier les détails'}</h2>
+      </div>
 
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Flag to Flag Header */}
-        <div className="bg-[#661489]/5 p-8 border-b border-slate-100 flex flex-col items-center">
+        <div className="bg-[#661489]/5 p-6 border-b border-slate-100 flex flex-col items-center">
           <div className="flex items-center gap-6 mb-4">
             <div className="relative">
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md">
@@ -144,7 +155,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
           </div>
         </div>
 
-        <div className="p-8 space-y-8">
+        <div className="p-6 space-y-4">
           {/* Recipient Details */}
           {!transferData.isBulk && (
             <div className="grid grid-cols-2 gap-6">
@@ -224,13 +235,10 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
         </div>
       </div>
 
-      <div className="mt-10 flex flex-col-reverse sm:flex-row gap-4">
-        <button onClick={previousStep} className="w-full sm:flex-1 px-8 py-5 rounded-full border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3">
-          <ChevronLeft size={24} /> {t('back')}
-        </button>
+      <div className="mt-4 flex flex-col sm:flex-row gap-4">
         <button
           onClick={nextStep}
-          className="w-full sm:flex-[2] px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#661489] text-white shadow-xl shadow-[#661489]/20"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#661489] text-white shadow-xl shadow-[#661489]/20"
         >
           {t('next')} <ChevronRight size={24} />
         </button>

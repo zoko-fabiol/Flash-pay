@@ -126,16 +126,22 @@ export const adminService = {
 
             // --- AWARD LOYALTY POINTS ---
             try {
-              let amountInRUB = txData.amount;
-              if (txData.currency && txData.currency !== 'RUB') {
+              const settingsSnap = await getDocs(query(collection(db, 'settings')));
+              const settings = !settingsSnap.empty ? settingsSnap.docs[0].data() : {};
+              const targetCurrency = settings.pointsCurrency || 'RUB';
+              const earningRate = settings.pointsEarningRate || 1;
+
+              let amountInTarget = txData.amount;
+              if (txData.currency && txData.currency !== targetCurrency) {
                 const ratesSnap = await getDocs(collection(db, 'exchange_rates'));
                 const rates = ratesSnap.docs.map(d => d.data());
-                const rateObj = rates.find(r => r.from === txData.currency && r.to === 'RUB');
-                const rate = rateObj?.rate || (txData.currency === 'XAF' ? 0.1385 : 1);
-                amountInRUB = txData.amount * rate;
+                const rateObj = rates.find(r => r.from === txData.currency && r.to === targetCurrency);
+                const inverseRateObj = !rateObj ? rates.find(r => r.from === targetCurrency && r.to === txData.currency) : null;
+                const rate = rateObj?.rate || (inverseRateObj ? (1 / inverseRateObj.rate) : (txData.currency === 'XAF' && targetCurrency === 'RUB' ? 0.1385 : 1));
+                amountInTarget = txData.amount * rate;
               }
               
-              const pointsToEarn = Math.floor(amountInRUB);
+              const pointsToEarn = Math.floor(amountInTarget * earningRate);
               if (pointsToEarn > 0) {
                 await updateDoc(userRef, {
                   solde_points: increment(pointsToEarn),
@@ -605,7 +611,10 @@ export const adminService = {
     referralBonusRUB: number = 500,
     standardLimitRUB: number = 20000,
     expertLimitRUB: number = 150000,
-    notificationEmails: string[] = []
+    notificationEmails: string[] = [],
+    pointsCurrency: string = 'RUB',
+    pointsEarningRate: number = 1,
+    pointsRedemptionRate: number = 1000
   ) => {
     const q = query(collection(db, 'settings'));
     const snapshot = await getDocs(q);
@@ -616,6 +625,9 @@ export const adminService = {
       expertLimitRUB,
       referralBonusRUB,
       notificationEmails,
+      pointsCurrency,
+      pointsEarningRate,
+      pointsRedemptionRate,
       updatedAt: Timestamp.now(),
       updatedBy: auth.currentUser?.uid,
     };

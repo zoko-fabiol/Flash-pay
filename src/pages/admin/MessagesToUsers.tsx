@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { addAdminBroadcast } from '../../services/adminNotificationService';
+import { sendBroadcastDirect } from '../../services/adminNotificationService';
 
 export const MessagesToUsers: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -12,8 +12,8 @@ export const MessagesToUsers: React.FC = () => {
     setSending(true);
     setSuccess(null);
     try {
-      await addAdminBroadcast({ title, body, createdAt: Date.now() });
-      setSuccess('Message publié et enqueued pour envoi');
+      const result = await sendBroadcastDirect(title, body, { sendEmail: true });
+      setSuccess(result.sent > 0 ? `Message envoyé à ${result.sent} utilisateurs` : 'Aucun destinataire trouvé');
       setTitle('');
       setBody('');
     } catch (err) {

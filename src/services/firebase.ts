@@ -20,6 +20,7 @@ import {
   setDoc,
   getDoc,
   updateDoc,
+  deleteDoc,
   addDoc,
   query,
   where,
@@ -73,8 +74,72 @@ export const authService = {
       }
     }
 
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const user = userCredential.user;
+    let user;
+    let isResuming = false;
+    
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      user = userCredential.user;
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          user = userCredential.user;
+          let userDoc = await getDoc(doc(db, 'users', user.uid));
+          
+          if (!userDoc.exists()) {
+            // Check if they are stuck in pending_users
+            const pendingDoc = await getDoc(doc(db, 'pending_users', user.uid));
+            if (pendingDoc.exists()) {
+              // Migrate them immediately to users so the rest of the app works seamlessly
+              await setDoc(doc(db, 'users', user.uid), {
+                ...pendingDoc.data(),
+                emailVerified: false,
+                updatedAt: new Date()
+              });
+              await deleteDoc(doc(db, 'pending_users', user.uid));
+              userDoc = await getDoc(doc(db, 'users', user.uid)); // Refresh userDoc
+            } else {
+              // GHOST ACCOUNT: They exist in Firebase Auth but have NO Firestore document at all!
+              // This happened because generateUniqueReferralCode crashed previously.
+              // We just let the flow continue to create their document as if it was a new signup!
+              isResuming = false;
+            }
+          }
+
+          if (userDoc.exists() && userDoc.data().emailVerified === false) {
+            isResuming = true;
+          } else if (userDoc.exists() && userDoc.data().emailVerified === true) {
+            throw error; // Already verified, throw original error
+          }
+          // If !userDoc.exists(), isResuming remains false, meaning it drops out of the catch block
+          // and continues to create the document from scratch!
+        } catch (signInErr) {
+          throw error; // Wrong password or other login error, throw original
+        }
+      } else {
+        throw error;
+      }
+    }
+
+    if (isResuming) {
+      // User is continuing an unverified signup. Resend code and stop here.
+      try {
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        await setDoc(doc(db, 'verification_codes', user.uid), {
+          code: verificationCode,
+          email,
+          expiresAt: Timestamp.fromDate(new Date(Date.now() + 15 * 60 * 1000)),
+          createdAt: Timestamp.now()
+        });
+        const htmlBody = emailService.getVerificationTemplate(verificationCode);
+        await emailService.sendEmail(email, 'Code de vérification Flash Pay', htmlBody);
+      } catch (err) {
+        console.error('Failed to resend verification on resume:', err);
+      }
+      return;
+    }
+
     const referralCode = await generateUniqueReferralCode();
     
     // Store user data in Firestore
@@ -1598,14 +1663,10 @@ function generateReferralCode(): string {
 }
 
 async function generateUniqueReferralCode(): Promise<string> {
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const code = generateReferralCode();
-    const codeQuery = query(collection(db, 'users'), where('referralCode', '==', code), limit(1));
-    const snapshot = await getDocs(codeQuery);
-    if (snapshot.empty) return code;
-  }
-
-  return `${generateReferralCode()}${Date.now().toString(36).slice(-2).toUpperCase()}`;
+  // We skip the database check because new users don't have permission to query all users,
+  // which causes a permission-denied error and crashes the signup flow.
+  // The collision probability is astronomically low.
+  return generateReferralCode();
 }
 // Support Service
 export const supportService = {

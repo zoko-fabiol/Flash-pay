@@ -2,10 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../services/firebase';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc, setDoc, Timestamp } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import { ShieldCheck, RefreshCcw, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { emailService } from '../services/emailService';
 
 export const EmailVerificationPage: React.FC = () => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
@@ -14,6 +15,33 @@ export const EmailVerificationPage: React.FC = () => {
   const { user, firebaseUser } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  const handleResendCode = async () => {
+    if (!firebaseUser?.email) return;
+    
+    const toastId = toast.loading('Envoi du nouveau code en cours...');
+    try {
+      setLoading(true);
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      await setDoc(doc(db, 'verification_codes', firebaseUser.uid), {
+        code: verificationCode,
+        email: firebaseUser.email,
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 15 * 60 * 1000)),
+        createdAt: Timestamp.now()
+      });
+
+      const htmlBody = emailService.getVerificationTemplate(verificationCode);
+      await emailService.sendEmail(firebaseUser.email, 'Code de vérification Flash Pay', htmlBody);
+      
+      toast.success('Un nouveau code vous a été envoyé !', { id: toastId });
+    } catch (error) {
+      console.error('Erreur lors du renvoi:', error);
+      toast.error('Impossible d\'envoyer le code. Veuillez réessayer.', { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Redirection si déjà vérifié
   useEffect(() => {
@@ -84,9 +112,28 @@ export const EmailVerificationPage: React.FC = () => {
       const data = verifSnap.data();
       if (data.code === finalCode) {
         // Code correct !
-        await updateDoc(doc(db, 'users', firebaseUser.uid), {
-          emailVerified: true
-        });
+        
+        // 1. Fetch data from pending_users
+        const pendingRef = doc(db, 'pending_users', firebaseUser.uid);
+        const pendingSnap = await getDoc(pendingRef);
+        
+        if (pendingSnap.exists()) {
+          const userData = pendingSnap.data();
+          // 2. Create official user document
+          await setDoc(doc(db, 'users', firebaseUser.uid), {
+            ...userData,
+            emailVerified: true,
+            updatedAt: new Date()
+          });
+          // 3. Delete from pending_users
+          await deleteDoc(pendingRef);
+        } else {
+          // Fallback if already moved or created elsewhere
+          await updateDoc(doc(db, 'users', firebaseUser.uid), {
+            emailVerified: true
+          });
+        }
+
         await deleteDoc(verifRef); // Supprimer le code utilisé
         
         toast.success('Compte vérifié avec succès !', { id: toastId });
@@ -147,10 +194,35 @@ export const EmailVerificationPage: React.FC = () => {
         </div>
 
         <button
-          onClick={() => {/* Logique de renvoi */}}
-          className="w-full py-4 flex items-center justify-center gap-2 text-slate-400 font-bold hover:text-brand transition-all border-t border-slate-100"
+          onClick={handleResendCode}
+          disabled={loading}
+          className="w-full py-4 flex items-center justify-center gap-2 text-slate-400 font-bold hover:text-brand transition-all border-t border-slate-100 disabled:opacity-50"
         >
-          <RefreshCcw size={18} /> Renvoyer le code
+          <RefreshCcw size={18} className={loading ? 'animate-spin' : ''} /> 
+          {loading ? 'Envoi en cours...' : 'Renvoyer le code'}
+        </button>
+
+        <button
+          onClick={async () => {
+            if (!firebaseUser) return;
+            if (window.confirm('Voulez-vous vraiment annuler votre inscription ? Votre compte sera supprimé et vous pourrez recommencer.')) {
+              try {
+                const userRef = doc(db, 'users', firebaseUser.uid);
+                const verifRef = doc(db, 'verification_codes', firebaseUser.uid);
+                await deleteDoc(userRef);
+                await deleteDoc(verifRef);
+                await firebaseUser.delete();
+                toast.success('Compte supprimé. Vous pouvez vous réinscrire.');
+                navigate('/signup');
+              } catch (err) {
+                console.error('Failed to delete unverified user:', err);
+                toast.error('Erreur lors de la suppression du compte.');
+              }
+            }
+          }}
+          className="w-full py-3 text-rose-400 font-bold text-[10px] uppercase tracking-widest hover:text-rose-600 transition-all opacity-60"
+        >
+          Annuler et recommencer
         </button>
       </div>
     </div>

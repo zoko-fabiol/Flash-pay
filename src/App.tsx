@@ -121,6 +121,10 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return <Navigate to="/login" />;
   }
 
+  if ((user as any).isPending || user.emailVerified === false) {
+    return <Navigate to="/email-verification" />;
+  }
+
   return <>{children}</>;
 };
 

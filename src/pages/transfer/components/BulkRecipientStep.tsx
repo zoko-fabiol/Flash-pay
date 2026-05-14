@@ -30,7 +30,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
   const totalDistributed = recipients.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
   const targetAmount = Number(transferData.amount || 0);
   const isAmountMatching = Math.abs(totalDistributed - targetAmount) < 0.01;
-  const isAllFieldsFilled = recipients.every(r => r.name.length > 2 && r.phone.length >= 8 && r.amount > 0);
+  const isAllFieldsFilled = recipients.every(r => r.name.length > 2 && r.phone.length >= 6 && r.amount > 0);
   const isAllValid = isAllFieldsFilled && isAmountMatching;
 
   // Auto-detect operators on mount for existing recipients
@@ -101,11 +101,19 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
-      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('bulk_recipients_list')}</h2>
+      <div className="flex items-center gap-4 mb-6">
+        <button 
+          onClick={previousStep}
+          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('bulk_recipients_list')}</h2>
+      </div>
       
       {/* Summary Bar - Premium Design */}
       <div className="mb-10 bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className={`p-8 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all ${isAmountMatching ? 'bg-emerald-50/30' : 'bg-[#661489]/5'}`}>
+        <div className={`p-6 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all ${isAmountMatching ? 'bg-emerald-50/30' : 'bg-[#661489]/5'}`}>
           <div className="space-y-1 text-center sm:text-left">
             <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${isAmountMatching ? 'text-emerald-600' : 'text-[#661489]'}`}>
               {isAmountMatching ? 'Distribution terminée ✓' : 'Répartition du montant'}
@@ -145,7 +153,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
 
       <div className="space-y-6">
         {recipients.map((r, i) => (
-          <div key={i} className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-10 space-y-6 relative group overflow-hidden">
+          <div key={i} className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-6 space-y-6 relative group overflow-hidden">
              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-[#661489]/10 flex items-center justify-center text-[#661489] font-black">
@@ -213,7 +221,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
         
         <button 
           onClick={addRecipient}
-          className="w-full p-8 rounded-[40px] border-4 border-dashed border-slate-100 text-slate-300 font-black flex flex-col items-center justify-center gap-4 hover:border-[#661489]/20 hover:text-[#661489] hover:bg-[#661489]/5 transition-all"
+          className="w-full p-6 rounded-[40px] border-4 border-dashed border-slate-100 text-slate-300 font-black flex flex-col items-center justify-center gap-4 hover:border-[#661489]/20 hover:text-[#661489] hover:bg-[#661489]/5 transition-all"
         >
           <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#661489]/10">
             <Plus size={32} />
@@ -260,14 +268,11 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
       )}
 
       {/* Navigation Buttons for Bulk */}
-      <div className="mt-12 flex flex-col-reverse gap-4 sm:flex-row">
-        <button onClick={previousStep} className="w-full px-8 py-5 rounded-full border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3 sm:flex-1">
-          <ChevronLeft size={24} /> {t('back')}
-        </button>
+      <div className="mt-4 flex flex-col sm:flex-row gap-4">
         <button 
           onClick={handleNext}
           disabled={!isAllValid}
-          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-brand text-white shadow-xl shadow-brand/20 disabled:opacity-40 disabled:bg-slate-300 sm:flex-[2]"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-brand text-white shadow-xl shadow-brand/20 disabled:opacity-40 disabled:bg-slate-300"
         >
           {t('next')} <ChevronRight size={24} />
         </button>

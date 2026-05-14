@@ -64,11 +64,19 @@ export const OperatorSelectionStep: React.FC<OperatorSelectionStepProps> = ({
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
-      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('operator_selection_title')}</h2>
+      <div className="flex items-center gap-4 mb-6">
+        <button 
+          onClick={previousStep}
+          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('operator_selection_title')}</h2>
+      </div>
       
-      <div className="space-y-8">
+      <div className="space-y-4">
         {recipientsToProcess.map((r: any, i: number) => (
-          <div key={i} className="bg-white rounded-[40px] border border-slate-100 p-8 shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
+          <div key={i} className="bg-white rounded-[40px] border border-slate-100 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.06)]">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 rounded-2xl bg-brand/10 flex items-center justify-center text-brand font-black">
                 {r.originalIndex === -1 ? <User size={24} /> : r.originalIndex + 1}
@@ -101,17 +109,14 @@ export const OperatorSelectionStep: React.FC<OperatorSelectionStepProps> = ({
         ))}
       </div>
 
-      <div className="mt-12 flex flex-col-reverse gap-4 sm:flex-row">
-        <button onClick={previousStep} className="w-full px-8 py-5 rounded-full border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-50 transition-all flex items-center justify-center gap-3 sm:flex-1">
-          <ChevronLeft size={24} /> {t('back')}
-        </button>
+      <div className="mt-4 flex flex-col sm:flex-row gap-4">
         <button
           onClick={nextStep}
           disabled={recipientsToProcess.some((r: any) => {
             if (r.originalIndex === -1) return !transferData.recipientOperator;
             return !transferData.bulkRecipients[r.originalIndex].operator;
           })}
-          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-brand text-white shadow-xl shadow-brand/20 disabled:opacity-40 disabled:bg-slate-300 sm:flex-[2]"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-brand text-white shadow-xl shadow-brand/20 disabled:opacity-40 disabled:bg-slate-300"
         >
           {t('next')} <ChevronRight size={24} />
         </button>

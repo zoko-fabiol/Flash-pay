@@ -195,7 +195,7 @@ export const TransactionsPage: React.FC = () => {
                       </div>
                       {tx.fee > 0 && (
                         <div className="text-[10px] font-bold uppercase tracking-widest text-rose-500/60">
-                          +{formatNumber(tx.fee, 'RUB')} {t('fees')}
+                        {formatNumber(tx.fee, tx.currency)} {t('fees')}
                         </div>
                       )}
                     </div>

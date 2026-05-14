@@ -336,15 +336,19 @@ const CountriesListPage: React.FC = () => {
                       ...op,
                       prefixes: op.prefixes?.filter((p: string) => p.trim() !== '') || []
                     }));
-                    await adminService.saveCountry(editingItem?.id || null, {
-                      name: formData.get('name'),
-                      code: formData.get('code'),
-                      currency: formData.get('currency'),
-                      dialCode: formData.get('dialCode'),
+                    const countryPayload: Record<string, any> = {
+                      name: String(formData.get('name') || ''),
+                      code: String(formData.get('code') || '').toUpperCase(),
+                      currency: String(formData.get('currency') || '').toUpperCase(),
+                      dialCode: String(formData.get('dialCode') || ''),
                       enabled: editingItem ? editingItem.enabled : true,
                       operators: cleanedOperators,
-                      depositAccounts: editingItem ? editingItem.depositAccounts : []
-                    });
+                      depositAccounts: editingItem?.depositAccounts || [],
+                      allowedDestinations: editingItem?.allowedDestinations || [],
+                      canSendToRussia: editingItem?.canSendToRussia ?? true,
+                      canReceiveFromRussia: editingItem?.canReceiveFromRussia ?? true,
+                    };
+                    await adminService.saveCountry(editingItem?.id || null, countryPayload);
                   } else {
                     await adminService.saveBank(editingItem?.id || null, {
                       name: formData.get('name'),

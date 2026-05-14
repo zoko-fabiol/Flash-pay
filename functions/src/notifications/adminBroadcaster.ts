@@ -21,6 +21,11 @@ export const onAdminBroadcastCreated = functions.firestore
     const broadcastId = snap.id;
     if (!data) return;
 
+    if (data.sentViaClient) {
+      await snap.ref.update({ status: 'sent', sentAt: Date.now(), skippedByTrigger: true });
+      return;
+    }
+
     try {
       // 1. OneSignal Push Notification (if requested)
       if (data.sendNotification) {

@@ -62,8 +62,16 @@ const flagImageFor = (code?: string) => {
 
 const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previousStep }: any) => {
   return (
-    <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
-      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('choose_transfer_method')}</h2>
+    <div className="animate-in fade-in slide-in-from-right-4 duration-500 ">
+      <div className="flex items-center gap-4 mb-6">
+        <button 
+          onClick={previousStep}
+          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('choose_transfer_method')}</h2>
+      </div>
 
       <div className="grid gap-6">
         <button
@@ -92,12 +100,6 @@ const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previ
           </div>
         </button>
       </div>
-
-      <div className="mt-12">
-        <button onClick={previousStep} className="w-full px-8 py-5 rounded-full border-2 border-[#79747E] text-[#49454F] font-black hover:bg-slate-100 transition-all flex items-center justify-center gap-3">
-          <ChevronLeft size={24} /> {t('back')}
-        </button>
-      </div>
     </div>
   );
 };
@@ -116,7 +118,7 @@ export const TransferWizardPage: React.FC = () => {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [settings, setSettings] = useState({ dailyLimitRUB: 150000, standardLimitRUB: 20000, expertLimitRUB: 150000, notificationEmails: [] as string[] });
+  const [settings, setSettings] = useState({ dailyLimitRUB: 150000, standardLimitRUB: 20000, expertLimitRUB: 150000, notificationEmails: [] as string[], pointsCurrency: 'RUB', pointsEarningRate: 1, pointsRedemptionRate: 1000 });
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [payWithBonus, setPayWithBonus] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(20 * 60); // 20 minutes
@@ -246,7 +248,10 @@ export const TransferWizardPage: React.FC = () => {
           dailyLimitRUB: data.dailyLimitRUB || 150000,
           standardLimitRUB: data.standardLimitRUB || 20000,
           expertLimitRUB: data.expertLimitRUB || 150000,
-          notificationEmails: data.notificationEmails || []
+          notificationEmails: data.notificationEmails || [],
+          pointsCurrency: data.pointsCurrency || 'RUB',
+          pointsEarningRate: data.pointsEarningRate || 1,
+          pointsRedemptionRate: data.pointsRedemptionRate || 1000
         });
       }
     });
@@ -457,18 +462,22 @@ export const TransferWizardPage: React.FC = () => {
       }
 
       // 2. Determine input and output currencies based on transfer type
-      let inputCurrency = transferData.currency || 'RUB';
-      let outputCurrency = transferData.currency || 'RUB';
+      const originCountryData = countries.find(c => c.code === (transferData.originCountry || 'RU'));
+      const destCountryData = countries.find(c => c.code === (transferData.destinationCountry || 'RU'));
       
+      let inputCurrency = originCountryData?.currency || transferData.originCurrency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
+      let outputCurrency = destCountryData?.currency || transferData.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
+      
+      // Override based on explicit type rules if necessary (safety)
       if (transferData.transferType === 'russia-africa') {
         inputCurrency = 'RUB';
-        outputCurrency = transferData.currency || 'XAF';
+        outputCurrency = destCountryData?.currency || transferData.currency || 'XAF';
       } else if (transferData.transferType === 'africa-russia') {
-        inputCurrency = transferData.currency || 'XAF';
+        inputCurrency = originCountryData?.currency || transferData.originCurrency || 'XAF';
         outputCurrency = 'RUB';
       } else if (transferData.transferType === 'africa-africa') {
-        inputCurrency = transferData.originCurrency || 'XAF';
-        outputCurrency = transferData.currency || 'XAF';
+        inputCurrency = originCountryData?.currency || transferData.originCurrency || 'XAF';
+        outputCurrency = destCountryData?.currency || transferData.currency || 'XAF';
       }
 
       // Calculate total amount if bulk
@@ -587,54 +596,62 @@ export const TransferWizardPage: React.FC = () => {
           .catch(err => console.error('Failed to update recent contact:', err));
       }
 
-      // 4.5 Deduct Bonus (RUB) and Points (Hybrid support)
+      // 4.5 Deduct Bonus and Points (Hybrid support)
       if (payWithBonus) {
-        let rubNeeded = calculation.totalToPay;
-        if (inputCurrency === 'XAF') {
-          const rateObj = rates.find(r => r.from === 'XAF' && r.to === 'RUB');
-          const rate = rateObj?.rate || 0.1385;
-          rubNeeded = calculation.totalToPay * rate;
+        let neededInPointsCurrency = calculation.totalToPay;
+        const ptsCurrency = settings.pointsCurrency || 'RUB';
+
+        if (inputCurrency !== ptsCurrency) {
+          const rateObj = rates.find(r => r.from === inputCurrency && r.to === ptsCurrency);
+          const inverseRateObj = !rateObj ? rates.find(r => r.from === ptsCurrency && r.to === inputCurrency) : null;
+          const rate = rateObj?.rate || (inverseRateObj ? (1 / inverseRateObj.rate) : (inputCurrency === 'XAF' && ptsCurrency === 'RUB' ? 0.1385 : 1));
+          neededInPointsCurrency = calculation.totalToPay * rate;
         }
         
-        // 1. Use Referral Bonus (RUB) first
-        const availableRUB = user?.solde_bonus || 0;
-        const rubUsed = Math.min(availableRUB, rubNeeded);
-        let rubRemaining = rubNeeded - rubUsed;
+        // 1. Use Referral Bonus first
+        const availableBonus = user?.solde_bonus || 0;
+        const bonusUsed = Math.min(availableBonus, neededInPointsCurrency);
+        let remainingNeeded = neededInPointsCurrency - bonusUsed;
         
-        // 2. Use Points if RUB not enough
+        // 2. Use Points if bonus not enough
         let pointsUsed = 0;
-        let pointsDeductionInRUB = 0;
-        if (rubRemaining > 0) {
+        let pointsDeductionInBase = 0;
+        const ptsRedeemRate = settings.pointsRedemptionRate || 1000;
+
+        if (remainingNeeded > 0) {
            const availablePoints = user?.solde_points || 0;
-           const pointsNeeded = Math.ceil(rubRemaining * 1000);
+           const pointsNeeded = Math.ceil(remainingNeeded * ptsRedeemRate);
            pointsUsed = Math.min(availablePoints, pointsNeeded);
-           pointsDeductionInRUB = pointsUsed / 1000;
-           rubRemaining -= pointsDeductionInRUB;
+           pointsDeductionInBase = pointsUsed / ptsRedeemRate;
+           remainingNeeded -= pointsDeductionInBase;
         }
 
-        const totalDeductionInRUB = rubUsed + pointsDeductionInRUB;
-        
-        // Calculate equivalent cash paid
-        let cashPaidInInputCurrency = 0;
-        if (rubRemaining > 0) {
-           const rubToXafRate = 1 / (rates.find(r => r.from === 'XAF' && r.to === 'RUB')?.rate || 0.1385);
-           const coverageInInputCurrency = inputCurrency === 'XAF' 
-              ? (totalDeductionInRUB * rubToXafRate)
-              : totalDeductionInRUB;
-           cashPaidInInputCurrency = Math.max(0, calculation.totalToPay - coverageInInputCurrency);
+        // Convert coverage back to input currency for display
+        let coverageInInputCurrency = 0;
+        const totalDeductionInBase = bonusUsed + pointsDeductionInBase;
+
+        if (inputCurrency === ptsCurrency) {
+          coverageInInputCurrency = totalDeductionInBase;
+        } else {
+          const rateToInputObj = rates.find(r => r.from === ptsCurrency && r.to === inputCurrency);
+          const inverseRateObj = !rateToInputObj ? rates.find(r => r.from === inputCurrency && r.to === ptsCurrency) : null;
+          const rate = rateToInputObj?.rate || (inverseRateObj ? (1 / inverseRateObj.rate) : (inputCurrency === 'XAF' && ptsCurrency === 'RUB' ? 7.2 : 1));
+          coverageInInputCurrency = totalDeductionInBase * rate;
         }
+
+        let cashPaidInInputCurrency = Math.max(0, calculation.totalToPay - coverageInInputCurrency);
 
         await updateDoc(doc(db, 'transactions', txDocRef.id), {
-          bonusUsed: rubUsed,
+          bonusUsed: bonusUsed,
           pointsUsed: pointsUsed,
-          totalDiscountRUB: totalDeductionInRUB,
+          totalDiscountRUB: totalDeductionInBase,
           paidByCash: cashPaidInInputCurrency,
-          isHybrid: (rubUsed > 0 || pointsUsed > 0) && cashPaidInInputCurrency > 0
+          isHybrid: (bonusUsed > 0 || pointsUsed > 0) && cashPaidInInputCurrency > 0
         });
         
         const deductionPromises = [];
-        if (rubUsed > 0) {
-          deductionPromises.push(userService.deductBonus(user?.id || auth.currentUser?.uid || '', rubUsed, t('transfer_to_recipient', { 
+        if (bonusUsed > 0) {
+          deductionPromises.push(userService.deductBonus(user?.id || auth.currentUser?.uid || '', bonusUsed, t('transfer_to_recipient', { 
             recipient: (transferData.recipientName || t('recipient'))
           })));
         }
@@ -683,7 +700,7 @@ export const TransferWizardPage: React.FC = () => {
   if (currentStep === 1) {
     return (
       <Layout>
-        <div className="max-w-xl mx-auto py-12 px-4">
+        <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
           <AmountSelectionStep
             transferData={transferData}
             updateTransferData={updateTransferData}
@@ -711,7 +728,7 @@ export const TransferWizardPage: React.FC = () => {
       case 2: // Nouveau: Choix Type de Transfert (Unique vs Plusieurs)
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <TransferTypeStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -757,12 +774,12 @@ export const TransferWizardPage: React.FC = () => {
         const selectedCountry = countries.find(c => c.code === transferData.destinationCountry);
         const isNameValid = (transferData.recipientName?.length || 0) > 3;
         const phoneDigitsOnly = (transferData.recipientPhone || '').replace(/\D/g, '');
-        const isPhoneValid = phoneDigitsOnly.length >= 8;
+        const isPhoneValid = phoneDigitsOnly.length >= 6;
         const isRecipientValid = isNameValid && isPhoneValid;
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <StepWrapper title={t('recipient_info')} onBack={previousStep} onNext={handleNextFromRecipients} isValid={isRecipientValid}>
                 <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-10 space-y-8">
                   {/* Name */}
@@ -918,7 +935,7 @@ export const TransferWizardPage: React.FC = () => {
 
                               if (filtered.length === 0) {
                                 return (
-                                  <div className="text-center py-12">
+                                  <div className="text-center pt-2 pb-24">
                                     <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                       <BookUser className="text-slate-200" size={40} />
                                     </div>
@@ -961,7 +978,7 @@ export const TransferWizardPage: React.FC = () => {
       case 4: // Nouveau: Sélection Manuelle d'Opérateur
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <OperatorSelectionStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -977,7 +994,7 @@ export const TransferWizardPage: React.FC = () => {
       case 5: { // Verification (Summary)
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <SummaryStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -996,6 +1013,7 @@ export const TransferWizardPage: React.FC = () => {
                   }
                 }}
                 user={user}
+                countries={countries}
               />
             </div>
           </Layout>
@@ -1005,7 +1023,7 @@ export const TransferWizardPage: React.FC = () => {
       case 6: { // Payment
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <PaymentStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -1038,7 +1056,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-8 pt-[0.5mm] px-4 flex flex-col items-center">
+            <div className="max-w-xl mx-auto py-8  px-4 flex flex-col items-center">
               {/* Airplane Illustration Area */}
               <div className="relative w-full h-48 mb-8 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent rounded-[40px]" />
@@ -1107,7 +1125,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <StepWrapper title={t('beneficiary_info_title')} onBack={previousStep} onNext={nextStep} isValid={isStep2ValidAfRu}>
                 <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-10 space-y-8">
                   {/* Name */}
@@ -1168,7 +1186,7 @@ export const TransferWizardPage: React.FC = () => {
 
                           if (filtered.length === 0) {
                             return (
-                              <div className="text-center py-12">
+                              <div className="text-center pt-2 pb-24">
                                 <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
                                 <p className="text-slate-500 font-medium">{t('no_saved_contacts')}</p>
                               </div>
@@ -1205,7 +1223,7 @@ export const TransferWizardPage: React.FC = () => {
         const sourceCountry = countries.find(c => c.code === transferData.originCountry);
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <StepWrapper title={t('deposit_method')} description={t('deposit_method_desc')} onBack={previousStep} onNext={nextStep} isValid={!!transferData.selectedOperator}>
                 <div className="grid gap-3">
                   {sourceCountry?.operators?.map((op: any) => (
@@ -1236,7 +1254,7 @@ export const TransferWizardPage: React.FC = () => {
       case 4: { // Verification (Summary)
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <SummaryStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -1247,6 +1265,7 @@ export const TransferWizardPage: React.FC = () => {
                 nextStep={nextStep}
                 previousStep={previousStep}
                 user={user}
+                countries={countries}
               />
             </div>
           </Layout>
@@ -1256,7 +1275,7 @@ export const TransferWizardPage: React.FC = () => {
       case 5: { // Payment
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <PaymentStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -1286,7 +1305,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-8 pt-[0.5mm] px-4 flex flex-col items-center">
+            <div className="max-w-xl mx-auto py-8  px-4 flex flex-col items-center">
               {/* Airplane Illustration Area */}
               <div className="relative w-full h-48 mb-8 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent rounded-[40px]" />
@@ -1308,7 +1327,7 @@ export const TransferWizardPage: React.FC = () => {
 
               <h2 className="text-3xl font-black text-slate-900 mb-2">{t('payment_initiated')}</h2>
               <p className="text-slate-500 font-medium text-center mb-8">
-                {t('payment_initiated_msg', { amount: successBaseAmount.toLocaleString(), currency: 'XAF' })}
+                {t('payment_initiated_msg', { amount: successBaseAmount.toLocaleString(), currency: transferData.originCurrency || 'XAF' })}
               </p>
 
               {/* Status Banner */}
@@ -1351,7 +1370,7 @@ export const TransferWizardPage: React.FC = () => {
         const destCountry = countries.find(c => c.code === transferData.destinationCountry);
         const isNameValid = (transferData.recipientName?.length || 0) > 3;
         const phoneDigitsOnly = (transferData.recipientPhone || '').replace(/\D/g, '');
-        const isPhoneValid = phoneDigitsOnly.length >= 8;
+        const isPhoneValid = phoneDigitsOnly.length >= 6;
         const isRecipientValid = isNameValid && isPhoneValid;
 
         const handleNextFromRecipientAfrica = () => {
@@ -1367,7 +1386,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <StepWrapper title={t('recipient_info')} onBack={previousStep} onNext={handleNextFromRecipientAfrica} isValid={isRecipientValid}>
                 <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-10 space-y-8">
                   <div>
@@ -1437,7 +1456,7 @@ export const TransferWizardPage: React.FC = () => {
 
                           if (filtered.length === 0) {
                             return (
-                              <div className="text-center py-12">
+                              <div className="text-center pt-2 pb-24">
                                 <BookUser className="mx-auto text-slate-200 mb-4" size={48} />
                                 <p className="text-slate-500 font-medium">{t('no_recent_recipients')}</p>
                               </div>
@@ -1475,7 +1494,7 @@ export const TransferWizardPage: React.FC = () => {
         const sourceCountry = countries.find(c => c.code === transferData.originCountry);
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <StepWrapper 
                 title={t('deposit_method') || 'Méthode de dépôt'} 
                 description={t('deposit_method_desc') || 'Choisissez l\'opérateur avec lequel vous allez payer.'} 
@@ -1521,7 +1540,7 @@ export const TransferWizardPage: React.FC = () => {
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <SummaryStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -1532,6 +1551,7 @@ export const TransferWizardPage: React.FC = () => {
                 nextStep={nextStep}
                 previousStep={handleBackFromSummaryAfrica}
                 user={user}
+                countries={countries}
               />
             </div>
           </Layout>
@@ -1541,7 +1561,7 @@ export const TransferWizardPage: React.FC = () => {
       case 8: { // Payment
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <PaymentStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}
@@ -1571,11 +1591,11 @@ export const TransferWizardPage: React.FC = () => {
         const successBaseAmount = transferData.isBulk 
           ? (transferData.bulkRecipients?.reduce((acc: number, r: any) => acc + (Number(r.amount) || 0), 0) || 0)
           : (transferData.amount || 0);
-        const successCurrency = transferData.transferType === 'africa-russia' ? 'XAF' : (transferData.originCurrency || 'XAF');
+        const successCurrency = transferData.originCurrency || 'XAF';
 
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-8 pt-[0.5mm] px-4 flex flex-col items-center">
+            <div className="max-w-xl mx-auto py-8  px-4 flex flex-col items-center">
               {/* Airplane Illustration Area */}
               <div className="relative w-full h-48 mb-8 flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-brand/5 to-transparent rounded-[40px]" />
@@ -1634,7 +1654,7 @@ export const TransferWizardPage: React.FC = () => {
         const destCountry = countries.find(c => c.code === transferData.destinationCountry);
         return (
           <Layout>
-            <div className="max-w-xl mx-auto py-12 px-4">
+            <div className="max-w-xl mx-auto pt-2 pb-24 px-4">
               <OperatorSelectionStep
                 transferData={transferData}
                 updateTransferData={updateTransferData}

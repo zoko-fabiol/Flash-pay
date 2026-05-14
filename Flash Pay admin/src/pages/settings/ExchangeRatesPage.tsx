@@ -101,10 +101,23 @@ const ExchangeRatesPage: React.FC = () => {
   const [editingReferralBonus, setEditingReferralBonus] = useState<string>('500');
   const [editingEmails, setEditingEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState('');
+  const [editingPointsCurrency, setEditingPointsCurrency] = useState<string>('RUB');
+  const [editingPointsEarningRate, setEditingPointsEarningRate] = useState<string>('1');
+  const [editingPointsRedemptionRate, setEditingPointsRedemptionRate] = useState<string>('1000');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
   const canAdd = canPerformAdminAction(profile, 'add');
   const canEdit = canPerformAdminAction(profile, 'edit');
   const canDelete = canPerformAdminAction(profile, 'delete');
+
+  // All unique currencies from exchange_rates + custom_rates
+  const availableCurrencies = React.useMemo(() => {
+    const set = new Set<string>();
+    [...rates, ...customRates].forEach(r => {
+      if (r.from) set.add(r.from);
+      if (r.to)   set.add(r.to);
+    });
+    return Array.from(set).sort();
+  }, [rates, customRates]);
 
   useEffect(() => {
     const q = query(collection(db, 'exchange_rates'));
@@ -137,6 +150,9 @@ const ExchangeRatesPage: React.FC = () => {
         setEditingExpertLimit((expLimit || 0).toString());
         setEditingReferralBonus((bonus || 0).toString());
         setEditingEmails(Array.isArray(emails) ? emails : []);
+        setEditingPointsCurrency(settingsDoc.pointsCurrency || 'RUB');
+        setEditingPointsEarningRate((settingsDoc.pointsEarningRate || 1).toString());
+        setEditingPointsRedemptionRate((settingsDoc.pointsRedemptionRate || 1000).toString());
       }
     }, (error) => {
       console.error('Error fetching settings:', error);
@@ -194,14 +210,28 @@ const ExchangeRatesPage: React.FC = () => {
     const newExpLimit = parseInt(editingExpertLimit);
     const newBonus = parseInt(editingReferralBonus);
     
+    const pointsEarnRate = parseFloat(editingPointsEarningRate);
+    const pointsRedeemRate = parseFloat(editingPointsRedemptionRate);
+
     if (isNaN(newLimit) || newLimit <= 0) { toast.error('Limite max invalide'); return; }
     if (isNaN(newStdLimit) || newStdLimit <= 0) { toast.error('Limite Standard invalide'); return; }
     if (isNaN(newExpLimit) || newExpLimit <= 0) { toast.error('Limite Expert invalide'); return; }
     if (isNaN(newBonus) || newBonus < 0) { toast.error('Bonus parrainage invalide'); return; }
+    if (isNaN(pointsEarnRate) || pointsEarnRate < 0) { toast.error('Taux de gain invalide'); return; }
+    if (isNaN(pointsRedeemRate) || pointsRedeemRate <= 0) { toast.error('Taux de rachat invalide'); return; }
 
     const t = toast.loading('Mise à jour des paramètres...');
     try {
-      await adminService.updateDailyLimit(newLimit, newBonus, newStdLimit, newExpLimit, editingEmails);
+      await adminService.updateDailyLimit(
+        newLimit, 
+        newBonus, 
+        newStdLimit, 
+        newExpLimit, 
+        editingEmails,
+        editingPointsCurrency,
+        pointsEarnRate,
+        pointsRedeemRate
+      );
       toast.success('Configuration système à jour', { id: t });
     } catch (err: any) {
       console.error('Settings update failed:', err);
@@ -331,6 +361,39 @@ const ExchangeRatesPage: React.FC = () => {
                  <div className="relative">
                     <input type="number" value={editingReferralBonus} onChange={e => setEditingReferralBonus(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[24px] px-6 py-4 text-white font-black text-lg outline-none focus:bg-white/20 transition-all disabled:opacity-60" />
                     <span className="absolute right-6 top-1/2 -translate-y-1/2 text-white/40 font-black text-xs uppercase">RUB</span>
+                 </div>
+              </div>
+
+
+              <div className="pt-8 border-t border-white/10 space-y-5">
+                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Programme de Fidélité</h4>
+                 
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Monnaie de base</label>
+                    <select
+                      value={editingPointsCurrency}
+                      onChange={e => setEditingPointsCurrency(e.target.value)}
+                      disabled={!canEdit}
+                      className="w-full bg-white/10 border border-white/20 rounded-[24px] px-6 py-4 text-white font-black text-lg outline-none focus:bg-white/20 transition-all appearance-none cursor-pointer disabled:opacity-60"
+                    >
+                      {availableCurrencies.length === 0 && (
+                        <option value={editingPointsCurrency} className="bg-[#661489]">{editingPointsCurrency}</option>
+                      )}
+                      {availableCurrencies.map(cur => (
+                        <option key={cur} value={cur} className="bg-[#4D0F67] text-white font-black">{cur}</option>
+                      ))}
+                    </select>
+                 </div>
+
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Points gagnés par 1 {editingPointsCurrency} dépensé</label>
+                    <input type="number" step="0.01" value={editingPointsEarningRate} onChange={e => setEditingPointsEarningRate(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[24px] px-6 py-4 text-white font-black text-lg outline-none focus:bg-white/20 transition-all" />
+                 </div>
+
+                 <div className="space-y-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Valeur de rachat (pts pour 1 {editingPointsCurrency})</label>
+                    <input type="number" value={editingPointsRedemptionRate} onChange={e => setEditingPointsRedemptionRate(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[24px] px-6 py-4 text-white font-black text-lg outline-none focus:bg-white/20 transition-all" />
+                    <p className="text-[9px] text-white/40 italic ml-1">Par défaut: 1000 pts = 1 {editingPointsCurrency}</p>
                  </div>
               </div>
 

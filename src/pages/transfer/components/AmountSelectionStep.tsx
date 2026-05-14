@@ -39,13 +39,31 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   const currentSender = senderCountries.find(c => c.code === (transferData.originCountry || 'RU'));
   const currentRecipient = recipientCountries.find(c => c.code === (transferData.destinationCountry || recipientCountries[0]?.code));
 
-  const fromCurrency = currentSender?.currency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
-  const toCurrency = currentRecipient?.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
+  const fromCurrency = currentSender?.currency || transferData.originCurrency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
+  const toCurrency = currentRecipient?.currency || transferData.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
   
   const foundRate = rates.find((r: any) => 
     r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
     r.to?.toString().toUpperCase().trim() === toCurrency.toUpperCase().trim()
   );
+
+  // Filter recipient countries based on available rates from current sender
+  const availableRecipientCountries = recipientCountries.filter(c => {
+    const targetCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    return rates.some(r => 
+      r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
+      r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
+    );
+  });
+
+  // Filter sender countries based on available rates to current recipient
+  const availableSenderCountries = senderCountries.filter(c => {
+    const sourceCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    return rates.some(r => 
+      r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
+      r.to?.toString().toUpperCase().trim() === toCurrency.toUpperCase().trim()
+    );
+  });
 
   const inverseRate = !foundRate ? rates.find((r: any) => 
     r.from?.toString().toUpperCase().trim() === toCurrency.toUpperCase().trim() && 
@@ -87,30 +105,94 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   };
 
   const handleSenderSelect = (c: any) => {
+    const sourceCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    
+    // Find valid recipients for this new sender based on rates
+    const validRecipients = recipientCountries.filter(rc => {
+      const targetCurrency = rc.currency || (rc.code === 'RU' ? 'RUB' : 'XAF');
+      return rates.some(r => 
+        r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
+        r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
+      );
+    });
+
+    let newDest = transferData.destinationCountry;
+    let newCurrency = transferData.currency;
+    let newType = transferData.transferType;
+
+    // If current destination is invalid for new sender, pick first valid one
+    if (!validRecipients.some(r => r.code === newDest)) {
+      const firstValid = validRecipients[0];
+      newDest = firstValid?.code;
+      newCurrency = firstValid?.currency;
+    }
+
+    // Determine transfer type
+    if (c.code === 'RU') newType = 'russia-africa';
+    else if (newDest === 'RU') newType = 'africa-russia';
+    else newType = 'africa-africa';
+
     updateTransferData({ 
       originCountry: c.code, 
-      originCurrency: c.currency || 'XAF',
-      // Determine type if recipient exists, or pick default first recipient
-      transferType: undefined 
+      originCurrency: sourceCurrency,
+      destinationCountry: newDest,
+      currency: newCurrency,
+      transferType: newType
     });
     setIsSenderDropdownOpen(false);
   };
 
   const handleRecipientSelect = (c: any) => {
-    const type = transferData.originCountry === 'RU' ? 'russia-africa' : (c.code === 'RU' ? 'africa-russia' : 'africa-africa');
+    const targetCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+
+    // Find valid senders for this new recipient based on rates
+    const validSenders = senderCountries.filter(sc => {
+      const sourceCurrency = sc.currency || (sc.code === 'RU' ? 'RUB' : 'XAF');
+      return rates.some(r => 
+        r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
+        r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
+      );
+    });
+
+    let newOrigin = transferData.originCountry;
+    let newOriginCurrency = transferData.originCurrency;
+    let newType = transferData.transferType;
+
+    // If current origin is invalid for new recipient, pick first valid one
+    if (!validSenders.some(s => s.code === newOrigin)) {
+      const firstValid = validSenders[0];
+      newOrigin = firstValid?.code;
+      newOriginCurrency = firstValid?.currency;
+    }
+
+    // Determine transfer type
+    if (newOrigin === 'RU') newType = 'russia-africa';
+    else if (c.code === 'RU') newType = 'africa-russia';
+    else newType = 'africa-africa';
+
     updateTransferData({ 
       destinationCountry: c.code, 
-      currency: c.currency,
-      transferType: type
+      currency: targetCurrency,
+      originCountry: newOrigin,
+      originCurrency: newOriginCurrency,
+      transferType: newType
     });
     setIsRecipientDropdownOpen(false);
   };
 
   return (
     <div className="animate-in fade-in slide-in-from-right-4 duration-500 pt-[0.5mm]">
-      <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-6">{t('amount_selection')}</h2>
+      <div className="flex items-center gap-4 mb-6">
+        <button 
+          onClick={previousStep}
+          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+        >
+          <ChevronLeft size={24} />
+        </button>
+        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('amount_selection')}</h2>
+      </div>
 
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-10 space-y-8">
+      <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-6 space-y-4">
         <div className="space-y-4">
           {/* You Send */}
           <div className={`p-6 rounded-[32px] transition-all border-2 ${isSendMode ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 bg-slate-50'}`}>
@@ -133,11 +215,11 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
                     <div className="fixed inset-0 z-40" onClick={() => setIsSenderDropdownOpen(false)} />
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
                       <div className="max-h-60 overflow-y-auto">
-                        {senderCountries.map(c => (
+                        {availableSenderCountries.map(c => (
                           <button
                             key={c.code}
                             onClick={() => handleSenderSelect(c)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-brand/5 transition-colors text-left"
+                            className={`w-full flex items-center gap-3 p-3 hover:bg-brand/5 transition-colors text-left ${transferData.originCountry === c.code ? 'bg-brand/10' : ''}`}
                           >
                             <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover" alt="" />
                             <span className="font-bold text-slate-700 text-sm">{c.name}</span>
@@ -189,11 +271,11 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
                     <div className="fixed inset-0 z-40" onClick={() => setIsRecipientDropdownOpen(false)} />
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
                       <div className="max-h-60 overflow-y-auto">
-                        {recipientCountries.map(c => (
+                        {availableRecipientCountries.map(c => (
                           <button
                             key={c.code}
                             onClick={() => handleRecipientSelect(c)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-brand/5 transition-colors text-left"
+                            className={`w-full flex items-center gap-3 p-3 hover:bg-brand/5 transition-colors text-left ${transferData.destinationCountry === c.code ? 'bg-brand/10' : ''}`}
                           >
                             <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover" alt="" />
                             <span className="font-bold text-slate-700 text-sm">{c.name}</span>
@@ -263,14 +345,11 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
         </div>
       </div>
 
-      <div className="mt-10 flex flex-col-reverse sm:flex-row gap-4">
-        <button onClick={previousStep} className="w-full sm:flex-1 px-8 py-5 rounded-full border-2 border-[#79747E] text-[#49454F] font-black hover:bg-slate-100 transition-all flex items-center justify-center gap-3">
-          <ChevronLeft size={24} /> {t('back')}
-        </button>
+      <div className="mt-4 flex flex-col sm:flex-row gap-4">
         <button
           onClick={nextStep}
           disabled={!isAmountValid}
-          className="w-full sm:flex-[2] px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#661489] text-white shadow-xl shadow-[#661489]/20 disabled:opacity-50"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#661489] text-white shadow-xl shadow-[#661489]/20 disabled:opacity-50"
         >
           {t('next')} <ChevronRight size={24} />
         </button>

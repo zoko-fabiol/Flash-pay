@@ -61,7 +61,7 @@ export interface Transaction {
   receiverName: string;
   receiverPhone: string;
   amount: number;
-  currency: 'EUR' | 'RUB' | 'XAF';
+  currency: string;
   fee: number;
   status: 'pending' | 'completed' | 'failed' | 'cancelled';
   route: string;
@@ -144,8 +144,11 @@ export interface Operator {
 }
 
 export interface Country {
+  id?: string;
+  code: string;
   name: string;
   dialCode: string;
+  currency?: string;
   operators: Operator[];
   deposit?: string;
 }
