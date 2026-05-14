@@ -70,6 +70,7 @@ export interface Transaction {
   selectedOperator?: string;
   recipientAccount?: string;
   beneficiaryAccount?: string;
+  beneficiaryBankAccount?: string;
   narration?: string;
   route?: string;
   country?: string;

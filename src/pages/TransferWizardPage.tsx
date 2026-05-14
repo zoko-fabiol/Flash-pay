@@ -151,7 +151,11 @@ export const TransferWizardPage: React.FC = () => {
     let list = [];
     if (originCode === 'RU') {
       // La Russie peut envoyer vers tous les pays africains configurés
-      list = countries.filter(c => c.code !== 'RU');
+      // On inclut aussi la Russie pour permettre à l'utilisateur de cliquer dessus et d'inverser le transfert
+      list = [...countries];
+      if (!list.some(c => c.code === 'RU')) {
+        list.push({ code: 'RU', name: 'Russie', currency: 'RUB' });
+      }
     } else {
       // Un pays africain envoie vers les destinations autorisées + la Russie
       const allowed = origin?.allowedDestinations || [];
@@ -416,18 +420,33 @@ export const TransferWizardPage: React.FC = () => {
   const getCommission = (amount: number, type: string, destinationCountry?: string, operator?: string, currency?: string) => {
     if (!amount) return 0;
     
-    // Find rules that match type and amount range
-    const rules = commissions.filter(c => 
-      (c.transferType === type || (type === 'africa-africa' && c.transferType === 'russia-russia')) && 
-      (
-        !currency || 
-        !c.currency || // Allow rules without a specific currency to act as default
-        c.currency === currency || 
-        (type === 'africa-africa' && (currency === 'XAF' || currency === 'XOF') && (c.currency === 'XAF' || c.currency === 'XOF'))
-      ) &&
-      amount >= c.minAmount && 
-      amount <= c.maxAmount
-    );
+    const findCurrency = (code?: string) => countries.find(co => co.code === code)?.currency;
+
+    // Find rules that match type
+    const rules = commissions.filter(c => {
+      const typeMatch = c.transferType === type || (type === 'africa-africa' && c.transferType === 'russia-russia');
+      if (!typeMatch) return false;
+
+      // Determine currencies for comparison
+      // ruleCurrency: the currency in which minAmount/maxAmount are defined
+      // inputCurrency: the currency of the 'amount' passed to this function
+      const ruleCurrency = c.currency || (c.destinationCountry ? findCurrency(c.destinationCountry) : findCurrency(destinationCountry));
+      const inputCurrency = currency || (type === 'africa-russia' ? findCurrency('CM') : findCurrency(transferData.originCountry));
+
+      let comparisonAmount = amount;
+      if (ruleCurrency && inputCurrency && ruleCurrency !== inputCurrency) {
+        const foundRate = rates.find(r => 
+          (r.from === inputCurrency && r.to === ruleCurrency) ||
+          (r.from === ruleCurrency && r.to === inputCurrency)
+        );
+        if (foundRate) {
+          const rate = foundRate.from === inputCurrency ? (foundRate.rate || foundRate.rateFixed) : (1 / (foundRate.rate || foundRate.rateFixed));
+          comparisonAmount = amount * rate;
+        }
+      }
+
+      return comparisonAmount >= c.minAmount && comparisonAmount <= c.maxAmount;
+    });
 
     if (rules.length === 0) return 0;
 
@@ -439,6 +458,8 @@ export const TransferWizardPage: React.FC = () => {
     if (!applicable) return 0;
 
     if (applicable.feeType === 'fixed') {
+      // If the rule is in a different currency, we should technically convert the fixed fee back to input currency
+      // but for now let's assume fixed fees are in the input currency or handled separately.
       return applicable.fixedAmount || 0;
     }
     return amount * ((applicable.percentage || 0) / 100);
@@ -463,21 +484,21 @@ export const TransferWizardPage: React.FC = () => {
 
       // 2. Determine input and output currencies based on transfer type
       const originCountryData = countries.find(c => c.code === (transferData.originCountry || 'RU'));
-      const destCountryData = countries.find(c => c.code === (transferData.destinationCountry || 'RU'));
-      
-      let inputCurrency = originCountryData?.currency || transferData.originCurrency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
-      let outputCurrency = destCountryData?.currency || transferData.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
-      
-      // Override based on explicit type rules if necessary (safety)
+      const destCountryData = countries.find(c => c.code === (transferData.destinationCountry || 'CM'));
+      const findCoCurrency = (code: string) => countries.find(co => co.code === code)?.currency;
+
+      let inputCurrency = originCountryData?.currency || transferData.originCurrency || findCoCurrency(transferData.originCountry || 'RU') || 'RUB';
+      let outputCurrency = destCountryData?.currency || transferData.currency || findCoCurrency(transferData.destinationCountry || 'CM') || 'XAF';
+
       if (transferData.transferType === 'russia-africa') {
-        inputCurrency = 'RUB';
-        outputCurrency = destCountryData?.currency || transferData.currency || 'XAF';
+        inputCurrency = originCountryData?.currency || findCoCurrency('RU') || 'RUB';
+        outputCurrency = destCountryData?.currency || transferData.currency || findCoCurrency(transferData.destinationCountry!) || 'XAF';
       } else if (transferData.transferType === 'africa-russia') {
-        inputCurrency = originCountryData?.currency || transferData.originCurrency || 'XAF';
-        outputCurrency = 'RUB';
-      } else if (transferData.transferType === 'africa-africa') {
-        inputCurrency = originCountryData?.currency || transferData.originCurrency || 'XAF';
-        outputCurrency = destCountryData?.currency || transferData.currency || 'XAF';
+        inputCurrency = originCountryData?.currency || transferData.originCurrency || findCoCurrency(transferData.originCountry!) || 'XAF';
+        outputCurrency = destCountryData?.currency || findCoCurrency('RU') || 'RUB';
+      } else {
+        inputCurrency = originCountryData?.currency || transferData.originCurrency || findCoCurrency(transferData.originCountry!) || 'XAF';
+        outputCurrency = destCountryData?.currency || transferData.currency || findCoCurrency(transferData.destinationCountry!) || 'XAF';
       }
 
       // Calculate total amount if bulk
@@ -1149,15 +1170,32 @@ export const TransferWizardPage: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
-                        <CreditCard size={20} />
+                        <Smartphone size={20} />
                       </div>
-                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">{t('account_sbp_label')}</span>
+                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">{t('sbp_number_label')}</span>
                     </div>
                     <input
                       type="text"
                       value={transferData.beneficiaryAccount || ''}
                       onChange={e => updateTransferData({ beneficiaryAccount: e.target.value })}
-                      placeholder="+7 900 XXX XXXX"
+                      placeholder={t('sbp_number_placeholder')}
+                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-brand outline-none text-slate-900 font-bold bg-slate-50 transition-all mb-8"
+                    />
+                  </div>
+
+                  {/* Account Number (Optional) */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
+                        <CreditCard size={20} />
+                      </div>
+                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">{t('account_number_label')} <span className="text-slate-400 font-medium normal-case">(Optionnel)</span></span>
+                    </div>
+                    <input
+                      type="text"
+                      value={transferData.beneficiaryBankAccount || ''}
+                      onChange={e => updateTransferData({ beneficiaryBankAccount: e.target.value })}
+                      placeholder="Ex: 40817810..."
                       className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-brand outline-none text-slate-900 font-bold bg-slate-50 transition-all"
                     />
                   </div>

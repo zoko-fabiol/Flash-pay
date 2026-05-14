@@ -195,6 +195,10 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
                 <span className="font-bold text-[#661489]">1 {fromCurrency} = {rate} {toCurrency}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-500 font-medium">{t('recipient_receives') || 'Le destinataire reçoit'}</span>
+                <span className="font-bold text-[#661489]">{formatNumber(finalTotalReceiveAmount, toCurrency)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-500 font-medium">{t('transfer_fee')}</span>
                 <span className="font-bold text-slate-900">{formatNumber(totalCommission, fromCurrency)}</span>
               </div>

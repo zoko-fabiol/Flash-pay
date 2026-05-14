@@ -39,8 +39,10 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   const currentSender = senderCountries.find(c => c.code === (transferData.originCountry || 'RU'));
   const currentRecipient = recipientCountries.find(c => c.code === (transferData.destinationCountry || recipientCountries[0]?.code));
 
-  const fromCurrency = currentSender?.currency || transferData.originCurrency || (transferData.originCountry === 'RU' ? 'RUB' : 'XAF');
-  const toCurrency = currentRecipient?.currency || transferData.currency || (transferData.destinationCountry === 'RU' ? 'RUB' : 'XAF');
+  const findCurrency = (code: string) => [...senderCountries, ...recipientCountries].find(c => c.code === code)?.currency || (code === 'RU' ? 'RUB' : 'XAF');
+
+  const fromCurrency = currentSender?.currency || transferData.originCurrency || findCurrency(transferData.originCountry || 'RU');
+  const toCurrency = currentRecipient?.currency || transferData.currency || findCurrency(transferData.destinationCountry || recipientCountries[0]?.code);
   
   const foundRate = rates.find((r: any) => 
     r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
@@ -49,19 +51,25 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
 
   // Filter recipient countries based on available rates from current sender
   const availableRecipientCountries = recipientCountries.filter(c => {
-    const targetCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    if (c.code === 'RU') return true; // Always allow Russia so it can act as a toggle
+    const targetCurrency = c.currency || findCurrency(c.code);
     return rates.some(r => 
-      r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
-      r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
+      (r.from?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim() && 
+       r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()) ||
+      (r.from?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim() && 
+       r.to?.toString().toUpperCase().trim() === fromCurrency.toUpperCase().trim())
     );
   });
 
   // Filter sender countries based on available rates to current recipient
   const availableSenderCountries = senderCountries.filter(c => {
-    const sourceCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    if (c.code === 'RU') return true; // Always allow Russia so it can act as a toggle
+    const sourceCurrency = c.currency || findCurrency(c.code);
     return rates.some(r => 
-      r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
-      r.to?.toString().toUpperCase().trim() === toCurrency.toUpperCase().trim()
+      (r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
+       r.to?.toString().toUpperCase().trim() === toCurrency.toUpperCase().trim()) ||
+      (r.from?.toString().toUpperCase().trim() === toCurrency.toUpperCase().trim() && 
+       r.to?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim())
     );
   });
 
@@ -105,14 +113,16 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   };
 
   const handleSenderSelect = (c: any) => {
-    const sourceCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    const sourceCurrency = c.currency || findCurrency(c.code);
     
     // Find valid recipients for this new sender based on rates
     const validRecipients = recipientCountries.filter(rc => {
-      const targetCurrency = rc.currency || (rc.code === 'RU' ? 'RUB' : 'XAF');
+      const targetCurrency = rc.currency || findCurrency(rc.code);
       return rates.some(r => 
-        r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
-        r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
+        (r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
+         r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()) ||
+        (r.from?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim() && 
+         r.to?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim())
       );
     });
 
@@ -143,14 +153,16 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
   };
 
   const handleRecipientSelect = (c: any) => {
-    const targetCurrency = c.currency || (c.code === 'RU' ? 'RUB' : 'XAF');
+    const targetCurrency = c.currency || findCurrency(c.code);
 
     // Find valid senders for this new recipient based on rates
     const validSenders = senderCountries.filter(sc => {
-      const sourceCurrency = sc.currency || (sc.code === 'RU' ? 'RUB' : 'XAF');
+      const sourceCurrency = sc.currency || findCurrency(sc.code);
       return rates.some(r => 
-        r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
-        r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()
+        (r.from?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim() && 
+         r.to?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim()) ||
+        (r.from?.toString().toUpperCase().trim() === targetCurrency.toUpperCase().trim() && 
+         r.to?.toString().toUpperCase().trim() === sourceCurrency.toUpperCase().trim())
       );
     });
 
@@ -328,6 +340,15 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
               {t('exchange_rate_label')}
             </div>
             <span className="font-black">1 {fromCurrency} = {rate} {toCurrency}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center gap-2 text-white/60 font-bold">
+              <div className="w-4 h-4 rounded-full bg-brand/20 flex items-center justify-center">
+                <ArrowRight size={10} className="text-brand-light" />
+              </div>
+              {t('recipient_receives') || 'Le destinataire reçoit'}
+            </div>
+            <span className="font-black">{formatNumber(receiveAmount, toCurrency)}</span>
           </div>
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2 text-white/60 font-bold">

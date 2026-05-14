@@ -232,9 +232,10 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       pdf.text(recipient ? recipient.name : (transaction.recipientName || 'N/A'), pageWidth - margin, y + 7, { align: 'right' });
       pdf.setFontSize(9);
-      const recipientContact = recipient 
+      const recipientContactBase = recipient 
         ? (recipient.phone || recipient.account || '') 
         : (transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '');
+      const recipientContact = recipientContactBase + (!recipient && transaction.beneficiaryBankAccount ? ` (Acc: ${transaction.beneficiaryBankAccount})` : '');
       pdf.text(recipientContact, pageWidth - margin, y + 12, { align: 'right' });
 
       y += 28;
@@ -630,17 +631,23 @@ const TransactionDetailsPage: React.FC = () => {
                         <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">
                           {transaction.type === 'russia-africa' ? 'Numéro de Téléphone' : 'Coordonnées (Compte/Carte)'}
                         </p>
-                        <p className="text-[#1D1B20] font-black text-lg tracking-tight">
+                        <div className="text-[#1D1B20] font-black text-lg tracking-tight">
                            {transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount ? (
-                             <span className="text-[#661489]">
+                             <span className="text-[#661489] block">
                                {transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount}
                              </span>
                            ) : 'N/A'}
-                        </p>
+                           {transaction.beneficiaryBankAccount && (
+                             <span className="text-[#49454F] block text-sm mt-1 bg-white/50 inline-block px-2 py-0.5 rounded-md">
+                               Acc: <span className="text-[#661489]">{transaction.beneficiaryBankAccount}</span>
+                             </span>
+                           )}
+                        </div>
                       </div>
                       <button onClick={() => { 
                         const value = transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '';
-                        navigator.clipboard.writeText(value); 
+                        const extra = transaction.beneficiaryBankAccount ? ` / ${transaction.beneficiaryBankAccount}` : '';
+                        navigator.clipboard.writeText(value + extra); 
                         toast.success('Copié'); 
                       }} className="p-2 bg-white text-[#661489] rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"><Copy size={16} /></button>
                     </div>
