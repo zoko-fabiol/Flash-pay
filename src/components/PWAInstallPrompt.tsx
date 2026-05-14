@@ -4,7 +4,7 @@ import { usePWAInstall } from '../context/PWAInstallContext';
 import { useLanguage } from '../context/LanguageContext';
 import { deviceService } from '../services/deviceService';
 
-const APK_URL = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.0.0/FlashPay-debug-1.0.2.apk';
+const APK_URL = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.0.1/FlashPay-debug-1.0.2.apk';
 
 export const PWAInstallPrompt: React.FC = () => {
   const { canInstall, installApp, isInstalled } = usePWAInstall();
