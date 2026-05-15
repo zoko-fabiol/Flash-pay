@@ -453,12 +453,34 @@ const UsersListPage: React.FC = () => {
                             {selectedUser.tel ? <a href={`tel:${selectedUser.tel}`} className="text-[#661489] hover:underline">{selectedUser.tel}</a> : 'Non renseigné'}
                           </p>
                         </div>
-                          <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
-                            <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Inscription</p>
-                            <p className="text-[#1D1B20] font-black text-sm tracking-tight">
-                              {selectedUser.createdAt ? (selectedUser.createdAt.toDate ? selectedUser.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(selectedUser.createdAt).toLocaleDateString('fr-FR')) : 'N/A'}
-                            </p>
-                          </div>
+                           <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                             <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Pays</p>
+                             <p className="text-[#1D1B20] font-black text-sm tracking-tight flex items-center gap-2">
+                               {selectedUser.countryCode ? (
+                                 <>
+                                   <img 
+                                     src={`https://flagcdn.com/w40/${selectedUser.countryCode.toLowerCase()}.png`} 
+                                     alt="" 
+                                     className="w-5 h-3.5 object-cover rounded-sm shadow-sm"
+                                   />
+                                   {selectedUser.countryCode === 'CM' ? 'Cameroun' : 
+                                    selectedUser.countryCode === 'RU' ? 'Russie' : 
+                                    selectedUser.countryCode === 'FR' ? 'France' : 
+                                    selectedUser.countryCode === 'CI' ? 'Côte d\'Ivoire' : 
+                                    selectedUser.countryCode === 'SN' ? 'Sénégal' : 
+                                    selectedUser.countryCode === 'GA' ? 'Gabon' : 
+                                    selectedUser.countryCode === 'CG' ? 'Congo' : 
+                                    selectedUser.countryCode}
+                                 </>
+                               ) : 'N/A'}
+                             </p>
+                           </div>
+                       </div>
+                       <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
+                          <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Inscription</p>
+                          <p className="text-[#1D1B20] font-black text-sm tracking-tight">
+                            {selectedUser.createdAt ? (selectedUser.createdAt.toDate ? selectedUser.createdAt.toDate().toLocaleDateString('fr-FR') : new Date(selectedUser.createdAt).toLocaleDateString('fr-FR')) : 'N/A'}
+                          </p>
                        </div>
                        <div className="bg-[#F3EDF7] p-5 rounded-[24px] flex justify-between items-center group/mail">
                           <div>

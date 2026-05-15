@@ -8,29 +8,46 @@ export const emailService = {
    * Envoie un email via Google Apps Script
    */
   async sendEmail(recipient: string, subject: string, htmlBody: string) {
-    if (!GAS_URL || GAS_URL.includes('VOTRE_URL')) {
-      console.warn('URL Google Apps Script non configurée.');
-      return;
-    }
-
     try {
-      // Utilisation d'une requête simple pour éviter les problèmes de CORS avec GAS
-      await fetch(GAS_URL, {
+      // Priorité à la fonction proxy Netlify
+      const response = await fetch('/.netlify/functions/send-email', {
         method: 'POST',
-        mode: 'no-cors', // Mode no-cors pour éviter les erreurs de redirection Google
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipients: [recipient],
           title: subject,
           body: htmlBody
         })
       });
-      console.log('Requête d\'envoi d\'email transmise à GAS');
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de l\'email:', error);
-      throw error;
+
+      if (!response.ok) {
+        throw new Error(`Proxy error: ${response.status}`);
+      }
+
+      console.log('Email envoyé via proxy Netlify');
+    } catch (proxyError) {
+      console.warn('Proxy Netlify échoué, tentative directe vers GAS...', proxyError);
+      
+      if (!GAS_URL || GAS_URL.includes('VOTRE_URL')) {
+        return;
+      }
+
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            recipients: [recipient],
+            title: subject,
+            body: htmlBody
+          })
+        });
+        console.log('Email envoyé via GAS (direct)');
+      } catch (error) {
+        console.error('Échec total de l\'envoi d\'email:', error);
+        throw error;
+      }
     }
   },
 
