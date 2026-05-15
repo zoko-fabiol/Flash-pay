@@ -26,9 +26,6 @@ const config: CapacitorConfig = {
     Camera: {
       // Allow camera & gallery
     },
-    PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"],
-    },
   },
 };
 

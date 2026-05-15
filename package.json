@@ -14,7 +14,6 @@
     "@capacitor/camera": "^8.2.0",
     "@capacitor/clipboard": "^8.0.1",
     "@capacitor/filesystem": "^8.1.2",
-    "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/share": "^8.0.1",
     "@capacitor/status-bar": "^8.0.2",
     "@capgo/capacitor-native-biometric": "^8.4.5",
