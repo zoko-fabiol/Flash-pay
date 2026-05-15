@@ -144,7 +144,15 @@ export const PreferencesPage: React.FC = () => {
                   Profitez d'une expérience plus fluide et de notifications natives en installant l'application officielle.
                 </p>
                 <button
-                  onClick={() => window.location.href = '/.netlify/functions/latest-apk'}
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = '/.netlify/functions/latest-apk';
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
                   className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white text-[#661489] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                 >
                   <Download size={14} />

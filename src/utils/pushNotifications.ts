@@ -35,6 +35,8 @@ export const initializePushNotifications = async (userId?: string) => {
       await OneSignalWeb.init({
         appId: ONESIGNAL_APP_ID,
         allowLocalhostAsSecureOrigin: true,
+        serviceWorkerPath: '/OneSignalSDKWorker.js',
+        serviceWorkerUpdaterPath: '/OneSignalSDKWorker.js',
       });
       webInitialized = true;
 

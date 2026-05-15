@@ -26,6 +26,10 @@ export const oneSignalService = {
       });
 
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`OneSignal proxy failed (${response.status}): ${result?.error || 'Unknown error'}`);
+      }
+
       console.log('[OneSignal] Notification result:', result);
       return result;
     } catch (error: any) {
@@ -56,6 +60,10 @@ export const oneSignalService = {
       });
 
       const result = await response.json();
+      if (!response.ok) {
+        throw new Error(`OneSignal proxy failed (${response.status}): ${result?.error || 'Unknown error'}`);
+      }
+
       console.log('[OneSignal] Broadcast result:', result);
       return result;
     } catch (error) {

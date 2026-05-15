@@ -23,8 +23,14 @@ export const PWAInstallPrompt: React.FC = () => {
 
   const handleInstallClick = () => {
     if (isAndroid) {
-      // Pour Android, on télécharge l'APK via le lien statique
-      window.location.href = APK_URL;
+      // Create a hidden link to trigger download without leaving the page
+      const link = document.createElement('a');
+      link.href = APK_URL;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else if (isIOS) {
       // Pour iOS, on affiche le guide (car pas d'install auto)
       setShowIOSGuide(true);
