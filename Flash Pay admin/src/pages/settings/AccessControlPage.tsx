@@ -14,7 +14,7 @@ import {
   updateDoc,
   where,
 } from 'firebase/firestore';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { db, auth } from '../../lib/firebase';
 import type { AdminPermissions, UserProfile } from '../../types';
 import {
@@ -33,7 +33,13 @@ import {
   SlidersHorizontal,
   Trash2,
   UserCog,
+  AlertTriangle,
+  Lock,
+  Database,
+  RefreshCw,
+  X,
 } from 'lucide-react';
+import { writeBatch } from 'firebase/firestore';
 
 const AccessControlPage: React.FC = () => {
   const [admins, setAdmins] = useState<any[]>([]);
@@ -52,6 +58,14 @@ const AccessControlPage: React.FC = () => {
   const [resettingPassword, setResettingPassword] = useState('');
   const [countries, setCountries] = useState<any[]>([]);
   const [selectedCountry, setSelectedCountry] = useState('');
+  
+  // Wipe State
+  const [isWipeModalOpen, setIsWipeModalOpen] = useState(false);
+  const [wipePassword, setWipePassword] = useState('');
+  const [isWiping, setIsWiping] = useState(false);
+  
+  const { profile } = useAuth();
+  const isSuperAdmin = profile?.adminRole === 'super';
 
   useEffect(() => {
     const unsubscribe = onSnapshot(query(collection(db, 'users'), orderBy('createdAt', 'desc')), (snapshot) => {
@@ -193,6 +207,92 @@ const AccessControlPage: React.FC = () => {
       toast.error(error.message || 'Erreur lors de l\'envoi du lien', { id: toastId });
     } finally {
       setResettingPassword('');
+    }
+  };
+
+  const handleNuclearWipe = async () => {
+    if (!isSuperAdmin) {
+      toast.error('Accès refusé. Seul un Super Admin peut effectuer cette action.');
+      return;
+    }
+
+    if (!wipePassword) {
+      toast.error('Veuillez saisir votre mot de passe pour confirmer.');
+      return;
+    }
+
+    setIsWiping(true);
+    const toastId = toast.loading('Vérification de l\'identité...');
+
+    try {
+      // 1. Re-authenticate
+      const credential = EmailAuthProvider.credential(auth.currentUser?.email || '', wipePassword);
+      if (auth.currentUser) {
+        await reauthenticateWithCredential(auth.currentUser, credential);
+      } else {
+        throw new Error('Utilisateur non connecté');
+      }
+
+      toast.loading('Nettoyage de la base de données...', { id: toastId });
+
+      // 2. Perform Wipe
+      const collectionsToWipe = ['transactions', 'kyc', 'notifications'];
+      
+      for (const colName of collectionsToWipe) {
+        const snap = await getDocs(collection(db, colName));
+        const chunks = [];
+        const batchSize = 500;
+        
+        for (let i = 0; i < snap.docs.length; i += batchSize) {
+          chunks.push(snap.docs.slice(i, i + batchSize));
+        }
+
+        for (const chunk of chunks) {
+          const batch = writeBatch(db);
+          chunk.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        }
+      }
+
+      // 3. Reset User KYC Statuses
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const userChunks = [];
+      for (let i = 0; i < usersSnap.docs.length; i += 500) {
+        userChunks.push(usersSnap.docs.slice(i, i + 500));
+      }
+
+      for (const chunk of userChunks) {
+        const batch = writeBatch(db);
+        chunk.forEach(d => {
+          batch.update(d.ref, {
+            kycStatus: 'none',
+            kycDocuments: {},
+            kycSubmittedAt: null,
+            totalSpentRUB: 0,
+            solde_bonus: 0,
+            updatedAt: Timestamp.now()
+          });
+        });
+        await batch.commit();
+      }
+
+      // 4. Log the action
+      await addDoc(collection(db, 'admin_logs'), {
+        action: 'NUCLEAR_WIPE_BEFORE_LAUNCH',
+        adminEmail: auth.currentUser?.email,
+        timestamp: Timestamp.now(),
+        details: 'Suppression complète des transactions, KYC et notifications. Réinitialisation des statuts utilisateurs.'
+      });
+
+      toast.success('La base de données a été nettoyée avec succès !', { id: toastId });
+      setIsWipeModalOpen(false);
+      setWipePassword('');
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.code === 'auth/wrong-password' ? 'Mot de passe incorrect.' : 'Erreur lors du nettoyage.';
+      toast.error(msg, { id: toastId });
+    } finally {
+      setIsWiping(false);
     }
   };
 
@@ -588,6 +688,98 @@ const AccessControlPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* SYSTEM MAINTENANCE SECTION */}
+      {isSuperAdmin && (
+        <div className="mt-16 pt-16 border-t-4 border-rose-500/20">
+          <div className="m3-card-elevated !bg-[#FFF8F8] border-rose-500/30 overflow-hidden relative">
+            <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-rose-500 text-white rounded-[24px] flex items-center justify-center shadow-xl animate-pulse">
+                  <Database size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight flex items-center gap-3">
+                    Maintenance Critique <AlertTriangle className="text-rose-500" size={24} />
+                  </h3>
+                  <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.15em] mt-1">
+                    Réinitialisation totale avant lancement officiel
+                  </p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setIsWipeModalOpen(true)}
+                className="px-8 py-4 bg-rose-500 text-white rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl hover:bg-rose-600 hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+              >
+                <Trash2 size={20} /> Réinitialiser la plateforme
+              </button>
+            </div>
+
+            <div className="mt-8 p-6 bg-rose-50 rounded-[28px] border border-rose-200 flex gap-5 items-start">
+              <div className="p-3 bg-white rounded-2xl shadow-sm text-rose-500"><Lock size={24} /></div>
+              <div className="space-y-2">
+                <p className="text-[11px] text-rose-900 font-black uppercase tracking-widest">Zone de danger</p>
+                <p className="text-xs text-rose-700 font-bold leading-relaxed">
+                  Cette action supprimera **définitivement** toutes les transactions, les documents KYC (pièces d'identité, selfies) et les notifications. Les comptes clients sont conservés mais leurs compteurs sont remis à zéro. **Action irréversible.**
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WIPE CONFIRMATION MODAL */}
+      {isWipeModalOpen && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div className="absolute inset-0 bg-[#1D1B20]/80 backdrop-blur-md" onClick={() => !isWiping && setIsWipeModalOpen(false)} />
+          <div className="relative bg-white w-full max-w-md rounded-[40px] shadow-2xl overflow-hidden border-4 border-rose-500/20 p-10 animate-in zoom-in-95 duration-300 text-center">
+            <div className="w-24 h-24 bg-rose-100 text-rose-500 rounded-[32px] flex items-center justify-center mx-auto mb-8 shadow-inner">
+              <RefreshCw size={48} className={isWiping ? 'animate-spin' : ''} />
+            </div>
+            
+            <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-4">Confirmation de Identité</h3>
+            <p className="text-[#49454F] text-sm font-bold leading-relaxed mb-8">
+              Pour des raisons de sécurité, veuillez saisir votre mot de passe administrateur pour confirmer la suppression totale des données.
+            </p>
+
+            <div className="space-y-6 text-left">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1">Mot de passe Super Admin</label>
+                <div className="relative">
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-rose-500/40" size={18} />
+                  <input 
+                    type="password"
+                    value={wipePassword}
+                    onChange={(e) => setWipePassword(e.target.value)}
+                    disabled={isWiping}
+                    placeholder="••••••••"
+                    className="w-full bg-rose-50 border border-rose-100 rounded-2xl py-4 pl-14 pr-6 font-black text-[#1D1B20] outline-none focus:ring-4 focus:ring-rose-500/10 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4 pt-4">
+                <button 
+                  onClick={() => setIsWipeModalOpen(false)}
+                  disabled={isWiping}
+                  className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-[#49454F] hover:bg-slate-50 rounded-2xl transition-all"
+                >
+                  Annuler
+                </button>
+                <button 
+                  onClick={handleNuclearWipe}
+                  disabled={isWiping || !wipePassword}
+                  className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:bg-rose-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+                >
+                  {isWiping ? 'Nettoyage...' : 'Confirmer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

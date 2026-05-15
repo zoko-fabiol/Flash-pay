@@ -38,7 +38,7 @@ const CommissionsPage: React.FC = () => {
 
   // Form State
   const [formData, setFormData] = useState<Partial<Commission>>({
-    transferType: 'africa-africa',
+    transferType: 'russia-africa',
     feeType: 'percentage',
     percentage: 0,
     fixedAmount: 0,
@@ -91,7 +91,7 @@ const CommissionsPage: React.FC = () => {
       setIsAdding(false);
       setEditingId(null);
       setFormData({
-        transferType: 'africa-africa',
+        transferType: 'russia-africa',
         feeType: 'percentage',
         percentage: 0,
         fixedAmount: 0,
@@ -236,7 +236,6 @@ const CommissionsPage: React.FC = () => {
                   >
                     <option value="russia-africa">Russie → Afrique</option>
                     <option value="africa-russia">Afrique → Russie</option>
-                    <option value="africa-africa">Afrique → Afrique</option>
                   </select>
                 </div>
 
