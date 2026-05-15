@@ -140,7 +140,11 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
     // Determine transfer type
     if (c.code === 'RU') newType = 'russia-africa';
     else if (newDest === 'RU') newType = 'africa-russia';
-    else newType = 'africa-africa';
+    else {
+      // Security fallback: Force Russia if somehow we got another African country
+      newDest = 'RU';
+      newType = 'africa-russia';
+    }
 
     updateTransferData({ 
       originCountry: c.code, 
@@ -180,7 +184,11 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
     // Determine transfer type
     if (newOrigin === 'RU') newType = 'russia-africa';
     else if (c.code === 'RU') newType = 'africa-russia';
-    else newType = 'africa-africa';
+    else {
+      // Security fallback: Force Russia as origin if recipient is African
+      newOrigin = 'RU';
+      newType = 'russia-africa';
+    }
 
     updateTransferData({ 
       destinationCountry: c.code, 

@@ -27,12 +27,6 @@ export const TransferStep1Page: React.FC = () => {
       description: 'Envoyer de l\'argent en Russie depuis l\'Afrique',
       component: Zap,
     },
-    {
-      type: 'africa-africa' as TransferType,
-      title: 'Afrique → Afrique',
-      description: 'Envoyer de l\'argent entre pays africains',
-      component: Building2,
-    },
   ];
 
   return (

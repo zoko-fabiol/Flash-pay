@@ -153,15 +153,9 @@ export const TransferWizardPage: React.FC = () => {
       // Russia sends to any African country
       list = countries.filter(c => c.code !== 'RU');
     } else {
-      // African country sends to its allowed destinations + Russia
-      const allowed = origin?.allowedDestinations || [];
-      const canSendToRussia = origin?.canSendToRussia !== false;
-      
-      list = countries.filter(c => c.code !== originCode && allowed.includes(c.code));
-      if (canSendToRussia) {
-        const ruObj = countries.find(c => c.code === 'RU') || { code: 'RU', name: 'Russie', currency: 'RUB' };
-        if (!list.some(c => c.code === 'RU')) list.push(ruObj);
-      }
+      // African country sends ONLY to Russia (Africa-Africa disabled)
+      const ruObj = countries.find(c => c.code === 'RU') || { code: 'RU', name: 'Russie', currency: 'RUB' };
+      list = [ruObj];
     }
 
     // Strictly alphabetical sort as requested
