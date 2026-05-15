@@ -24,6 +24,7 @@ import {
   DEFAULT_ADMIN_PERMISSIONS,
   mergeAdminPermissions,
 } from '../../lib/adminAccess';
+import { useAuth } from '../../context/AuthContext';
 import {
   CheckCircle2,
   Mail,
