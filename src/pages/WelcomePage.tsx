@@ -9,16 +9,19 @@ const slides = [
   {
     id: 1,
     image: '/onboarding_1.jpg',
+    imageEn: '/onboarding_1_en.jpg',
     bgColor: 'bg-[#FDF4EB]', 
   },
   {
     id: 2,
     image: '/onboarding_2.jpg',
+    imageEn: '/onboarding_2_en.jpg',
     bgColor: 'bg-[#FDF4EB]', 
   },
   {
     id: 3,
     image: '/onboarding_3.jpg',
+    imageEn: '/onboarding_3_en.jpg',
     bgColor: 'bg-[#FDF4EB]', 
   }
 ];
