@@ -9,6 +9,11 @@ import { registerServiceWorker } from './utils/serviceWorkerUtils'
 
 import { registerSW } from 'virtual:pwa-register';
 
+// Redirect legacy /signup URLs (from old referral links) to use HashRouter
+if (window.location.pathname === '/signup') {
+  window.location.replace(`/#/signup${window.location.search}`);
+}
+
 // Register PWA service worker
 registerSW({ immediate: true });
 

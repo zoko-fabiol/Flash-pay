@@ -66,7 +66,7 @@ export const ReferralPage: React.FC = () => {
     };
   }, [user]);
 
-  const referralLink = `https://flash-pay.site/signup?ref=${referralCode}`;
+  const referralLink = `https://flash-pay.site/#/signup?ref=${referralCode}`;
 
   const handleCopy = async () => {
     if (!referralCode) return;
