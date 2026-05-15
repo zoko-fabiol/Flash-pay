@@ -37,6 +37,22 @@ const UsersListPage: React.FC = () => {
   const [emailSubject, setEmailSubject] = useState('Message de Flash Pay');
   const [emailMessage, setEmailMessage] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [emailMode, setEmailMode] = useState<'single' | 'bulk'>('single');
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUserIds(prev => 
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0) {
+      setSelectedUserIds([]);
+    } else {
+      setSelectedUserIds(filteredUsers.map(u => u.id));
+    }
+  };
 
   useEffect(() => {
     const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -57,19 +73,57 @@ const UsersListPage: React.FC = () => {
   };
 
   const handleSendManualEmail = async () => {
-    if (!emailUser?.email || !emailMessage) return;
+    const selectedUsers = emailMode === 'single' 
+      ? [emailUser] 
+      : users.filter(u => selectedUserIds.includes(u.id));
+
+    if (selectedUsers.length === 0 || !emailMessage) return;
     
     setIsSendingEmail(true);
-    const t = toast.loading('Envoi de l\'email...');
+    const toastId = toast.loading(selectedUsers.length > 1 ? `Préparation des emails (0/${selectedUsers.length})...` : 'Envoi de l\'email...');
+    
     try {
-      const htmlBody = emailService.getCustomMessageTemplate(emailMessage);
-      await emailService.sendEmail(emailUser.email, emailSubject, htmlBody);
-      toast.success('Email envoyé avec succès !', { id: t });
-      setEmailUser(null);
-      setEmailMessage('');
+      let sentCount = 0;
+      let errorCount = 0;
+
+      // Envoi en parallèle pour plus de rapidité (comme sur Google Sheets)
+      const emailPromises = selectedUsers.map(async (user) => {
+        if (!user?.email) return;
+        
+        try {
+          // Utiliser le nom ou à défaut le début de l'email pour la personnalisation
+          const displayName = user.nom || user.email.split('@')[0];
+          const htmlBody = emailService.getCustomMessageTemplate(emailMessage, displayName);
+          
+          await emailService.sendEmail(user.email, emailSubject, htmlBody);
+          sentCount++;
+        } catch (singleErr) {
+          console.error(`Erreur d'envoi pour ${user.email}:`, singleErr);
+          errorCount++;
+        }
+      });
+
+      await Promise.all(emailPromises);
+      
+      if (errorCount === 0) {
+        toast.success(selectedUsers.length > 1 ? `${sentCount} emails envoyés en un instant !` : 'Email envoyé avec succès !', { id: toastId });
+      } else if (sentCount > 0) {
+        toast.success(`${sentCount} envoyés, ${errorCount} échecs.`, { id: toastId, duration: 5000 });
+      } else {
+        toast.error('Échec de l\'envoi pour tous les destinataires.', { id: toastId });
+      }
+
+      if (sentCount > 0) {
+        setEmailUser(null);
+        setEmailMessage('');
+        if (emailMode === 'bulk') {
+          setSelectedUserIds([]);
+          setEmailMode('single');
+        }
+      }
     } catch (err) {
       console.error(err);
-      toast.error('Erreur lors de l\'envoi de l\'email', { id: t });
+      toast.error('Une erreur critique est survenue', { id: toastId });
     } finally {
       setIsSendingEmail(false);
     }
@@ -174,6 +228,15 @@ const UsersListPage: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3 w-full lg:w-auto">
+          {selectedUserIds.length > 0 && (
+            <button 
+              onClick={() => { setEmailMode('bulk'); setEmailUser({ email: 'Destinataires multiples' }); }}
+              className="flex items-center gap-2 px-6 py-3.5 bg-[#661489] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              <Mail size={16} />
+              Mail Groupé ({selectedUserIds.length})
+            </button>
+          )}
           <div className="m3-search flex-1 lg:w-80">
             <Search className="text-[#49454F]" size={18} />
             <input 
@@ -193,7 +256,15 @@ const UsersListPage: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#F3EDF7]/50 text-[#49454F] text-[10px] uppercase font-black tracking-[0.2em] border-b border-[#E7E0EB]">
-                <th className="px-8 py-5">Utilisateur</th>
+                <th className="px-6 py-5 w-10">
+                  <input 
+                    type="checkbox" 
+                    checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-[#CAC4D0] text-[#661489] focus:ring-[#661489]"
+                  />
+                </th>
+                <th className="px-6 py-5">Utilisateur</th>
                 <th className="px-8 py-5">Contact & Identité</th>
                 <th className="px-8 py-5">Niveau KYC</th>
                 <th className="px-8 py-5">Fidélité & Parrainage</th>
@@ -204,7 +275,7 @@ const UsersListPage: React.FC = () => {
             <tbody className="divide-y divide-[#E7E0EB]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-32 text-center">
+                  <td colSpan={7} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
                       <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Initialisation des profils...</span>
@@ -213,7 +284,7 @@ const UsersListPage: React.FC = () => {
                 </tr>
               ) : filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-8 py-32 text-center">
+                  <td colSpan={7} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4 text-[#49454F]/30">
                       <Search size={64} strokeWidth={1} />
                       <span className="text-sm font-black uppercase tracking-widest">Aucun client trouvé</span>
@@ -222,10 +293,18 @@ const UsersListPage: React.FC = () => {
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer" onClick={() => openUserDetails(user)}>
-                    <td className="px-8 py-6">
+                  <tr key={user.id} className={`hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer ${selectedUserIds.includes(user.id) ? 'bg-[#661489]/5' : ''}`} onClick={() => openUserDetails(user)}>
+                    <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedUserIds.includes(user.id)}
+                        onChange={() => toggleUserSelection(user.id)}
+                        className="w-4 h-4 rounded border-[#CAC4D0] text-[#661489] focus:ring-[#661489]"
+                      />
+                    </td>
+                    <td className="px-6 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-[14px] bg-[#EADDFF] text-[#21005D] flex items-center justify-center font-black text-xs border border-[#661489]/10 shadow-sm group-hover:scale-110 transition-transform">
+                        <div className="w-10 h-10 rounded-[14px] bg-[#EADDFF] text-[#21005D] flex items-center justify-center font-black text-xs border border-[#661489]/10 shadow-sm group-hover:scale-110 transition-transform shrink-0">
                           {user.nom?.charAt(0).toUpperCase() || '?'}
                         </div>
                         <div className="flex flex-col">
@@ -299,30 +378,26 @@ const UsersListPage: React.FC = () => {
                     <td className="px-8 py-6 text-right" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
                         <button
-                          onClick={() => setEmailUser(user)}
+                          onClick={() => { setEmailMode('single'); setEmailUser(user); }}
                           className="p-2.5 bg-white border border-[#EADDFF] text-[#661489] hover:bg-[#661489] hover:text-white rounded-xl transition-all shadow-sm"
                           title="Envoyer un email"
                         >
                           <Mail size={18} />
                         </button>
-                        {isSuperAdmin && (
-                          <button
-                            onClick={() => handleDeleteUser(user)}
-                            className="p-2.5 bg-white border border-[#F2B8B5] text-[#B3261E] hover:bg-[#B3261E] hover:text-white rounded-xl transition-all shadow-sm"
-                            title="Supprimer définitivement"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
-                        {isSuperAdmin && (
-                          <button
-                            onClick={() => toggleAdminPrivilege(user, user.adminRole || 'restricted')}
-                            disabled={updatingAdminId === user.id}
-                            className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${user.isAdmin ? 'bg-[#F9DEDC] text-[#B3261E] border-[#F2B8B5]' : 'bg-[#E8DEF8] text-[#21005D] border-[#D0BCFF]'} disabled:opacity-50`}
-                          >
-                            {updatingAdminId === user.id ? '...' : user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleDeleteUser(user)}
+                          className="p-2.5 bg-white border border-[#F2B8B5] text-[#B3261E] hover:bg-[#B3261E] hover:text-white rounded-xl transition-all shadow-sm"
+                          title="Supprimer définitivement"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => toggleAdminPrivilege(user)}
+                          disabled={updatingAdminId === user.id}
+                          className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border ${user.isAdmin ? 'bg-[#F9DEDC] text-[#B3261E] border-[#F2B8B5]' : 'bg-[#E8DEF8] text-[#21005D] border-[#D0BCFF]'} disabled:opacity-50`}
+                        >
+                          {updatingAdminId === user.id ? '...' : user.isAdmin ? 'Retirer admin' : 'Rendre admin'}
+                        </button>
                         <button 
                           onClick={() => openUserDetails(user)}
                           className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#661489] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
@@ -342,7 +417,7 @@ const UsersListPage: React.FC = () => {
       {/* Manual Email Modal */}
       {emailUser && ReactDOM.createPortal(
         <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => setEmailUser(null)} />
+          <div className="absolute inset-0 bg-[#1D1B20]/40 backdrop-blur-sm" onClick={() => { setEmailUser(null); setEmailMode('single'); }} />
           <div className="relative bg-white w-full max-w-lg rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-[#E7E0EB]" onClick={e => e.stopPropagation()}>
             <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center">
               <div className="flex items-center gap-3">
@@ -350,11 +425,13 @@ const UsersListPage: React.FC = () => {
                   <Mail size={20} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">Envoyer un mail</h3>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">À: {emailUser.email}</p>
+                  <h3 className="text-xl font-black text-[#1D1B20] tracking-tight">{emailMode === 'bulk' ? 'Email Groupé' : 'Envoyer un mail'}</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">
+                    {emailMode === 'bulk' ? `${selectedUserIds.length} destinataires sélectionnés` : `À: ${emailUser.email}`}
+                  </p>
                 </div>
               </div>
-              <button onClick={() => setEmailUser(null)} className="p-2 hover:bg-[#F3EDF7] rounded-full transition-all">
+              <button onClick={() => { setEmailUser(null); setEmailMode('single'); }} className="p-2 hover:bg-[#F3EDF7] rounded-full transition-all">
                 <X size={20} />
               </button>
             </div>
@@ -412,7 +489,7 @@ const UsersListPage: React.FC = () => {
             
             <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg font-black text-xl">
+                <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg font-black text-xl shrink-0">
                   {selectedUser.nom?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div>
@@ -427,6 +504,13 @@ const UsersListPage: React.FC = () => {
                   title="Envoyer un mail"
                 >
                   <Mail size={24} />
+                </button>
+                <button 
+                  onClick={() => handleDeleteUser(selectedUser)}
+                  className="p-3 bg-[#F9DEDC] text-[#B3261E] rounded-full hover:shadow-md transition-all"
+                  title="Supprimer le compte"
+                >
+                  <Trash2 size={24} />
                 </button>
                 <button onClick={() => setSelectedUser(null)} className="p-3 bg-[#F3EDF7] text-[#49454F] rounded-full hover:bg-[#F9DEDC] hover:text-[#B3261E] transition-all">
                   <X size={24} />

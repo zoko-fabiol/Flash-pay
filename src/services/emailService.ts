@@ -1,20 +1,21 @@
 import axios from 'axios';
 
 // URL de votre script Google Apps Script
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzZv4O7fcvbN-s_3kzD_RT43B4kW48nF9CKig_EKXtsF6G-D8jsDR5oqOPaul8Fb3hXWA/exec';
+const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbyfnpE8gpa-_uVnhEvlJN4WnvgUjdpekThBgfZHkvoyyCErm8O9QV0LuFoMGNvKN9sCZQ/exec';
 
 export const emailService = {
   /**
    * Envoie un email via Google Apps Script
    */
-  async sendEmail(recipient: string, subject: string, htmlBody: string) {
+  async sendEmail(recipient: string | string[], subject: string, htmlBody: string) {
+    const recipients = Array.isArray(recipient) ? recipient : [recipient];
     try {
       // Priorité à la fonction proxy Netlify
       const response = await fetch('/.netlify/functions/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recipients: [recipient],
+          recipients: recipients,
           title: subject,
           body: htmlBody
         })
@@ -38,7 +39,7 @@ export const emailService = {
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
-            recipients: [recipient],
+            recipients: recipients,
             title: subject,
             body: htmlBody
           })
@@ -133,7 +134,8 @@ export const emailService = {
   /**
    * Génère le template HTML pour un message personnalisé
    */
-  getCustomMessageTemplate(message: string) {
+  getCustomMessageTemplate(message: string, userName?: string) {
+    const greeting = userName ? `Bonjour <strong>${userName}</strong>,<br><br>` : 'Bonjour,<br><br>';
     const formattedMessage = message.replace(/\n/g, '<br>');
     return `
       <div style="font-family: sans-serif; background-color: #F5E8FF; padding: 40px;">
@@ -144,6 +146,7 @@ export const emailService = {
           </div>
           
           <div style="color: #1e293b; font-size: 16px; line-height: 1.6;">
+            ${greeting}
             ${formattedMessage}
           </div>
           
