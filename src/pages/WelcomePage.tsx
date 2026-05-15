@@ -14,7 +14,11 @@ const slides = [
   {
     id: 2,
     image: '/onboarding_2.jpg',
-    imageEn: '/onboarding_2_en.jpg',
+    bgColor: 'bg-[#FDF4EB]', 
+  },
+  {
+    id: 3,
+    image: '/onboarding_3.jpg',
     bgColor: 'bg-[#FDF4EB]', 
   }
 ];
@@ -65,12 +69,10 @@ export const WelcomePage: React.FC = () => {
             }`}
           >
             <img 
-              src={language === 'en' && slide.imageEn ? slide.imageEn : slide.image} 
+              src={language === 'en' && (slide as any).imageEn ? (slide as any).imageEn : slide.image} 
               alt=""
-              className="w-full h-full object-cover object-center transform scale-110" 
+              className="w-full h-full object-cover object-center" 
             />
-            {/* Bottom gradient for text readability */}
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/50 via-transparent to-transparent z-1" />
           </div>
         ))}
       </div>
