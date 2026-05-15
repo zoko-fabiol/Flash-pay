@@ -4,7 +4,8 @@ import { usePWAInstall } from '../context/PWAInstallContext';
 import { useLanguage } from '../context/LanguageContext';
 import { deviceService } from '../services/deviceService';
 
-const APK_URL = '/.netlify/functions/latest-apk';
+// On utilise le lien direct vers les releases GitHub pour plus de fiabilité quel que soit l'hébergeur
+const APK_URL = 'https://github.com/zoko-fabiol/Flash-pay/releases/latest';
 
 export const PWAInstallPrompt: React.FC = () => {
   const { canInstall, installApp, isInstalled } = usePWAInstall();
@@ -17,20 +18,14 @@ export const PWAInstallPrompt: React.FC = () => {
 
   // On native platforms (APK already installed), we don't show the prompt
   if (deviceService.isNative() || isInstalled || dismissed) return null;
-
+  
   // On iOS, canInstall is usually false, but we want to show it anyway to guide the user
-  if (!canInstall && !isIOS) return null;
+  if (!canInstall && !isIOS && !isAndroid) return null;
 
   const handleInstallClick = () => {
     if (isAndroid) {
-      // Create a hidden link to trigger download without leaving the page
-      const link = document.createElement('a');
-      link.href = APK_URL;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Direct download via window.location for better mobile compatibility
+      window.location.href = APK_URL;
     } else if (isIOS) {
       // Pour iOS, on affiche le guide (car pas d'install auto)
       setShowIOSGuide(true);
@@ -61,17 +56,17 @@ export const PWAInstallPrompt: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-center gap-2">
               <button
                 onClick={handleInstallClick}
-                className="flex items-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-[11px] font-black text-white shadow-xl transition-all active:scale-95 hover:bg-black"
+                className="flex items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-[11px] font-black text-white shadow-xl transition-all active:scale-95 hover:bg-black w-full"
               >
                 <Download size={14} />
                 {isAndroid ? 'Télécharger' : (t('install') || 'Installer')}
               </button>
               <button 
                 onClick={() => setDismissed(true)}
-                className="text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest px-2"
+                className="text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest py-1 w-full text-center"
               >
                 {t('ignore') || 'Ignorer'}
               </button>
