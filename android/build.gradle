@@ -16,6 +16,33 @@ buildscript {
     }
 }
 
+// Configure Java toolchain usage for subprojects/tasks that require a Java compiler.
+// This requests Java 21 and — combined with org.gradle.java.installations.auto-download=true
+// in gradle.properties — allows Gradle to download a matching JDK if the host JDK differs.
+subprojects {
+    // Ensure repositories are available for toolchain downloads
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    // Configure toolchain for JavaCompile tasks where available
+    tasks.withType(JavaCompile).configureEach {
+        javaCompiler = javaToolchains.compilerFor {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    // If Kotlin is present, set its jvmTarget to 21
+    afterEvaluate { proj ->
+        proj.plugins.withId('org.jetbrains.kotlin.jvm') {
+            proj.tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+                kotlinOptions.jvmTarget = '21'
+            }
+        }
+    }
+}
+
 apply from: "variables.gradle"
 
 allprojects {

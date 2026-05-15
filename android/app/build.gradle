@@ -4,6 +4,10 @@ apply plugin: 'kotlin-android'
 android {
     namespace = "com.flashpay.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
     defaultConfig {
         applicationId "com.flashpay.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -39,6 +43,15 @@ android {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// Kotlin compiler target for Android module
+afterEvaluate {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = '21'
         }
     }
 }
