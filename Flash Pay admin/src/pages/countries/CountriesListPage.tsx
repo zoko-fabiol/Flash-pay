@@ -11,6 +11,7 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { db, auth } from '../../lib/firebase';
+import { useConfirm } from '../../context/ConfirmContext';
 import type { Country, RussianBank } from '../../types';
 import { adminService } from '../../services/adminService';
 import {
@@ -30,6 +31,7 @@ import {
 } from 'lucide-react';
 
 const CountriesListPage: React.FC = () => {
+  const { confirm } = useConfirm();
   const [activeTab, setActiveTab] = useState<'countries' | 'operators' | 'banks'>('countries');
   const [countries, setCountries] = useState<Country[]>([]);
   const [banks, setBanks] = useState<RussianBank[]>([]);
@@ -38,7 +40,6 @@ const CountriesListPage: React.FC = () => {
   const [tempOperators, setTempOperators] = useState<any[]>([]);
   const [bankLogo, setBankLogo] = useState('');
   const [restrictionModal, setRestrictionModal] = useState<{ open: boolean; country: any }>({ open: false, country: null });
-  const [destinationsModal, setDestinationsModal] = useState<{ open: boolean; country: Country | null }>({ open: false, country: null });
   const [rateModal, setRateModal] = useState<{ open: boolean; from: string; to: string; onConfirm: (rate: number) => void }>({ 
     open: false, 
     from: '', 
@@ -92,7 +93,13 @@ const CountriesListPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string, collectionName: string) => {
-    if (window.confirm('Voulez-vous vraiment supprimer cet élément ?')) {
+    const confirmed = await confirm({
+      title: 'Confirmer la suppression',
+      message: 'Voulez-vous vraiment supprimer cet élément du réseau ? Cette action est irréversible.',
+      type: 'danger'
+    });
+    
+    if (confirmed) {
       try {
         await adminService.deleteDocument(collectionName, id);
         toast.success('Supprimé avec succès');
@@ -195,9 +202,6 @@ const CountriesListPage: React.FC = () => {
                  </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setDestinationsModal({ open: true, country })} className="m3-btn-tonal !py-2 !px-4 text-[9px] uppercase tracking-[0.2em] shadow-sm">
-                  Destinations <ArrowRightLeft size={14} className="ml-1" />
-                </button>
                 <button onClick={() => setRestrictionModal({ open: true, country })} className="p-2.5 bg-[#F3EDF7] text-[#661489] rounded-full hover:bg-[#EADDFF] transition-all">
                   <Settings2 size={16} />
                 </button>
@@ -540,118 +544,7 @@ const CountriesListPage: React.FC = () => {
         document.body
       )}
 
-      {/* MODAL: DESTINATIONS CONFIG */}
-      {destinationsModal.open && destinationsModal.country && ReactDOM.createPortal(
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="absolute inset-0 bg-[#1D1B20]/60 backdrop-blur-md" onClick={() => setDestinationsModal({ open: false, country: null })} />
-          <div className="relative bg-white w-full max-w-xl rounded-[40px] shadow-2xl overflow-hidden p-8 border border-[#E7E0EB] flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
-            <div className="text-center mb-8 shrink-0">
-              <div className="w-20 h-20 bg-[#EADDFF] text-[#21005D] rounded-[28px] flex items-center justify-center mx-auto mb-6 shadow-lg">
-                 <Globe size={40} />
-              </div>
-              <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-2">Destinations Afrique-Afrique</h3>
-              <p className="text-[#49454F] text-sm font-medium">Sélectionnez les pays vers lesquels <span className="text-[#661489] font-black">{destinationsModal.country.name}</span> peut envoyer de l'argent.</p>
-            </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-8 scrollbar-hide">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {sortedCountries.filter(c => c.id !== destinationsModal.country?.id).map((c) => {
-                  const isSelected = destinationsModal.country?.allowedDestinations?.includes(c.code) || false;
-                  return (
-                    <button
-                      key={c.id}
-                      onClick={async () => {
-                        const currentCountry = destinationsModal.country!;
-                        const currentDestinations = currentCountry.allowedDestinations || [];
-                        const isAdding = !isSelected;
-                        
-                        const handleSave = async (rate?: number) => {
-                          let newDestinations;
-                          if (isSelected) {
-                            newDestinations = currentDestinations.filter(code => code !== c.code);
-                          } else {
-                            newDestinations = [...currentDestinations, c.code];
-                          }
-                          
-                          try {
-                            await adminService.saveCountry(currentCountry.id, { 
-                              ...currentCountry, 
-                              allowedDestinations: newDestinations 
-                            });
-
-                            if (rate && isAdding) {
-                              // Find if rate exists or just add new
-                              const q = query(
-                                collection(db, 'exchange_rates'),
-                                where('from', '==', currentCountry.currency),
-                                where('to', '==', c.currency)
-                              );
-                              const snap = await getDocs(q);
-                              if (!snap.empty) {
-                                await adminService.updateExchangeRate(snap.docs[0].id, rate, 0);
-                              } else {
-                                await addDoc(collection(db, 'exchange_rates'), {
-                                  from: currentCountry.currency,
-                                  to: c.currency,
-                                  rate: rate,
-                                  margin: 0,
-                                  updatedAt: Timestamp.now(),
-                                  updatedBy: auth.currentUser?.uid,
-                                  source: 'manual'
-                                });
-                              }
-                            }
-
-                            setDestinationsModal({ 
-                              open: true, 
-                              country: { ...currentCountry, allowedDestinations: newDestinations } 
-                            });
-                            toast.success(isSelected ? 'Destination retirée' : 'Destination ajoutée');
-                          } catch (err) {
-                            toast.error('Erreur lors de la mise à jour');
-                          }
-                        };
-
-                        if (isAdding && currentCountry.currency !== c.currency) {
-                          setRateModal({
-                            open: true,
-                            from: currentCountry.currency,
-                            to: c.currency,
-                            onConfirm: (rate) => {
-                              handleSave(rate);
-                              setRateModal(prev => ({ ...prev, open: false }));
-                            }
-                          });
-                        } else {
-                          handleSave();
-                        }
-                      }}
-                      className={`flex items-center gap-4 p-4 rounded-[24px] border-2 transition-all text-left shadow-sm group ${isSelected ? 'border-[#661489] bg-[#661489]/5' : 'border-[#F3EDF7] bg-white hover:border-[#661489]/20'}`}
-                    >
-                      <div className="w-10 h-10 rounded-full overflow-hidden border border-[#E7E0EB] shrink-0">
-                        <img 
-                          src={`https://flagcdn.com/${c.code.toLowerCase()}.svg`} 
-                          alt={c.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <p className={`text-xs font-black uppercase tracking-widest ${isSelected ? 'text-[#661489]' : 'text-[#1D1B20]'}`}>{c.name}</p>
-                      </div>
-                      {isSelected && <div className="w-6 h-6 bg-[#661489] rounded-full flex items-center justify-center text-white shrink-0"><Plus size={14} className="rotate-45" /></div>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button onClick={() => setDestinationsModal({ open: false, country: null })} className="w-full py-5 m3-btn-filled rounded-full text-[10px] uppercase tracking-[0.2em] shadow-lg shrink-0">
-              Terminer la configuration
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
 
       {/* MODAL: EXCHANGE RATE POPUP */}
       {rateModal.open && ReactDOM.createPortal(

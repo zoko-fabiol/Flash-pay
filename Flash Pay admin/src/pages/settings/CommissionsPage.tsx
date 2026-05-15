@@ -12,6 +12,7 @@ import {
   limit 
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useConfirm } from '../../context/ConfirmContext';
 import type { Commission } from '../../types';
 import { 
   Save, 
@@ -29,6 +30,7 @@ import {
 import toast from 'react-hot-toast';
 
 const CommissionsPage: React.FC = () => {
+  const { confirm } = useConfirm();
   const [commissions, setCommissions] = useState<Commission[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -108,7 +110,12 @@ const CommissionsPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Supprimer cette règle de commission ?')) return;
+    const confirmDelete = await confirm({
+      title: 'Supprimer la règle',
+      message: 'Êtes-vous sûr de vouloir supprimer cette règle de commission ?',
+      type: 'danger'
+    });
+    if (!confirmDelete) return;
     const t = toast.loading('Suppression...');
     try {
       await deleteDoc(doc(db, 'commissions', id));

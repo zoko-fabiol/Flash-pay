@@ -14,9 +14,11 @@ import { sendBroadcastDirect } from '../../services/adminNotificationService';
 import type { BroadcastOptions } from '../../services/adminNotificationService';
 import { collection, getDocs, query, orderBy, limit, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 
 export const MessagesToUsers: React.FC = () => {
+  const { confirm } = useConfirm();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
@@ -48,7 +50,12 @@ export const MessagesToUsers: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer ce message historique ?')) return;
+    const confirmed = await confirm({
+      title: 'Supprimer du historique',
+      message: 'Êtes-vous sûr de vouloir supprimer ce message de l\'historique ? Cette action est irréversible.',
+      type: 'danger'
+    });
+    if (!confirmed) return;
     
     const t = toast.loading('Suppression...');
     try {

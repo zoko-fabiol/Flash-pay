@@ -10,6 +10,7 @@ import {
   addDoc
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useConfirm } from '../../context/ConfirmContext';
 import { 
   Users, 
   Gift, 
@@ -23,6 +24,7 @@ import {
 import toast from 'react-hot-toast';
 
 const PartnersPage: React.FC = () => {
+  const { confirm } = useConfirm();
   const [partners, setPartners] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,14 @@ const PartnersPage: React.FC = () => {
     const amount = partner.earnings || 0;
     if (amount <= 0) return toast.error('Solde insuffisant pour un virement.');
     
-    if (window.confirm(`Confirmer le virement de ${amount} RUB à ${partner.displayName || 'ce partenaire'} ?`)) {
+    const confirmed = await confirm({
+      title: 'Confirmer le virement',
+      message: `Êtes-vous sûr de vouloir effectuer le virement de ${amount.toLocaleString()} RUB à ${partner.displayName || 'ce partenaire'} ? Cette action remettra son solde à zéro.`,
+      confirmLabel: 'Confirmer le paiement',
+      type: 'info'
+    });
+    
+    if (confirmed) {
        const t = toast.loading('Traitement du paiement...');
        try {
          await updateDoc(doc(db, 'users', partner.id), {

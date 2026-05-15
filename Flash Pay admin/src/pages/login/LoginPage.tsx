@@ -7,9 +7,11 @@ import { LockProIcon, MessagesProIcon, LoaderProIcon, ArrowRightProIcon, ShieldP
 import { Fingerprint } from 'lucide-react';
 import { biometricService } from '../../services/biometricService';
 import { translateFirebaseError } from '../../utils/errorMessages';
+import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
+  const { confirm } = useConfirm();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,9 +58,16 @@ const LoginPage: React.FC = () => {
     if (userDoc.exists() && userDoc.data()?.isAdmin) {
       // If successful manual login and biometric available but not set, ask to save
       if (biometricAvailable && !biometricEnabled) {
-        const wantSave = window.confirm("Souhaitez-vous activer l'empreinte pour vos prochaines connexions admin ?");
+        const wantSave = await confirm({
+          title: 'Sécurité Biométrique',
+          message: "Souhaitez-vous activer l'empreinte digitale pour vos prochaines connexions au portail admin ?",
+          confirmLabel: 'Activer maintenant',
+          cancelLabel: 'Plus tard',
+          type: 'info'
+        });
         if (wantSave) {
           await biometricService.saveCredentials({ email: loginEmail, password: loginPass });
+          localStorage.setItem('admin_biometric_enabled', 'true');
         }
       }
       navigate('/dashboard');

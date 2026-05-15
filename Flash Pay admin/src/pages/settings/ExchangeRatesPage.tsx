@@ -11,6 +11,7 @@ import {
   getDocs
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
+import { useConfirm } from '../../context/ConfirmContext';
 import type { ExchangeRate } from '../../types';
 import { adminService } from '../../services/adminService';
 import { useAuth } from '../../context/AuthContext';
@@ -82,6 +83,7 @@ const RateCard = ({ rate, onEdit }: { rate: ExchangeRate; onEdit: (rate: Exchang
 };
 
 const ExchangeRatesPage: React.FC = () => {
+  const { confirm } = useConfirm();
   const { profile } = useAuth();
   const [rates, setRates] = useState<ExchangeRate[]>([]);
   const [editingRate, setEditingRate] = useState<ExchangeRate | null>(null);
@@ -420,16 +422,22 @@ const ExchangeRatesPage: React.FC = () => {
               <div className="pt-4">
                  <button 
                    onClick={async () => {
-                     if (window.confirm('Êtes-vous sûr de vouloir réinitialiser TOUS les bonus de TOUS les utilisateurs à 0 ? Cette action est irréversible.')) {
-                        const t = toast.loading('Réinitialisation des bonus...');
-                        try {
-                          const usersSnap = await getDocs(collection(db, 'users'));
-                          const promises = usersSnap.docs.map((u: any) => updateDoc(doc(db, 'users', u.id), { solde_bonus: 0 }));
-                          await Promise.all(promises);
-                          toast.success('Tous les bonus ont été réinitialisés.', { id: t });
-                        } catch (e) {
-                          toast.error('Erreur lors de la réinitialisation.', { id: t });
-                        }
+                     const confirmed = await confirm({
+                       title: 'Réinitialisation Globale',
+                       message: 'Êtes-vous sûr de vouloir réinitialiser TOUS les bonus de TOUS les utilisateurs à 0 ? Cette action est irréversible.',
+                       type: 'danger',
+                       confirmLabel: 'Réinitialiser maintenant'
+                     });
+                     if (confirmed) {
+                       const t = toast.loading('Réinitialisation des bonus...');
+                       try {
+                         const usersSnap = await getDocs(collection(db, 'users'));
+                         const promises = usersSnap.docs.map((u: any) => updateDoc(doc(db, 'users', u.id), { solde_bonus: 0 }));
+                         await Promise.all(promises);
+                         toast.success('Tous les bonus ont été réinitialisés.', { id: t });
+                       } catch (e) {
+                         toast.error('Erreur lors de la réinitialisation.', { id: t });
+                       }
                      }
                    }}
                    className="w-full py-3 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-2xl font-bold uppercase text-[9px] tracking-widest hover:bg-rose-500/30 transition-all"

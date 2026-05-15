@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, Timestamp, deleteField, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import type { UserProfile } from '../../types';
 import { buildPresetPermissions } from '../../lib/adminAccess';
 import { 
@@ -25,6 +26,7 @@ import toast from 'react-hot-toast';
 import { emailService } from '../../services/emailService';
 
 const UsersListPage: React.FC = () => {
+  const { confirm } = useConfirm();
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -190,7 +192,12 @@ const UsersListPage: React.FC = () => {
   const handleDeleteUser = async (user: any) => {
     if (!user?.id) return;
     
-    const confirmDelete = window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement le compte de ${user.nom || user.email} ? Cette action est irréversible.`);
+    const confirmDelete = await confirm({
+      title: 'Supprimer l\'utilisateur',
+      message: `Êtes-vous sûr de vouloir supprimer définitivement le compte de ${user.nom || user.email} ? Cette action est irréversible.`,
+      confirmLabel: 'Supprimer définitivement',
+      type: 'danger'
+    });
     if (!confirmDelete) return;
 
     const toastId = toast.loading('Suppression de l\'utilisateur...');

@@ -48,6 +48,7 @@ import { TermsOfServicePage } from './pages/TermsOfServicePage';
 import { Loading } from './components/UI';
 import { initializePushNotifications } from './utils/pushNotifications';
 import { BiometricGuard } from './components/BiometricGuard';
+import { UpdateGuard } from './components/UpdateGuard';
 
 // ─── Android Back Button Handler ────────────────────────────────────────────
 const AndroidBackHandler: React.FC = () => {
@@ -150,6 +151,7 @@ function AppRoutes() {
       <ScrollToTop />
       <AndroidBackHandler />
       <PushNotificationHandler />
+      <UpdateGuard />
       <Routes>
         {/* Auth Routes */}
         <Route path="/welcome" element={user ? <Navigate to="/" /> : <WelcomePage />} />
