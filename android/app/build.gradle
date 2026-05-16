@@ -12,7 +12,7 @@ android {
         applicationId "com.flashpay.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode project.hasProperty('versionCode') ? project.property('versionCode').toInteger() : 137
+        versionCode project.hasProperty('versionCode') ? project.property('versionCode').toInteger() : 144
         versionName project.hasProperty('versionName') ? project.property('versionName') : "1.0.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
