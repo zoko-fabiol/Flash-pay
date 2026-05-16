@@ -188,7 +188,7 @@ export const TransactionsPage: React.FC = () => {
                       </div>
                     </div>
                   
-                  <div className="flex flex-1 flex-row items-end justify-between border-t border-slate-50 pt-4 lg:flex-col lg:items-end lg:justify-center lg:border-t-0 lg:pt-0">
+                  <div className="flex flex-1 flex-row items-end justify-between lg:flex-col lg:items-end lg:justify-center">
                     <div className="space-y-1 text-left lg:text-right">
                       <div className="text-3xl font-bold tracking-tight text-slate-900">
                         {formatNumber(tx.amount, tx.currency)}

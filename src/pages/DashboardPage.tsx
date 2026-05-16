@@ -109,20 +109,24 @@ export const DashboardPage: React.FC = () => {
       <div className="max-w-xl mx-auto space-y-6 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Banner Section - Matching Screenshot */}
-        <section className="relative min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#6344B6] via-[#4A3191] to-[#2A083B] p-7 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)] sm:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_26%)]" />
-          <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-            <img 
-              src="/map-bg.jpg" 
-              alt="" 
-              className="h-full w-full object-cover translate-x-[20%] scale-110"
-              style={{ 
-                filter: 'invert(1)',
-                mixBlendMode: 'screen'
-              }}
-            />
-          </div>
-
+        <section className="relative min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#4A3191] to-[#0F051D] p-7 text-white shadow-[0_24px_60px_rgba(15,5,29,0.4)] sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_40%)]" />
+          
+          {/* Decorative Map with 25% overflow and smooth fade */}
+          <div 
+            className="absolute inset-y-0 -right-[15%] w-[115%] opacity-50 pointer-events-none"
+            style={{
+              backgroundImage: 'url(/map-bg.jpg)',
+              backgroundSize: 'contain',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'bottom right',
+              mixBlendMode: 'screen',
+              filter: 'brightness(1.5) invert(1)',
+              maskImage: 'radial-gradient(circle at bottom right, black 30%, transparent 80%)',
+              WebkitMaskImage: 'radial-gradient(circle at bottom right, black 30%, transparent 80%)'
+            }}
+          />
+          
           <div className="relative z-10 flex h-full flex-col justify-between gap-6">
             <div className="space-y-3 pr-24 sm:pr-32">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-white/60">

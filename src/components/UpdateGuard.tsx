@@ -68,10 +68,6 @@ export const UpdateGuard: React.FC = () => {
       <div className="relative bg-white w-full max-w-sm rounded-[40px] shadow-2xl border border-[#E7E0EB] overflow-hidden animate-in zoom-in-95 duration-500">
         {/* Header Illustration */}
         <div className="h-40 bg-[#6344B6] relative flex items-center justify-center overflow-hidden">
-           <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -ml-20 -mt-20 blur-3xl" />
-              <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mb-20 blur-3xl" />
-           </div>
            <div className="relative">
               <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-[28px] flex items-center justify-center text-white shadow-xl animate-bounce">
                 <RefreshCw size={40} />

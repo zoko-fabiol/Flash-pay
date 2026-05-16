@@ -300,7 +300,7 @@ export const ProfilePage: React.FC = () => {
         {success && <Success message={success} />}
 
         {/* ── Hero Card ── */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6344B6] via-[#4A3191] to-[#2A083B] p-6 text-white shadow-[0_16px_40px_rgba(42,8,59,0.28)]">
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#4A3191] to-[#0F051D] p-6 text-white shadow-[0_16px_40px_rgba(15,5,29,0.3)]">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
 
