@@ -18,13 +18,14 @@ export const UpdateGuard: React.FC = () => {
 
   useEffect(() => {
     const checkVersion = async () => {
+      // Le popup de mise à jour ne doit s'afficher QUE sur l'application native, pas sur le site web
+      if (!Capacitor.isNativePlatform()) {
+        return;
+      }
+
       try {
-        // Obtenir le vrai versionCode natif de l'APK (ou 4 par défaut sur le web)
-        let localVersionCode = 4;
-        if (Capacitor.isNativePlatform()) {
-          const info = await App.getInfo();
-          localVersionCode = parseInt(info.build, 10);
-        }
+        const info = await App.getInfo();
+        const localVersionCode = parseInt(info.build, 10);
 
         // On récupère le fichier version.json sur le serveur Netlify
         const response = await fetch(`/version.json?t=${Date.now()}`);
