@@ -6,6 +6,8 @@ import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from 'f
 import { LockProIcon, MessagesProIcon, LoaderProIcon, ArrowRightProIcon, ShieldProIcon, CreditCardProIcon } from '../../components/ui/ProIcons';
 import { Fingerprint } from 'lucide-react';
 import { biometricService } from '../../services/biometricService';
+import { pinService } from '../../services/pinService';
+import { PinModal } from '../../components/PinModal';
 import { translateFirebaseError } from '../../utils/errorMessages';
 import { useConfirm } from '../../context/ConfirmContext';
 import toast from 'react-hot-toast';
@@ -19,6 +21,8 @@ const LoginPage: React.FC = () => {
   const [resetSent, setResetSent] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricEnabled] = useState(localStorage.getItem('admin_biometric_enabled') === 'true');
+  const [pinEnabled] = useState(pinService.isEnabled());
+  const [showPinModal, setShowPinModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +36,29 @@ const LoginPage: React.FC = () => {
     };
     checkBiometric();
   }, []);
+
+  const handlePinLogin = async (pin?: string) => {
+    if (pin && pinService.verifyPin(pin)) {
+      setShowPinModal(false);
+      // Retrieve stored credentials for PIN login
+      const stored = localStorage.getItem('admin_encrypted_creds');
+      if (stored) {
+        try {
+          const { email: storedEmail, password: storedPass } = JSON.parse(atob(stored));
+          setLoading(true);
+          await executeLogin(storedEmail, storedPass);
+        } catch (err) {
+          setError("Erreur lors de la récupération des identifiants.");
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setError("Veuillez vous connecter manuellement une fois pour activer le PIN.");
+      }
+    } else if (pin) {
+      toast.error("Code PIN incorrect");
+    }
+  };
 
   const handleBiometricLogin = async () => {
     const creds = await biometricService.getCredentials();
@@ -67,6 +94,8 @@ const LoginPage: React.FC = () => {
         });
         if (wantSave) {
           await biometricService.saveCredentials({ email: loginEmail, password: loginPass });
+          // Also save for PIN login (obfuscated)
+          localStorage.setItem('admin_encrypted_creds', btoa(JSON.stringify({ email: loginEmail, password: loginPass })));
           localStorage.setItem('admin_biometric_enabled', 'true');
         }
       }
@@ -235,8 +264,28 @@ const LoginPage: React.FC = () => {
                   Utiliser l'empreinte
                 </button>
               )}
+
+              {pinEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setShowPinModal(true)}
+                  disabled={loading}
+                  className="w-full bg-white border-2 border-[#6344B6]/20 text-[#6344B6] font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all transform active:scale-95 hover:bg-[#6344B6]/5 text-[10px] uppercase tracking-widest"
+                >
+                  <LockProIcon size={20} />
+                  Utiliser le Code PIN
+                </button>
+              )}
             </div>
           </form>
+
+          {showPinModal && (
+            <PinModal 
+              mode="verify" 
+              onSuccess={handlePinLogin} 
+              onCancel={() => setShowPinModal(false)} 
+            />
+          )}
 
           <div className="mt-10 flex items-center justify-center gap-2 opacity-30">
              <ShieldProIcon size={14} />

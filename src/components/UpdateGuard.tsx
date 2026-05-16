@@ -25,7 +25,7 @@ export const UpdateGuard: React.FC = () => {
     const checkVersion = async () => {
       try {
         const info = await App.getInfo();
-        const localVersionCode = parseInt(info.build, 10);
+        const localVersionCode = parseInt(String(info.build || '0').trim(), 10);
 
         // On récupère le fichier version.json sur le serveur Netlify
         const response = await fetch(`/version.json?t=${Date.now()}`);

@@ -15,7 +15,7 @@ import ProblemsPage from './pages/problems/ProblemsPage';
 import PartnersPage from './pages/partners/PartnersPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import AnalyticsPage from './pages/analytics/AnalyticsPage';
-import TwoFactorSettingsPage from './pages/security/TwoFactorSettingsPage';
+import { SecurityPage } from './pages/security/SecurityPage';
 import WebhooksPage from './pages/webhooks/WebhooksPage';
 import UsersListPage from './pages/users/UsersListPage';
 import AccessControlPage from './pages/settings/AccessControlPage';
@@ -119,7 +119,7 @@ function App() {
                   <Route path="notifications" element={<SectionRoute section="notifications"><NotificationsPage /></SectionRoute>} />
                   <Route path="messages" element={<SectionRoute section="notifications"><MessagesToUsers /></SectionRoute>} />
                   <Route path="analytics" element={<SectionRoute section="analytics"><AnalyticsPage /></SectionRoute>} />
-                  <Route path="security/2fa" element={<SectionRoute section="security"><TwoFactorSettingsPage /></SectionRoute>} />
+                  <Route path="security" element={<SectionRoute section="security"><SecurityPage /></SectionRoute>} />
                   <Route path="webhooks" element={<SectionRoute section="webhooks"><WebhooksPage /></SectionRoute>} />
                 </Route>
 

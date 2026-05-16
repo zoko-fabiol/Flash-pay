@@ -44,6 +44,7 @@ const AdminLayout: React.FC = () => {
     { path: '/settings/exchange-rates', icon: TrendingProIcon, label: 'Taux & Limites', desc: 'Configuration', section: 'settings' as AdminSectionKey },
     { path: '/settings/access-control', icon: KycProIcon, label: 'Accès Admin', desc: 'Rôles & mails', section: 'settings' as AdminSectionKey },
     { path: '/problems', icon: ProblemsProIcon, label: 'Incidents', desc: 'Support', section: 'problems' as AdminSectionKey },
+    { path: '/security', icon: ShieldProIcon, label: 'Sécurité', desc: 'Empreinte & PIN', section: 'security' as AdminSectionKey },
   ].filter((item) => (profile?.adminRole === 'super') || canAccessAdminSection(profile, item.section));
 
   const handleLogout = async () => {
