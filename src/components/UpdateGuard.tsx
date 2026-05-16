@@ -18,8 +18,8 @@ export const UpdateGuard: React.FC = () => {
 
   useEffect(() => {
     const checkVersion = async () => {
-      // Le popup de mise à jour ne doit s'afficher QUE sur l'application native, pas sur le site web
-      if (!Capacitor.isNativePlatform()) {
+      // Le popup de mise à jour ne doit s'afficher QUE sur l'application native (APK), JAMAIS sur le site web
+      if (Capacitor.getPlatform() === 'web') {
         return;
       }
 
