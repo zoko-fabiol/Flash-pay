@@ -117,7 +117,7 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
   if (!isLocked) return <>{children}</>;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#661489] flex flex-col items-center justify-center p-8 text-white">
+    <div className="fixed inset-0 z-[9999] bg-[#6344B6] flex flex-col items-center justify-center p-8 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_40%)]" />
       
       <div className="relative z-10 flex flex-col items-center gap-8 max-w-xs text-center">
@@ -136,8 +136,8 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
 
         {!showPasswordForm ? (
           <div className="w-full space-y-4">
-            <button onClick={handleAuthenticate} disabled={isAuthenticating} className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#661489] rounded-2xl font-black text-sm shadow-xl">
-              {isAuthenticating ? <div className="w-5 h-5 border-2 border-[#661489] border-t-transparent rounded-full animate-spin" /> : <><Fingerprint size={20} /> Déverrouiller</>}
+            <button onClick={handleAuthenticate} disabled={isAuthenticating} className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#6344B6] rounded-2xl font-black text-sm shadow-xl">
+              {isAuthenticating ? <div className="w-5 h-5 border-2 border-[#6344B6] border-t-transparent rounded-full animate-spin" /> : <><Fingerprint size={20} /> Déverrouiller</>}
             </button>
             <button onClick={() => setShowPasswordForm(true)} className="w-full flex items-center justify-center gap-2 py-3 bg-white/20 rounded-xl font-black text-xs uppercase tracking-wider">
               <KeyRound size={16} /> Utiliser le mot de passe
@@ -147,7 +147,7 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
           <form onSubmit={handleUnlockWithPassword} className="w-full space-y-4">
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mot de passe" className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white outline-none" autoFocus />
             {passwordError && <p className="text-pink-300 text-xs font-bold">{passwordError}</p>}
-            <button type="submit" disabled={isVerifyingPassword} className="w-full py-4 bg-white text-[#661489] rounded-2xl font-black text-sm">
+            <button type="submit" disabled={isVerifyingPassword} className="w-full py-4 bg-white text-[#6344B6] rounded-2xl font-black text-sm">
               {isVerifyingPassword ? 'Vérification...' : 'Confirmer'}
             </button>
             <button type="button" onClick={() => setShowPasswordForm(false)} className="w-full py-3 text-xs uppercase font-black opacity-60">Retour</button>

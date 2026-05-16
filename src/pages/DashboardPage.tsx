@@ -106,32 +106,21 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="max-w-xl mx-auto space-y-6 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         
         {/* Banner Section - Matching Screenshot */}
-        <section className="relative mx-2 min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#661489] via-[#4D0F67] to-[#2A083B] p-7 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)] sm:p-8">
+        <section className="relative min-h-[220px] overflow-hidden rounded-[34px] bg-gradient-to-br from-[#6344B6] via-[#4A3191] to-[#2A083B] p-7 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)] sm:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_26%)]" />
-          <div className="absolute inset-y-0 right-0 w-[85%] opacity-30 pointer-events-none overflow-hidden">
-            <svg className="h-full w-full translate-x-[25%]" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <filter id="invert-mask">
-                  <feColorMatrix in="SourceGraphic" type="matrix" values="-1 0 0 0 1 
-                                                                          0 -1 0 0 1 
-                                                                          0 0 -1 0 1 
-                                                                          0 0 0 1 0" />
-                </filter>
-                <mask id="map-mask">
-                  <image 
-                    href="/map-bg.jpg" 
-                    width="100%" 
-                    height="100%" 
-                    preserveAspectRatio="xMidYMid meet"
-                    style={{ filter: 'url(#invert-mask)' }}
-                  />
-                </mask>
-              </defs>
-              <rect width="100%" height="100%" fill="white" mask="url(#map-mask)" />
-            </svg>
+          <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+            <img 
+              src="/map-bg.jpg" 
+              alt="" 
+              className="h-full w-full object-cover translate-x-[20%] scale-110"
+              style={{ 
+                filter: 'invert(1)',
+                mixBlendMode: 'screen'
+              }}
+            />
           </div>
 
           <div className="relative z-10 flex h-full flex-col justify-between gap-6">
@@ -150,7 +139,7 @@ export const DashboardPage: React.FC = () => {
             <div>
               <button 
                 onClick={() => navigate('/transfer')} 
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#661489] shadow-[0_10px_24px_rgba(42,8,59,0.2)] transition-transform active:scale-95"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-extrabold text-[#6344B6] shadow-[0_10px_24px_rgba(42,8,59,0.2)] transition-transform active:scale-95"
               >
                 {t('start_transfer')} 
                 <ArrowRight size={16} />
@@ -162,7 +151,7 @@ export const DashboardPage: React.FC = () => {
         <PWAInstallPrompt />
 
         {showReferral && (
-          <section className="relative mx-2 overflow-hidden rounded-[28px] bg-[#FDF7FF] p-5 shadow-sm border border-[#F3E8FF]">
+          <section className="relative overflow-hidden rounded-[28px] bg-[#FDF7FF] p-5 shadow-sm border border-[#F3E8FF]">
             <div className="flex justify-between items-start">
               <div className="space-y-4 flex-1 pr-4">
                 <h3 className="text-[15px] font-bold text-slate-800 leading-snug">
@@ -172,13 +161,13 @@ export const DashboardPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <button 
                     onClick={() => navigate('/referral')} 
-                    className="rounded-xl bg-[#661489] px-4 py-2 text-xs font-bold text-white shadow-md active:scale-95 transition-all"
+                    className="rounded-xl bg-[#6344B6] px-4 py-2 text-xs font-bold text-white shadow-md active:scale-95 transition-all"
                   >
                     {t('refer_now')}
                   </button>
                   <button 
                     onClick={handleIgnoreReferral}
-                    className="text-[10px] font-bold text-slate-400 hover:text-[#661489] transition-colors uppercase tracking-wider"
+                    className="text-[10px] font-bold text-slate-400 hover:text-[#6344B6] transition-colors uppercase tracking-wider"
                   >
                     {t('ignore')}
                   </button>
@@ -186,7 +175,7 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col items-end gap-2 shrink-0">
-                 <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-[9px] font-bold text-[#661489] shadow-sm border border-[#F3E8FF]">
+                 <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-[9px] font-bold text-[#6344B6] shadow-sm border border-[#F3E8FF]">
                    <Gift size={10} /> {t('special_offer')}
                  </div>
                  <div className="mt-1 scale-100">

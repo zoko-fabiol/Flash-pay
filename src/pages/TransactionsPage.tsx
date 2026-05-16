@@ -109,22 +109,22 @@ export const TransactionsPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <div className="px-2 space-y-2">
-          <h1 className="text-5xl font-bold text-slate-900 tracking-tight">{t('history_title')}</h1>
-          <p className="text-slate-500 font-medium text-sm tracking-wide">{t('history_desc')}</p>
+      <div className="max-w-xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('history_title')}</h1>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest opacity-60">{t('history_desc')}</p>
         </div>
 
         {/* Filters - Modern Style */}
-        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide px-2">
+        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
           {(['all', 'completed', 'pending', 'failed'] as const).map(status => (
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`px-6 py-3 rounded-2xl font-bold text-xs uppercase tracking-widest transition-all ${
+              className={`px-4 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${
                 filter === status
                   ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
+                  : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
               }`}
             >
               {t(`filter_${status}`)}
@@ -136,13 +136,13 @@ export const TransactionsPage: React.FC = () => {
         {loading ? (
           <div className="py-20 flex justify-center"><Loading /></div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="mx-2 premium-card p-20 text-center">
+          <div className="premium-card p-20 text-center">
             <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">📭</div>
             <p className="text-slate-900 font-bold text-2xl tracking-tight mb-2">{t('no_transactions')}</p>
             <p className="text-slate-400 font-medium">{t('no_transactions_filter')}</p>
           </div>
         ) : (
-          <div className="grid gap-4 px-2">
+          <div className="grid gap-4">
             {filteredTransactions.map(tx => {
               const logoUrl = getOperatorLogo(tx);
               const isBulk = tx.isBulk || (tx.bulkRecipients && tx.bulkRecipients.length > 0);

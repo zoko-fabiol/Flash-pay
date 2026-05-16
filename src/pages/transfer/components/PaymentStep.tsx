@@ -148,19 +148,19 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
           <ChevronLeft size={24} />
         </button>
         <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('make_payment_title') || 'Effectuer le paiement'}</h2>
-        <div className="flex items-center gap-3 text-[#661489] font-black bg-[#F5E8FF] px-5 py-2 rounded-full text-lg border-2 border-[#661489]/20 shadow-md">
+        <div className="flex items-center gap-3 text-[#6344B6] font-black bg-[#F5E8FF] px-5 py-2 rounded-full text-lg border-2 border-[#6344B6]/20 shadow-md">
           <Clock size={24} />
           <span className={timerSeconds < 120 ? 'text-rose-600 animate-pulse' : ''}>{formatTimer(timerSeconds)}</span>
         </div>
       </div>
 
       {/* Instruction Banner */}
-      <div className="bg-[#661489]/5 border border-[#661489]/10 rounded-[24px] p-5 flex items-start gap-4 mb-8">
-        <div className="w-10 h-10 rounded-full bg-[#661489]/10 flex items-center justify-center text-[#661489] shrink-0">
+      <div className="bg-[#6344B6]/5 border border-[#6344B6]/10 rounded-[24px] p-5 flex items-start gap-4 mb-8">
+        <div className="w-10 h-10 rounded-full bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6] shrink-0">
           <Info size={20} />
         </div>
         <div className="flex-1">
-          <p className="text-[14px] font-bold text-[#661489] leading-snug">
+          <p className="text-[14px] font-bold text-[#6344B6] leading-snug">
             Payez exactement <span className="font-black underline">{formatNumber(payWithBonus ? remainder : totalToPay, fromCurrency)}</span> sur l'un des numéros ci-dessous puis envoyez la preuve du paiement.
           </p>
           <p className="text-[11px] text-slate-500 font-medium mt-1 italic">
@@ -183,18 +183,18 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
               banks.map((bank, idx) => (
                 <div key={bank.id || idx} className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
                   <div className="mb-4 flex justify-between items-center">
-                    <span className="bg-[#661489] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+                    <span className="bg-[#6344B6] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
                       {bank.type === 'phone' ? 'SBP / TÉLÉPHONE' : 'CARTE BANCAIRE'}
                     </span>
                     <button 
                       onClick={() => { navigator.clipboard.writeText(bank.number || bank.phone || ''); toast.success(t('copied')); }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#661489]/5 text-[#661489] font-black text-[10px] uppercase tracking-widest hover:bg-[#661489]/10 transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#6344B6]/5 text-[#6344B6] font-black text-[10px] uppercase tracking-widest hover:bg-[#6344B6]/10 transition-all"
                     >
                       <Copy size={12} /> {t('copy')}
                     </button>
                   </div>
                   <div className="flex items-start gap-5">
-                    <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#661489] shrink-0 overflow-hidden border border-slate-100">
+                    <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#6344B6] shrink-0 overflow-hidden border border-slate-100">
                       {bank.logo ? (
                         <img src={bank.logo} alt={bank.name} className="w-full h-full object-contain p-2" />
                       ) : bank.type === 'phone' ? (
@@ -227,18 +227,18 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         ) : (
           <div className="bg-white rounded-[32px] p-6 border border-slate-100 shadow-sm relative overflow-hidden group">
             <div className="mb-4 flex justify-between items-center">
-              <span className="bg-[#661489] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
+              <span className="bg-[#6344B6] text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest">
                 {t('mobile_deposit') || 'DÉPÔT MOBILE'}
               </span>
               <button 
                 onClick={() => { navigator.clipboard.writeText(depAccount?.depositNumber || depAccount?.number || ''); toast.success(t('copied')); }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#661489]/5 text-[#661489] font-black text-[10px] uppercase tracking-widest hover:bg-[#661489]/10 transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#6344B6]/5 text-[#6344B6] font-black text-[10px] uppercase tracking-widest hover:bg-[#6344B6]/10 transition-all"
               >
                 <Copy size={12} /> {t('copy')}
               </button>
             </div>
             <div className="flex items-start gap-5">
-              <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#661489] shrink-0 overflow-hidden border border-slate-100">
+              <div className="w-16 h-16 rounded-[24px] bg-slate-50 flex items-center justify-center text-[#6344B6] shrink-0 overflow-hidden border border-slate-100">
                 {depAccount?.logo ? (
                   <img src={depAccount.logo} alt={transferData.selectedOperator} className="w-full h-full object-contain p-2" />
                 ) : (
@@ -283,7 +283,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
               <div>
                 <p className="text-lg font-black text-slate-900">{t('use_bonuses_and_points') || 'Utiliser mes Bonus & Points'}</p>
                 <div className="flex flex-col gap-0.5">
-                   <p className="text-[11px] text-[#661489] font-black uppercase tracking-widest">
+                   <p className="text-[11px] text-[#6344B6] font-black uppercase tracking-widest">
                       {t('referral_bonus') || 'Bonus'}: {formatNumber(bonusAvailableRUB, 'RUB')}
                    </p>
                    <p className="text-[11px] text-brand font-black uppercase tracking-widest">

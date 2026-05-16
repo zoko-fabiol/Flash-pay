@@ -89,7 +89,7 @@ export const WelcomePage: React.FC = () => {
             onClick={() => setLanguage(language === 'fr' ? 'en' : 'fr')}
             className="flex items-center gap-2 px-4 py-2.5 bg-white/60 backdrop-blur-xl rounded-full border border-white/40 text-slate-800 text-xs font-bold shadow-sm active:scale-95 transition-all"
           >
-            <Globe size={14} className="text-[#661489]" />
+            <Globe size={14} className="text-[#6344B6]" />
             {language === 'fr' ? 'Français' : 'English'}
             <span className="opacity-40 ml-1">▼</span>
           </button>
@@ -119,7 +119,7 @@ export const WelcomePage: React.FC = () => {
               className="w-full flex items-center justify-center gap-3 py-4.5 bg-white rounded-full font-bold text-slate-800 shadow-xl active:scale-95 transition-all text-sm"
             >
               {loadingGoogle ? (
-                <Loader size={20} className="animate-spin text-[#661489]" />
+                <Loader size={20} className="animate-spin text-[#6344B6]" />
               ) : (
                 <>
                   <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />

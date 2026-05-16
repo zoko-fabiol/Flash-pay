@@ -60,7 +60,7 @@ const AdminLayout: React.FC = () => {
       <div className="lg:hidden bg-white border-b border-[#E7E0EB] p-4 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
           <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
-          <span className="text-xl font-black text-[#661489] tracking-tighter">
+          <span className="text-xl font-black text-[#6344B6] tracking-tighter">
             AD
           </span>
         </div>
@@ -97,8 +97,8 @@ const AdminLayout: React.FC = () => {
         <div className="h-full flex flex-col p-6 overflow-y-auto">
           <div className="hidden lg:flex items-center gap-4 mb-10 px-2">
             <img src="/header-logo.png" alt="Flash Pay" className="h-10 w-auto object-contain" />
-            <div className="border-l-2 border-[#661489]/20 pl-4">
-              <span className="text-[10px] font-black text-[#661489] tracking-[0.3em] uppercase opacity-60">Admin Portal</span>
+            <div className="border-l-2 border-[#6344B6]/20 pl-4">
+              <span className="text-[10px] font-black text-[#6344B6] tracking-[0.3em] uppercase opacity-60">Admin Portal</span>
             </div>
           </div>
 
@@ -115,7 +115,7 @@ const AdminLayout: React.FC = () => {
                     : 'text-[#49454F] hover:bg-[#F3EDF7] hover:text-[#1D1B20]'}
                 `}
               >
-                <div className={`p-2.5 rounded-[12px] transition-colors ${location.pathname === item.path ? 'bg-[#661489] text-white' : 'bg-transparent text-[#49454F] group-hover:bg-[#EADDFF]/50'}`}>
+                <div className={`p-2.5 rounded-[12px] transition-colors ${location.pathname === item.path ? 'bg-[#6344B6] text-white' : 'bg-transparent text-[#49454F] group-hover:bg-[#EADDFF]/50'}`}>
                   <item.icon size={20} />
                 </div>
                 <div className="flex flex-col">
@@ -123,7 +123,7 @@ const AdminLayout: React.FC = () => {
                   <span className="text-[9px] font-medium opacity-50 uppercase tracking-wider">{item.desc}</span>
                 </div>
                 {location.pathname === item.path && (
-                  <div className="absolute right-4 w-1.5 h-1.5 bg-[#661489] rounded-full" />
+                  <div className="absolute right-4 w-1.5 h-1.5 bg-[#6344B6] rounded-full" />
                 )}
               </NavLink>
             ))}
@@ -131,12 +131,12 @@ const AdminLayout: React.FC = () => {
 
           <div className="mt-auto pt-8 border-t border-[#E7E0EB]">
             <div className="bg-[#F3EDF7] p-4 rounded-[24px] mb-6 flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#661489] font-black shadow-sm">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#6344B6] font-black shadow-sm">
                 {currentUser?.email?.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-black text-[#1D1B20] truncate">{currentUser?.email}</p>
-                <p className="text-[9px] font-bold text-[#661489] uppercase tracking-widest">
+                <p className="text-[9px] font-bold text-[#6344B6] uppercase tracking-widest">
                   {(profile?.adminRole as any) === 'agent' ? `Agent ${profile?.assignedCountry || ''}` : profile?.adminRole === 'restricted' ? 'Accès restreint' : profile?.adminRole === 'email-only' ? 'Notification seulement' : 'Administrateur complet'}
                 </p>
               </div>
@@ -173,7 +173,7 @@ const AdminLayout: React.FC = () => {
             <div className="flex items-center gap-3 pl-2">
               <div className="text-right">
                 <p className="text-xs font-black text-[#1D1B20]">Support Flash Pay</p>
-                <p className="text-[10px] font-bold text-[#661489] uppercase tracking-widest">
+                <p className="text-[10px] font-bold text-[#6344B6] uppercase tracking-widest">
                   {permissions.receiveOrderEmails ? 'Notifications actives' : 'Notifications désactivées'}
                 </p>
               </div>

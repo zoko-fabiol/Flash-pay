@@ -228,7 +228,7 @@ const UsersListPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Users size={24} /></div>
+            <div className="w-12 h-12 bg-[#6344B6] text-white rounded-[16px] flex items-center justify-center shadow-lg"><Users size={24} /></div>
             Gestion des Utilisateurs
           </h2>
           <p className="text-[#49454F] text-xs font-black uppercase tracking-[0.2em] mt-2">Base de données clients et suivi de fidélité</p>
@@ -238,7 +238,7 @@ const UsersListPage: React.FC = () => {
           {selectedUserIds.length > 0 && (
             <button 
               onClick={() => { setEmailMode('bulk'); setEmailUser({ email: 'Destinataires multiples' }); }}
-              className="flex items-center gap-2 px-6 py-3.5 bg-[#661489] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+              className="flex items-center gap-2 px-6 py-3.5 bg-[#6344B6] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
             >
               <Mail size={16} />
               Mail Groupé ({selectedUserIds.length})
@@ -268,7 +268,7 @@ const UsersListPage: React.FC = () => {
                     type="checkbox" 
                     checked={selectedUserIds.length === filteredUsers.length && filteredUsers.length > 0}
                     onChange={toggleSelectAll}
-                    className="w-4 h-4 rounded border-[#CAC4D0] text-[#661489] focus:ring-[#661489]"
+                    className="w-4 h-4 rounded border-[#CAC4D0] text-[#6344B6] focus:ring-[#6344B6]"
                   />
                 </th>
                 <th className="px-6 py-5">Utilisateur</th>
@@ -284,7 +284,7 @@ const UsersListPage: React.FC = () => {
                 <tr>
                   <td colSpan={7} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-12 h-12 border-4 border-[#6344B6] border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Initialisation des profils...</span>
                     </div>
                   </td>
@@ -300,23 +300,23 @@ const UsersListPage: React.FC = () => {
                 </tr>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className={`hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer ${selectedUserIds.includes(user.id) ? 'bg-[#661489]/5' : ''}`} onClick={() => openUserDetails(user)}>
+                  <tr key={user.id} className={`hover:bg-[#F3EDF7]/30 transition-all group cursor-pointer ${selectedUserIds.includes(user.id) ? 'bg-[#6344B6]/5' : ''}`} onClick={() => openUserDetails(user)}>
                     <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
                       <input 
                         type="checkbox" 
                         checked={selectedUserIds.includes(user.id)}
                         onChange={() => toggleUserSelection(user.id)}
-                        className="w-4 h-4 rounded border-[#CAC4D0] text-[#661489] focus:ring-[#661489]"
+                        className="w-4 h-4 rounded border-[#CAC4D0] text-[#6344B6] focus:ring-[#6344B6]"
                       />
                     </td>
                     <td className="px-6 py-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-[14px] bg-[#EADDFF] text-[#21005D] flex items-center justify-center font-black text-xs border border-[#661489]/10 shadow-sm group-hover:scale-110 transition-transform shrink-0">
+                        <div className="w-10 h-10 rounded-[14px] bg-[#EADDFF] text-[#21005D] flex items-center justify-center font-black text-xs border border-[#6344B6]/10 shadow-sm group-hover:scale-110 transition-transform shrink-0">
                           {user.nom?.charAt(0).toUpperCase() || '?'}
                         </div>
                         <div className="flex flex-col">
                           <span className="text-[#1D1B20] font-black tracking-tight">{user.nom || 'Client Anonyme'}</span>
-                          <span className="text-[#661489] text-[9px] font-black uppercase tracking-widest mt-0.5">ID: {user.id.substring(0, 8).toUpperCase()}</span>
+                          <span className="text-[#6344B6] text-[9px] font-black uppercase tracking-widest mt-0.5">ID: {user.id.substring(0, 8).toUpperCase()}</span>
                           {user.isAdmin && (
                             <span className="text-[9px] font-black uppercase tracking-widest mt-1 text-[#0B6E4F]">
                               Admin {user.adminRole ? `(${user.adminRole})` : ''}
@@ -328,7 +328,7 @@ const UsersListPage: React.FC = () => {
                     <td className="px-8 py-6">
                       <div className="flex flex-col gap-1.5">
                         <div className="flex items-center gap-2 text-xs text-[#1D1B20] font-bold group/mailitem">
-                          <Mail size={12} className="text-[#661489]" /> 
+                          <Mail size={12} className="text-[#6344B6]" /> 
                           {user.email ? (
                             <>
                               <a href={`mailto:${user.email}`} className="hover:underline">{user.email}</a>
@@ -341,7 +341,7 @@ const UsersListPage: React.FC = () => {
                                   navigator.clipboard.writeText(user.email);
                                   toast.success('Email copié !');
                                 }}
-                                className="p-1 opacity-0 group-hover/mailitem:opacity-100 hover:bg-[#EADDFF] rounded text-[#661489] transition-all"
+                                className="p-1 opacity-0 group-hover/mailitem:opacity-100 hover:bg-[#EADDFF] rounded text-[#6344B6] transition-all"
                                 title="Copier l'email"
                               >
                                 <Copy size={10} />
@@ -350,7 +350,7 @@ const UsersListPage: React.FC = () => {
                           ) : 'Pas d\'email'}
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-[#49454F] font-medium opacity-60">
-                          <Phone size={12} className="text-[#661489]/40" /> 
+                          <Phone size={12} className="text-[#6344B6]/40" /> 
                           {user.tel ? <a href={`tel:${user.tel}`} className="hover:underline">{user.tel}</a> : 'Sans numéro'}
                         </div>
                       </div>
@@ -368,7 +368,7 @@ const UsersListPage: React.FC = () => {
                     <td className="px-8 py-6">
                        <div className="flex flex-col gap-1">
                           {user.referralCode && (
-                            <span className="font-mono text-[10px] font-black text-[#661489] tracking-widest">{user.referralCode}</span>
+                            <span className="font-mono text-[10px] font-black text-[#6344B6] tracking-widest">{user.referralCode}</span>
                           )}
                           <div className="flex items-center gap-2">
                              <TrendingUp size={12} className="text-emerald-500" />
@@ -386,7 +386,7 @@ const UsersListPage: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => { setEmailMode('single'); setEmailUser(user); }}
-                          className="p-2.5 bg-white border border-[#EADDFF] text-[#661489] hover:bg-[#661489] hover:text-white rounded-xl transition-all shadow-sm"
+                          className="p-2.5 bg-white border border-[#EADDFF] text-[#6344B6] hover:bg-[#6344B6] hover:text-white rounded-xl transition-all shadow-sm"
                           title="Envoyer un email"
                         >
                           <Mail size={18} />
@@ -407,7 +407,7 @@ const UsersListPage: React.FC = () => {
                         </button>
                         <button 
                           onClick={() => openUserDetails(user)}
-                          className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#661489] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
+                          className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6344B6] hover:text-white rounded-xl transition-all shadow-sm group-hover:shadow-md"
                         >
                           <Eye size={18} />
                         </button>
@@ -450,7 +450,7 @@ const UsersListPage: React.FC = () => {
                   type="text"
                   value={emailSubject}
                   onChange={(e) => setEmailSubject(e.target.value)}
-                  className="w-full bg-[#F3EDF7] border border-transparent rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#661489] outline-none transition-all"
+                  className="w-full bg-[#F3EDF7] border border-transparent rounded-2xl px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#6344B6] outline-none transition-all"
                 />
               </div>
               
@@ -460,7 +460,7 @@ const UsersListPage: React.FC = () => {
                   value={emailMessage}
                   onChange={(e) => setEmailMessage(e.target.value)}
                   placeholder="Écrivez votre message ici..."
-                  className="w-full bg-[#F3EDF7] border border-transparent rounded-[24px] px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#661489] outline-none transition-all h-48 resize-none"
+                  className="w-full bg-[#F3EDF7] border border-transparent rounded-[24px] px-5 py-4 text-sm font-bold text-[#1D1B20] focus:border-[#6344B6] outline-none transition-all h-48 resize-none"
                 />
                 <p className="text-[9px] text-[#49454F] opacity-60 px-1 font-medium italic">
                   * L'email sera envoyé même si l'utilisateur a désactivé les notifications.
@@ -478,7 +478,7 @@ const UsersListPage: React.FC = () => {
               <button 
                 onClick={handleSendManualEmail}
                 disabled={isSendingEmail || !emailMessage}
-                className="flex-[2] py-4 bg-[#661489] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#661489]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                className="flex-[2] py-4 bg-[#6344B6] text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg shadow-[#6344B6]/30 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
               >
                 {isSendingEmail ? 'Envoi en cours...' : 'Envoyer le mail'}
               </button>
@@ -496,7 +496,7 @@ const UsersListPage: React.FC = () => {
             
             <div className="p-8 border-b border-[#E7E0EB] flex justify-between items-center bg-[#FEF7FF] sticky top-0 z-10">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg font-black text-xl shrink-0">
+                <div className="w-12 h-12 bg-[#6344B6] text-white rounded-[16px] flex items-center justify-center shadow-lg font-black text-xl shrink-0">
                   {selectedUser.nom?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div>
@@ -529,7 +529,7 @@ const UsersListPage: React.FC = () => {
               {/* Identity & Contact */}
               <div className="space-y-8">
                  <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
-                    <h4 className="text-[10px] font-black text-[#661489] uppercase tracking-[0.2em] flex items-center gap-2">
+                    <h4 className="text-[10px] font-black text-[#6344B6] uppercase tracking-[0.2em] flex items-center gap-2">
                        <UserIcon size={16} /> Informations Personnelles
                     </h4>
                     <div className="space-y-6">
@@ -541,7 +541,7 @@ const UsersListPage: React.FC = () => {
                           <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
                           <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Téléphone</p>
                           <p className="text-[#1D1B20] font-black text-sm tracking-tight">
-                            {selectedUser.tel ? <a href={`tel:${selectedUser.tel}`} className="text-[#661489] hover:underline">{selectedUser.tel}</a> : 'Non renseigné'}
+                            {selectedUser.tel ? <a href={`tel:${selectedUser.tel}`} className="text-[#6344B6] hover:underline">{selectedUser.tel}</a> : 'Non renseigné'}
                           </p>
                         </div>
                            <div className="bg-[#F3EDF7] p-5 rounded-[24px]">
@@ -577,10 +577,10 @@ const UsersListPage: React.FC = () => {
                           <div>
                             <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1 opacity-60">Adresse Email</p>
                             <p className="text-[#1D1B20] font-black text-sm tracking-tight">
-                              <a href={`mailto:${selectedUser.email}`} className="text-[#661489] hover:underline">{selectedUser.email}</a>
+                              <a href={`mailto:${selectedUser.email}`} className="text-[#6344B6] hover:underline">{selectedUser.email}</a>
                             </p>
                           </div>
-                          <button onClick={() => { navigator.clipboard.writeText(selectedUser.email); toast.success('Copié'); }} className="p-2 bg-white text-[#661489] rounded-full shadow-sm opacity-0 group-hover/mail:opacity-100 transition-all active:scale-90"><Copy size={14} /></button>
+                          <button onClick={() => { navigator.clipboard.writeText(selectedUser.email); toast.success('Copié'); }} className="p-2 bg-white text-[#6344B6] rounded-full shadow-sm opacity-0 group-hover/mail:opacity-100 transition-all active:scale-90"><Copy size={14} /></button>
                        </div>
                     </div>
                  </div>
@@ -588,7 +588,7 @@ const UsersListPage: React.FC = () => {
 
               {/* Status & Wallet */}
               <div className="space-y-8">
-                 <div className="bg-[#661489] p-8 rounded-[32px] shadow-2xl shadow-[#661489]/20 text-white space-y-6">
+                 <div className="bg-[#6344B6] p-8 rounded-[32px] shadow-2xl shadow-[#6344B6]/20 text-white space-y-6">
                     <h4 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 flex items-center gap-2">
                        <ShieldCheck size={16} /> Conformité KYC
                     </h4>
@@ -597,7 +597,7 @@ const UsersListPage: React.FC = () => {
                           <p className="text-[9px] font-black uppercase tracking-widest opacity-60 mb-1">Niveau Actuel</p>
                           <p className="text-xl font-black tracking-tight">{selectedUser.statut_kyc || 'Standard'}</p>
                        </div>
-                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#661489] shadow-lg">
+                       <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#6344B6] shadow-lg">
                           <ShieldCheck size={24} />
                        </div>
                     </div>
@@ -609,31 +609,31 @@ const UsersListPage: React.FC = () => {
                  </div>
 
                  <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
-                    <h4 className="text-[10px] font-black text-[#661489] uppercase tracking-[0.2em] flex items-center gap-2">
+                    <h4 className="text-[10px] font-black text-[#6344B6] uppercase tracking-[0.2em] flex items-center gap-2">
                        <Award size={16} /> Fidélité & Récompenses
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
                        <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] text-center">
                           <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">Solde Bonus</p>
-                          <p className="text-2xl font-black text-[#661489] tracking-tighter">{selectedUser.solde_bonus || 0} <span className="text-[10px] opacity-40">RUB</span></p>
+                          <p className="text-2xl font-black text-[#6344B6] tracking-tighter">{selectedUser.solde_bonus || 0} <span className="text-[10px] opacity-40">RUB</span></p>
                        </div>
                        <div className="bg-[#F3EDF7] p-5 rounded-[24px] border border-[#E7E0EB] text-center">
                           <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-2 opacity-60">Invités</p>
                           <p className="text-2xl font-black text-[#1D1B20] tracking-tighter">{selectedUser.referralStats?.invited || selectedUser.referredUsers?.length || 0}</p>
                        </div>
                     </div>
-                    <div className="bg-[#EADDFF] p-5 rounded-[24px] border border-[#661489]/10 flex justify-between items-center group/ref">
+                    <div className="bg-[#EADDFF] p-5 rounded-[24px] border border-[#6344B6]/10 flex justify-between items-center group/ref">
                        <div>
-                          <p className="text-[#661489] text-[9px] font-black uppercase tracking-widest mb-1">Code Parrainage</p>
+                          <p className="text-[#6344B6] text-[9px] font-black uppercase tracking-widest mb-1">Code Parrainage</p>
                           <p className="text-[#21005D] font-mono font-black text-xl tracking-[0.2em]">{selectedUser.referralCode || 'NÉANT'}</p>
                        </div>
-                       <button onClick={() => { navigator.clipboard.writeText(selectedUser.referralCode || ''); toast.success('Code Copié'); }} className="p-3 bg-white text-[#661489] rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-all"><Copy size={18} /></button>
+                       <button onClick={() => { navigator.clipboard.writeText(selectedUser.referralCode || ''); toast.success('Code Copié'); }} className="p-3 bg-white text-[#6344B6] rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-all"><Copy size={18} /></button>
                     </div>
                  </div>
 
                  {isSuperAdmin && (
                    <div className="m3-card bg-white border-[#E7E0EB] space-y-6">
-                      <h4 className="text-[10px] font-black text-[#661489] uppercase tracking-[0.2em] flex items-center gap-2">
+                      <h4 className="text-[10px] font-black text-[#6344B6] uppercase tracking-[0.2em] flex items-center gap-2">
                         <UserCog size={16} /> Privilèges Admin
                       </h4>
 
@@ -661,7 +661,7 @@ const UsersListPage: React.FC = () => {
                         <button
                           onClick={() => toggleAdminPrivilege(selectedUser, adminRoleDraft || 'restricted')}
                           disabled={updatingAdminId === selectedUser.id}
-                          className={`w-full py-3.5 rounded-[18px] font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50 ${selectedUser.isAdmin ? 'bg-[#B3261E] text-white' : 'bg-[#661489] text-white'}`}
+                          className={`w-full py-3.5 rounded-[18px] font-black uppercase text-[10px] tracking-widest transition-all disabled:opacity-50 ${selectedUser.isAdmin ? 'bg-[#B3261E] text-white' : 'bg-[#6344B6] text-white'}`}
                         >
                           {updatingAdminId === selectedUser.id
                             ? 'Mise à jour...'

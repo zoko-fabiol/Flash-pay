@@ -301,7 +301,7 @@ const AccessControlPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4 text-[#49454F]">
-          <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[#6344B6] border-t-transparent rounded-full animate-spin" />
           <p className="text-[10px] font-black uppercase tracking-widest">Chargement des accès...</p>
         </div>
       </div>
@@ -313,7 +313,7 @@ const AccessControlPage: React.FC = () => {
       {/* CREATE ADMIN SECTION */}
       <div className="m3-card-elevated !bg-gradient-to-br !from-[#EADDFF] !to-[#F3EDF7] border border-[#CAC4D0]/30 space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-white text-[#661489] shadow-lg">
+          <div className="p-3 rounded-2xl bg-white text-[#6344B6] shadow-lg">
             <UserPlus size={22} />
           </div>
           <div>
@@ -393,7 +393,7 @@ const AccessControlPage: React.FC = () => {
                 }
               }}
               disabled={creatingAdmin || !newAdminEmail}
-              className="w-full py-3.5 bg-[#661489] text-white rounded-[20px] font-black uppercase text-[10px] tracking-widest shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50"
+              className="w-full py-3.5 bg-[#6344B6] text-white rounded-[20px] font-black uppercase text-[10px] tracking-widest shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50"
             >
               {creatingAdmin ? 'Création...' : 'Créer'}
             </button>
@@ -407,7 +407,7 @@ const AccessControlPage: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div>
           <h2 className="text-3xl font-black text-[#1D1B20] tracking-tight flex items-center gap-4">
-            <div className="w-12 h-12 bg-[#661489] text-white rounded-[16px] flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 bg-[#6344B6] text-white rounded-[16px] flex items-center justify-center shadow-lg">
               <UserCog size={24} />
             </div>
             Accès Admin & Notifications
@@ -454,7 +454,7 @@ const AccessControlPage: React.FC = () => {
                   <button
                     key={role}
                     onClick={() => applyPreset(role as any)}
-                    className={`rounded-[22px] border px-4 py-4 text-left transition-all ${(selectedRole as any) === role ? 'bg-[#661489] text-white border-[#661489]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
+                    className={`rounded-[22px] border px-4 py-4 text-left transition-all ${(selectedRole as any) === role ? 'bg-[#6344B6] text-white border-[#6344B6]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
                   >
                     <div className="text-[10px] font-black uppercase tracking-widest opacity-60">Profil</div>
                     <div className="font-black text-sm mt-1">
@@ -465,7 +465,7 @@ const AccessControlPage: React.FC = () => {
                 <button
                   key="agent"
                   onClick={() => applyPreset('agent' as any)}
-                  className={`rounded-[22px] border px-4 py-4 text-left transition-all ${(selectedRole as any) === 'agent' ? 'bg-[#661489] text-white border-[#661489]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
+                  className={`rounded-[22px] border px-4 py-4 text-left transition-all ${(selectedRole as any) === 'agent' ? 'bg-[#6344B6] text-white border-[#6344B6]' : 'bg-white border-[#E7E0EB] text-[#1D1B20]'}`}
                 >
                   <div className="text-[10px] font-black uppercase tracking-widest opacity-60">Profil</div>
                   <div className="font-black text-sm mt-1">Agent Pays</div>
@@ -474,7 +474,7 @@ const AccessControlPage: React.FC = () => {
 
               {(selectedRole as any) === 'agent' && (
             <div className="space-y-4 p-6 bg-[#F3EDF7] rounded-[24px] border border-[#EADDFF] animate-in slide-in-from-top duration-500">
-              <label className="text-[10px] font-black uppercase tracking-widest text-[#661489]">Assignation du Pays (Max 1 par pays)</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-[#6344B6]">Assignation du Pays (Max 1 par pays)</label>
               <select
                 value={selectedCountry}
                 onChange={(e) => {
@@ -494,7 +494,7 @@ const AccessControlPage: React.FC = () => {
                   <option key={c.id} value={c.code}>{c.name} ({c.code})</option>
                 ))}
               </select>
-              <p className="text-[9px] font-bold text-[#661489] opacity-60 uppercase tracking-widest italic">
+              <p className="text-[9px] font-bold text-[#6344B6] opacity-60 uppercase tracking-widest italic">
                 Note: L'agent ne verra que les transactions et stats de ce pays.
               </p>
             </div>
@@ -508,7 +508,7 @@ const AccessControlPage: React.FC = () => {
               {ADMIN_SECTION_DEFINITIONS.map((section) => {
                 const isEnabled = permissions.sections?.[section.key] ?? false;
                 return (
-                  <label key={section.key} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-white hover:bg-[#F3EDF7] hover:border-[#661489]/30 transition-all cursor-pointer group">
+                  <label key={section.key} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-white hover:bg-[#F3EDF7] hover:border-[#6344B6]/30 transition-all cursor-pointer group">
                     <span className="text-sm font-bold text-[#1D1B20]">{section.label}</span>
                     <input
                       type="checkbox"
@@ -536,7 +536,7 @@ const AccessControlPage: React.FC = () => {
               {(['add', 'edit', 'delete'] as const).map((action) => {
                 const checked = permissions.actions?.[action] ?? false;
                 return (
-                  <label key={action} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-[#F3EDF7] hover:bg-[#EADDFF] hover:border-[#661489]/30 transition-all cursor-pointer group">
+                  <label key={action} className="flex items-center justify-between gap-3 rounded-[20px] border border-[#E7E0EB] px-4 py-3 bg-[#F3EDF7] hover:bg-[#EADDFF] hover:border-[#6344B6]/30 transition-all cursor-pointer group">
                     <span className="text-sm font-bold text-[#1D1B20]">{ADMIN_ACTION_LABELS[action]}</span>
                     <input
                       type="checkbox"
@@ -558,7 +558,7 @@ const AccessControlPage: React.FC = () => {
             </div>
           </div>
 
-          <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#EADDFF]/40 hover:bg-[#EADDFF]/60 hover:border-[#661489]/30 transition-all cursor-pointer group">
+          <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#EADDFF]/40 hover:bg-[#EADDFF]/60 hover:border-[#6344B6]/30 transition-all cursor-pointer group">
             <div>
               <p className="text-sm font-black text-[#1D1B20]">Recevoir les emails de commande</p>
               <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">Liste des destinataires lorsqu’une commande arrive</p>
@@ -572,7 +572,7 @@ const AccessControlPage: React.FC = () => {
           </label>
 
           {(selectedRole as any) === 'agent' && (
-            <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#F3EDF7] hover:bg-[#EADDFF] hover:border-[#661489]/30 transition-all cursor-pointer group">
+            <label className="flex items-center justify-between gap-4 rounded-[24px] border border-[#E7E0EB] px-5 py-4 bg-[#F3EDF7] hover:bg-[#EADDFF] hover:border-[#6344B6]/30 transition-all cursor-pointer group">
               <div>
                 <p className="text-sm font-black text-[#1D1B20]">Recevoir les emails de son pays</p>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#49454F] opacity-60">L'agent sera notifié par mail pour chaque transaction de son pays</p>
@@ -589,7 +589,7 @@ const AccessControlPage: React.FC = () => {
           <button
             onClick={saveAdminAccess}
             disabled={savingAdmin || !selectedAdminId}
-            className="w-full py-4 bg-[#661489] text-white rounded-[28px] font-black uppercase text-[11px] tracking-widest shadow-2xl hover:scale-[1.01] transition-all disabled:opacity-50"
+            className="w-full py-4 bg-[#6344B6] text-white rounded-[28px] font-black uppercase text-[11px] tracking-widest shadow-2xl hover:scale-[1.01] transition-all disabled:opacity-50"
           >
             {savingAdmin ? 'Sauvegarde...' : 'Enregistrer les droits'}
           </button>
@@ -626,7 +626,7 @@ const AccessControlPage: React.FC = () => {
               placeholder="admin@flashpay.com"
               className="flex-1 bg-[#F3EDF7] border border-[#CAC4D0] rounded-full px-5 py-4 text-sm font-bold text-[#1D1B20] outline-none"
             />
-            <button onClick={addEmail} className="p-4 bg-[#661489] text-white rounded-full shadow-lg hover:scale-110 transition-transform">
+            <button onClick={addEmail} className="p-4 bg-[#6344B6] text-white rounded-full shadow-lg hover:scale-110 transition-transform">
               <Plus size={18} />
             </button>
           </div>
@@ -640,7 +640,7 @@ const AccessControlPage: React.FC = () => {
               notificationEmails.map((email) => (
                 <div key={email} className="flex items-center justify-between rounded-[22px] border border-[#E7E0EB] px-4 py-3 bg-white">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-full bg-[#F3EDF7] text-[#661489]">
+                    <div className="p-2 rounded-full bg-[#F3EDF7] text-[#6344B6]">
                       <CheckCircle2 size={16} />
                     </div>
                     <span className="text-sm font-bold text-[#1D1B20]">{email}</span>
@@ -663,7 +663,7 @@ const AccessControlPage: React.FC = () => {
 
           <div className="rounded-[28px] bg-[#F3EDF7] border border-[#E7E0EB] p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <SlidersHorizontal className="text-[#661489]" size={20} />
+              <SlidersHorizontal className="text-[#6344B6]" size={20} />
               <p className="text-sm font-black text-[#1D1B20]">Aperçu du profil sélectionné</p>
             </div>
             {selectedAdmin ? (

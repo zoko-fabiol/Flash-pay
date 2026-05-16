@@ -110,7 +110,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
 
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] overflow-hidden">
         {/* Flag to Flag Header */}
-        <div className="bg-[#661489]/5 p-6 border-b border-slate-100 flex flex-col items-center">
+        <div className="bg-[#6344B6]/5 p-6 border-b border-slate-100 flex flex-col items-center">
           <div className="flex items-center gap-6 mb-4">
             <div className="relative">
               <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-white shadow-md">
@@ -126,7 +126,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
             </div>
             
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#661489] border border-slate-50">
+              <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#6344B6] border border-slate-50">
                 <ArrowRight size={20} />
               </div>
             </div>
@@ -192,11 +192,11 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-500 font-medium">{t('exchange_rate_label')}</span>
-                <span className="font-bold text-[#661489]">1 {fromCurrency} = {rate} {toCurrency}</span>
+                <span className="font-bold text-[#6344B6]">1 {fromCurrency} = {rate} {toCurrency}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-500 font-medium">{t('recipient_receives') || 'Le destinataire reçoit'}</span>
-                <span className="font-bold text-[#661489]">{formatNumber(finalTotalReceiveAmount, toCurrency)}</span>
+                <span className="font-bold text-[#6344B6]">{formatNumber(finalTotalReceiveAmount, toCurrency)}</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-500 font-medium">{t('transfer_fee')}</span>
@@ -206,7 +206,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
               <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
                 <span className="text-slate-900 font-black uppercase text-xs">{t('total_to_pay')}</span>
                 <div className="text-right">
-                  <p className="text-2xl font-black text-[#661489]">{formatNumber(finalTotalToPay, fromCurrency)}</p>
+                  <p className="text-2xl font-black text-[#6344B6]">{formatNumber(finalTotalToPay, fromCurrency)}</p>
                 </div>
               </div>
             </div>
@@ -225,14 +225,14 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
               onChange={e => updateTransferData({ narration: e.target.value })}
               placeholder={t('narration_placeholder') || 'Ex: Anniversaire, Cadeau, Loyer...'}
               rows={3}
-              className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none text-slate-900 font-bold bg-slate-50 transition-all resize-none"
+              className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6344B6] outline-none text-slate-900 font-bold bg-slate-50 transition-all resize-none"
             />
           </div>
 
           {/* Delivery Note */}
-          <div className="bg-[#F5E8FF] rounded-2xl p-4 flex items-center gap-3 border border-[#661489]/10">
-            <Clock className="text-[#661489]" size={18} />
-            <p className="text-[11px] text-[#661489] font-bold">
+          <div className="bg-[#F5E8FF] rounded-2xl p-4 flex items-center gap-3 border border-[#6344B6]/10">
+            <Clock className="text-[#6344B6]" size={18} />
+            <p className="text-[11px] text-[#6344B6] font-bold">
               {t('delivery_note') || 'Généralement livré en moins de 10 minutes'}
             </p>
           </div>
@@ -242,7 +242,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
       <div className="mt-4 flex flex-col sm:flex-row gap-4">
         <button
           onClick={nextStep}
-          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#661489] text-white shadow-xl shadow-[#661489]/20"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#6344B6] text-white shadow-xl shadow-[#6344B6]/20"
         >
           {t('next')} <ChevronRight size={24} />
         </button>

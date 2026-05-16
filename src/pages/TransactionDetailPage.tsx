@@ -84,7 +84,7 @@ export const TransactionDetailPage: React.FC = () => {
       const margin = isBulkRec ? 12 : 10;
       let y = 15;
 
-      const mainColor = [102, 20, 137]; // #661489
+      const mainColor = [102, 20, 137]; // #6344B6
 
       // Header background
       pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
@@ -229,7 +229,7 @@ export const TransactionDetailPage: React.FC = () => {
       <Layout>
         <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <p className="text-lg font-bold text-slate-900">Transaction introuvable</p>
-          <button onClick={() => navigate('/transactions')} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#661489] px-5 py-3 font-semibold text-white">
+          <button onClick={() => navigate('/transactions')} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#6344B6] px-5 py-3 font-semibold text-white">
             <ArrowLeft size={16} /> Retour
           </button>
         </div>
@@ -247,13 +247,13 @@ export const TransactionDetailPage: React.FC = () => {
         <div className="flex items-center justify-between px-1">
           <button
             onClick={() => navigate('/transactions')}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#661489] hover:bg-[#661489]/10 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#6344B6] hover:bg-[#6344B6]/10 transition-all"
             aria-label="Retour"
           >
             <ArrowLeft size={22} />
           </button>
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#661489] hover:bg-[#661489]/10 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-[#6344B6] hover:bg-[#6344B6]/10 transition-all"
             aria-label="Aide"
           >
             <Info size={20} />
@@ -265,12 +265,12 @@ export const TransactionDetailPage: React.FC = () => {
             <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(98,54,204,0.10),transparent_70%)]" />
 
             <div className="relative z-10 space-y-4">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EFE7FF] text-[#661489] shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#EFE7FF] text-[#6344B6] shadow-sm">
                 {currentStatus === 'completed' ? <CheckCircle2 size={28} /> : <Send size={28} />}
               </div>
 
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#661489]">
+                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#6344B6]">
                   {transaction.isBulk ? 'Transfert groupé' : (currentStatus === 'completed' ? 'Terminé' : 'En cours')}
                 </p>
                 <h1 className="text-3xl font-black tracking-tight text-[#1D1B20]">
@@ -317,19 +317,19 @@ export const TransactionDetailPage: React.FC = () => {
             {activeTab === 'update' ? (
               <>
             {transaction.isBulk && (
-              <div className="rounded-[28px] border border-[#661489]/10 bg-white p-6 space-y-5 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
+              <div className="rounded-[28px] border border-[#6344B6]/10 bg-white p-6 space-y-5 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
-                    <h3 className="text-[#661489] font-black text-lg tracking-tight">Progression de l'envoi</h3>
+                    <h3 className="text-[#6344B6] font-black text-lg tracking-tight">Progression de l'envoi</h3>
                     <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{completedRecipients} sur {totalRecipients} bénéficiaires payés</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-3xl font-black text-[#661489] tracking-tighter">{Math.round(bulkProgress)}%</span>
+                    <span className="text-3xl font-black text-[#6344B6] tracking-tighter">{Math.round(bulkProgress)}%</span>
                   </div>
                 </div>
                 <div className="w-full h-4 bg-[#F3EDF7] rounded-full overflow-hidden p-1 shadow-inner">
                   <div
-                    className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#661489] rounded-full transition-all duration-1000 ease-out shadow-lg"
+                    className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#6344B6] rounded-full transition-all duration-1000 ease-out shadow-lg"
                     style={{ width: `${bulkProgress}%` }}
                   >
                     <div className="w-full h-full bg-[linear-gradient(45deg,rgba(255,255,255,0.2)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.2)_50%,rgba(255,255,255,0.2)_75%,transparent_75%,transparent)] bg-[length:20px_20px] animate-[progress-bar-stripes_2s_linear_infinite]" />
@@ -340,7 +340,7 @@ export const TransactionDetailPage: React.FC = () => {
 
             <div className="space-y-4">
               <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 px-2">
-                <div className="w-1 h-4 bg-[#661489] rounded-full"></div>
+                <div className="w-1 h-4 bg-[#6344B6] rounded-full"></div>
                 {transaction.isBulk ? 'Liste des bénéficiaires' : 'Détails du bénéficiaire'}
               </h3>
 
@@ -350,7 +350,7 @@ export const TransactionDetailPage: React.FC = () => {
                     <div className="space-y-2">
                       <p className="text-[12px] font-black uppercase tracking-[0.18em] text-[#49454F]">Vous envoyez</p>
                       <p className="text-3xl font-black text-[#1D1B20] tracking-tight">{transaction.amount?.toLocaleString('fr-FR')}</p>
-                      <p className="text-sm font-black text-[#661489] tracking-tight">{transaction.currency}</p>
+                      <p className="text-sm font-black text-[#6344B6] tracking-tight">{transaction.currency}</p>
                       <p className="text-xs text-[#49454F] font-medium pt-2">à {transaction.recipientName || 'N/A'}</p>
                     </div>
                     <div className={`rounded-full px-4 py-2 text-[9px] font-black uppercase tracking-[0.22em] shadow-sm border ${statusTone[currentStatus] || statusTone.pending} border-current/10`}>
@@ -377,7 +377,7 @@ export const TransactionDetailPage: React.FC = () => {
                         {rec.status === 'completed' && (
                           <button
                             onClick={() => handleReceiptDownload(rec)}
-                            className="p-4 bg-[#661489]/5 text-[#661489] rounded-[20px] hover:bg-[#661489] hover:text-white transition-all shadow-sm border border-[#661489]/10"
+                            className="p-4 bg-[#6344B6]/5 text-[#6344B6] rounded-[20px] hover:bg-[#6344B6] hover:text-white transition-all shadow-sm border border-[#6344B6]/10"
                             title="Télécharger le reçu A5"
                           >
                             <Download size={20} />
@@ -392,8 +392,8 @@ export const TransactionDetailPage: React.FC = () => {
 
             {!transaction.isBulk && (
               <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
-                <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.28em] text-[#661489] mb-8">
-                  <div className="p-2 bg-[#661489]/10 rounded-lg">
+                <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.28em] text-[#6344B6] mb-8">
+                  <div className="p-2 bg-[#6344B6]/10 rounded-lg">
                     <Clock3 size={18} />
                   </div>
                   Mise à jour
@@ -409,7 +409,7 @@ export const TransactionDetailPage: React.FC = () => {
                       <div key={status} className="flex gap-6 relative z-10 group">
                         <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-700 ${
                           isFailed ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30' :
-                          active ? 'bg-[#661489] text-white shadow-xl shadow-[#661489]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
+                          active ? 'bg-[#6344B6] text-white shadow-xl shadow-[#6344B6]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
                         }`}>
                           {isFailed ? <ArrowLeft size={18} strokeWidth={3} className="rotate-[135deg]" /> : <CheckCircle2 size={18} strokeWidth={3} className={active ? 'animate-in zoom-in duration-500' : ''} />}
                         </div>
@@ -437,7 +437,7 @@ export const TransactionDetailPage: React.FC = () => {
             {currentStatus === 'completed' && !transaction.isBulk && (
               <div className="rounded-[28px] border border-[#eadfff] bg-gradient-to-br from-white to-[#F3EDF7]/50 p-6 shadow-[0_18px_50px_rgba(98,54,204,0.10)]">
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-[#661489] shadow-lg border border-[#eadfff]">
+                  <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-[#6344B6] shadow-lg border border-[#eadfff]">
                     <FileText size={30} />
                   </div>
                   <div className="flex-1 space-y-1">
@@ -447,7 +447,7 @@ export const TransactionDetailPage: React.FC = () => {
                 </div>
                 <button
                   onClick={() => handleReceiptDownload()}
-                  className="mt-6 w-full px-6 py-4 bg-[#661489] text-white font-black rounded-full shadow-[0_14px_30px_rgba(98,54,204,0.24)] active:scale-95 transition-all flex items-center justify-center gap-4"
+                  className="mt-6 w-full px-6 py-4 bg-[#6344B6] text-white font-black rounded-full shadow-[0_14px_30px_rgba(98,54,204,0.24)] active:scale-95 transition-all flex items-center justify-center gap-4"
                 >
                   <Download size={20} /> Télécharger le reçu
                 </button>

@@ -76,9 +76,9 @@ const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previ
       <div className="grid gap-6">
         <button
           onClick={() => { updateTransferData({ isBulk: false }); nextStep(); }}
-          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${!transferData.isBulk ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${!transferData.isBulk ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
         >
-          <div className={`p-5 rounded-[24px] ${!transferData.isBulk ? 'bg-[#661489] text-white' : 'bg-slate-100 text-[#661489]'}`}>
+          <div className={`p-5 rounded-[24px] ${!transferData.isBulk ? 'bg-[#6344B6] text-white' : 'bg-slate-100 text-[#6344B6]'}`}>
             <User size={32} />
           </div>
           <div>
@@ -89,9 +89,9 @@ const TransferTypeStep = ({ updateTransferData, transferData, t, nextStep, previ
 
         <button
           onClick={() => { updateTransferData({ isBulk: true }); nextStep(); }}
-          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${transferData.isBulk ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+          className={`flex items-center gap-6 p-8 rounded-[32px] border-2 transition-all text-left ${transferData.isBulk ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
         >
-          <div className={`p-5 rounded-[24px] ${transferData.isBulk ? 'bg-[#661489] text-white' : 'bg-slate-100 text-[#661489]'}`}>
+          <div className={`p-5 rounded-[24px] ${transferData.isBulk ? 'bg-[#6344B6] text-white' : 'bg-slate-100 text-[#6344B6]'}`}>
             <Globe size={32} />
           </div>
           <div>
@@ -853,7 +853,7 @@ export const TransferWizardPage: React.FC = () => {
                     <div className="bg-white w-full max-w-lg rounded-[32px] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[80vh]">
                       <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-3">
-                          <BookUser className="text-[#661489]" size={24} />
+                          <BookUser className="text-[#6344B6]" size={24} />
                           <h3 className="text-xl font-black text-slate-900">{t('my_contacts')}</h3>
                         </div>
                         <button onClick={() => { setIsContactModalOpen(false); setIsAddingContact(false); }} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
@@ -864,13 +864,13 @@ export const TransferWizardPage: React.FC = () => {
                         <div className="flex p-1 bg-slate-50 mx-6 mt-6 rounded-2xl border border-slate-100 shrink-0">
                           <button 
                             onClick={() => setContactTab('recent')}
-                            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${contactTab === 'recent' ? 'bg-white shadow-sm text-[#661489]' : 'text-slate-400'}`}
+                            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${contactTab === 'recent' ? 'bg-white shadow-sm text-[#6344B6]' : 'text-slate-400'}`}
                           >
                             {t('recent')}
                           </button>
                           <button 
                             onClick={() => setContactTab('personal')}
-                            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${contactTab === 'personal' ? 'bg-white shadow-sm text-[#661489]' : 'text-slate-400'}`}
+                            className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${contactTab === 'personal' ? 'bg-white shadow-sm text-[#6344B6]' : 'text-slate-400'}`}
                           >
                             {t('saved')}
                           </button>
@@ -886,7 +886,7 @@ export const TransferWizardPage: React.FC = () => {
                                 type="text"
                                 value={newContact.name}
                                 onChange={e => setNewContact({...newContact, name: e.target.value})}
-                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold text-slate-900 bg-slate-50"
+                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6344B6] outline-none font-bold text-slate-900 bg-slate-50"
                                 placeholder={t('recipient_name_placeholder')}
                               />
                             </div>
@@ -900,7 +900,7 @@ export const TransferWizardPage: React.FC = () => {
                                   const op = selectedCountry?.operators?.find((o: any) => o.prefixes?.some((p: string) => val.startsWith(p)));
                                   setNewContact({...newContact, phone: val, operator: op?.name || ''});
                                 }}
-                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none font-bold text-slate-900 bg-slate-50"
+                                className="w-full p-4 rounded-2xl border-2 border-slate-100 focus:border-[#6344B6] outline-none font-bold text-slate-900 bg-slate-50"
                                 placeholder="+237 ..."
                               />
                             </div>
@@ -914,7 +914,7 @@ export const TransferWizardPage: React.FC = () => {
                               <button onClick={() => setIsAddingContact(false)} className="flex-1 py-4 rounded-2xl border-2 border-slate-100 text-slate-500 font-black text-xs uppercase tracking-widest">
                                 {t('cancel')}
                               </button>
-                              <button onClick={handleAddManualContact} className="flex-1 py-4 rounded-2xl bg-[#661489] text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-[#661489]/20">
+                              <button onClick={handleAddManualContact} className="flex-1 py-4 rounded-2xl bg-[#6344B6] text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-[#6344B6]/20">
                                 {t('save_and_select')}
                               </button>
                             </div>
@@ -924,7 +924,7 @@ export const TransferWizardPage: React.FC = () => {
                             {/* Action Button */}
                             <button 
                               onClick={() => setIsAddingContact(true)}
-                              className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold flex items-center justify-center gap-2 hover:border-[#661489]/30 hover:text-[#661489] hover:bg-[#661489]/5 transition-all mb-4"
+                              className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-200 text-slate-400 font-bold flex items-center justify-center gap-2 hover:border-[#6344B6]/30 hover:text-[#6344B6] hover:bg-[#6344B6]/5 transition-all mb-4"
                             >
                               <Plus size={18} /> {t('add_new_contact')}
                             </button>
@@ -956,16 +956,16 @@ export const TransferWizardPage: React.FC = () => {
                                 <button 
                                   key={contact.id} 
                                   onClick={() => handleSelectContact(contact)}
-                                  className="w-full p-4 rounded-2xl border border-slate-100 hover:border-[#661489] hover:bg-[#661489]/5 flex items-center gap-4 transition-all text-left group"
+                                  className="w-full p-4 rounded-2xl border border-slate-100 hover:border-[#6344B6] hover:bg-[#6344B6]/5 flex items-center gap-4 transition-all text-left group"
                                 >
-                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-[#661489]/10 group-hover:text-[#661489] transition-colors font-bold text-lg">
+                                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-[#6344B6]/10 group-hover:text-[#6344B6] transition-colors font-bold text-lg">
                                     {(contact.name || contact.recipientName || '?').charAt(0).toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="font-black text-slate-900 truncate">{contact.name || contact.recipientName}</p>
                                     <p className="text-xs text-slate-500 font-bold">{contact.phone || contact.beneficiaryAccount || contact.recipientPhone}</p>
                                   </div>
-                                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[#661489] group-hover:text-white transition-all">
+                                  <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-[#6344B6] group-hover:text-white transition-all">
                                     <ChevronRight size={18} />
                                   </div>
                                 </button>

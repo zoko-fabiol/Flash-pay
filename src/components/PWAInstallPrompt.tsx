@@ -39,11 +39,11 @@ export const PWAInstallPrompt: React.FC = () => {
     <>
       <div className="mx-3 mb-8 animate-in fade-in slide-in-from-top-6 duration-1000 ease-out">
         <div className="relative overflow-hidden rounded-[30px] bg-white/40 backdrop-blur-md border border-white/60 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.03)] group">
-          <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-[#661489]/5 opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-[#6344B6]/5 opacity-50" />
           
           <div className="relative z-10 flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#661489] to-[#4D0F67] text-white shadow-lg shadow-[#661489]/20">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6344B6] to-[#4A3191] text-white shadow-lg shadow-[#6344B6]/20">
                 <Smartphone size={22} className="animate-pulse" />
               </div>
               <div className="flex flex-col">
@@ -80,14 +80,14 @@ export const PWAInstallPrompt: React.FC = () => {
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in zoom-in duration-500">
             <div className="flex flex-col items-center text-center gap-6">
-              <div className="w-16 h-16 rounded-2xl bg-[#661489]/10 flex items-center justify-center text-[#661489]">
+              <div className="w-16 h-16 rounded-2xl bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6]">
                 <Download size={32} />
               </div>
               <div className="space-y-3">
                 <h3 className="text-xl font-black text-slate-900">Installer sur iPhone</h3>
                 <p className="text-slate-500 text-sm font-medium leading-relaxed">
-                  1. Appuyez sur le bouton <span className="font-bold text-[#661489]">Partager</span> en bas de Safari.<br/>
-                  2. Faites défiler et appuyez sur <span className="font-bold text-[#661489]">Sur l'écran d'accueil</span>.
+                  1. Appuyez sur le bouton <span className="font-bold text-[#6344B6]">Partager</span> en bas de Safari.<br/>
+                  2. Faites défiler et appuyez sur <span className="font-bold text-[#6344B6]">Sur l'écran d'accueil</span>.
                 </p>
               </div>
               <button

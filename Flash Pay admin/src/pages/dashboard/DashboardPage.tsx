@@ -52,7 +52,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, t
         <Icon size={120} />
       </div>
       <div className="flex justify-between items-start mb-6">
-        <div className="p-4 bg-[#F3EDF7] text-[#661489] rounded-[20px] group-hover:scale-110 transition-transform duration-500 shadow-sm border border-[#E7E0EB]">
+        <div className="p-4 bg-[#F3EDF7] text-[#6344B6] rounded-[20px] group-hover:scale-110 transition-transform duration-500 shadow-sm border border-[#E7E0EB]">
           <Icon size={24} strokeWidth={2.5} />
         </div>
         {change && change !== '-' && (
@@ -283,7 +283,7 @@ const DashboardPage: React.FC = () => {
              <button 
               key={range.id}
               onClick={() => setTimeRange(range.id as any)}
-              className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range.id ? 'bg-[#661489] text-white shadow-md' : 'text-[#49454F] hover:bg-white'}`}
+              className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${timeRange === range.id ? 'bg-[#6344B6] text-white shadow-md' : 'text-[#49454F] hover:bg-white'}`}
              >
                {range.label}
              </button>
@@ -344,8 +344,8 @@ const DashboardPage: React.FC = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#661489" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#661489" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#6344B6" stopOpacity={0.2}/>
+                    <stop offset="95%" stopColor="#6344B6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="#E7E0EB" vertical={false} />
@@ -370,10 +370,10 @@ const DashboardPage: React.FC = () => {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#FEF7FF', border: '1px solid #E7E0EB', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', padding: '16px' }}
                   labelStyle={{ fontWeight: 900, color: '#1D1B20', marginBottom: '8px', fontSize: '12px', textTransform: 'uppercase' }}
-                  itemStyle={{ color: '#661489', fontWeight: 800, fontSize: '14px' }}
-                  cursor={{ stroke: '#661489', strokeWidth: 2, strokeDasharray: '5 5' }}
+                  itemStyle={{ color: '#6344B6', fontWeight: 800, fontSize: '14px' }}
+                  cursor={{ stroke: '#6344B6', strokeWidth: 2, strokeDasharray: '5 5' }}
                 />
-                <Area type="monotone" dataKey="value" stroke="#661489" strokeWidth={5} fillOpacity={1} fill="url(#colorValue)" animationDuration={2000} />
+                <Area type="monotone" dataKey="value" stroke="#6344B6" strokeWidth={5} fillOpacity={1} fill="url(#colorValue)" animationDuration={2000} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -436,11 +436,11 @@ const DashboardPage: React.FC = () => {
                 <div key={i} className="group">
                   <div className="flex justify-between items-end mb-3 px-1">
                     <span className="text-sm font-black text-[#1D1B20] uppercase tracking-tighter">{route.name}</span>
-                    <span className="text-[10px] text-[#661489] font-black uppercase tracking-widest">{route.count} transferts</span>
+                    <span className="text-[10px] text-[#6344B6] font-black uppercase tracking-widest">{route.count} transferts</span>
                   </div>
                   <div className="h-4 bg-[#F3EDF7] rounded-full overflow-hidden p-0.5 border border-[#E7E0EB]">
                     <div 
-                      className="h-full bg-gradient-to-r from-[#661489] to-[#9B89C9] rounded-full transition-all duration-1000 shadow-lg shadow-[#661489]/20" 
+                      className="h-full bg-gradient-to-r from-[#6344B6] to-[#9B89C9] rounded-full transition-all duration-1000 shadow-lg shadow-[#6344B6]/20" 
                       style={{ width: `${Math.max(10, (route.count / (recentTransactions.length || 1)) * 100)}%` }}
                     ></div>
                   </div>
@@ -453,7 +453,7 @@ const DashboardPage: React.FC = () => {
         {/* Activity Feed Feed */}
         <div className="m3-card-elevated">
           <div className="flex items-center gap-3 mb-10">
-            <div className="p-2 bg-[#F3EDF7] text-[#661489] rounded-lg shadow-sm"><Clock size={18} /></div>
+            <div className="p-2 bg-[#F3EDF7] text-[#6344B6] rounded-lg shadow-sm"><Clock size={18} /></div>
             <h2 className="text-xl font-black text-[#1D1B20] tracking-tight">Activité Récente</h2>
           </div>
           
@@ -465,7 +465,7 @@ const DashboardPage: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black text-[#1D1B20] truncate tracking-tight uppercase">#{String(tx.id || '').substring(0, 10)}</p>
-                  <p className="text-[9px] font-black text-[#661489] truncate uppercase mt-0.5 tracking-widest opacity-60">{tx.fromCountry || 'RU'} ➔ {tx.toCountry || 'AF'}</p>
+                  <p className="text-[9px] font-black text-[#6344B6] truncate uppercase mt-0.5 tracking-widest opacity-60">{tx.fromCountry || 'RU'} ➔ {tx.toCountry || 'AF'}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-black text-[#1D1B20]">{tx.amount.toLocaleString()} <span className="text-[10px] opacity-40">{tx.currency}</span></p>

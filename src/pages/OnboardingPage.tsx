@@ -118,7 +118,7 @@ export const OnboardingPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-[#661489] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#661489]/20 hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full py-4 bg-[#6344B6] text-white rounded-2xl font-black text-sm shadow-xl shadow-[#6344B6]/20 hover:shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
                 <Loader size={20} className="animate-spin" />

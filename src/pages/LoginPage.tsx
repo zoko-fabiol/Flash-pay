@@ -198,13 +198,13 @@ export const LoginPage: React.FC = () => {
       <div className="absolute top-6 right-6 flex items-center gap-1 bg-white/30 backdrop-blur-md p-1 rounded-2xl border border-white/50 shadow-sm z-10">
         <button 
           onClick={() => setLanguage('fr')}
-          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'fr' ? 'bg-[#661489] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
+          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'fr' ? 'bg-[#6344B6] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
         >
           FR
         </button>
         <button 
           onClick={() => setLanguage('en')}
-          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'en' ? 'bg-[#661489] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
+          className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'en' ? 'bg-[#6344B6] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
         >
           EN
         </button>
@@ -362,7 +362,7 @@ export const LoginPage: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in zoom-in slide-in-from-bottom-8 duration-500">
             <div className="flex flex-col items-center text-center gap-6">
-              <div className="w-20 h-20 rounded-[28px] bg-[#661489]/10 flex items-center justify-center text-[#661489] animate-bounce-slow">
+              <div className="w-20 h-20 rounded-[28px] bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6] animate-bounce-slow">
                 {isNative ? <Fingerprint size={40} /> : <Key size={40} />}
               </div>
               
@@ -382,7 +382,7 @@ export const LoginPage: React.FC = () => {
                 <button
                   onClick={handleEnableBiometricAfterLogin}
                   disabled={loading}
-                  className="w-full py-4 bg-[#661489] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#661489]/20 active:scale-95 transition-all"
+                  className="w-full py-4 bg-[#6344B6] text-white rounded-2xl font-black text-sm shadow-lg shadow-[#6344B6]/20 active:scale-95 transition-all"
                 >
                   {loading ? 'Activation...' : 'ACTIVER MAINTENANT'}
                 </button>

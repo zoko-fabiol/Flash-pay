@@ -76,7 +76,7 @@ export const PreferencesPage: React.FC = () => {
   const Toggle = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
     <button
       onClick={onChange}
-      className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${value ? 'bg-[#661489]' : 'bg-slate-200'}`}
+      className={`w-14 h-8 rounded-full transition-all flex items-center px-1 ${value ? 'bg-[#6344B6]' : 'bg-slate-200'}`}
     >
       <div className={`w-6 h-6 bg-white rounded-full shadow-md transition-transform ${value ? 'translate-x-6' : 'translate-x-0'}`} />
     </button>
@@ -106,7 +106,7 @@ export const PreferencesPage: React.FC = () => {
         {/* Font Size Card */}
         <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-6 pt-6 pb-3 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#661489]/10 flex items-center justify-center text-[#661489]">
+            <div className="w-8 h-8 rounded-lg bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6]">
               <Type size={18} />
             </div>
             <h2 className="font-black text-slate-900">{t('font_size')}</h2>
@@ -119,7 +119,7 @@ export const PreferencesPage: React.FC = () => {
                   onClick={() => setPreferences({ ...preferences, fontSize: size })}
                   className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     preferences.fontSize === size 
-                      ? 'bg-white text-[#661489] shadow-md ring-1 ring-slate-100 scale-[1.02]' 
+                      ? 'bg-white text-[#6344B6] shadow-md ring-1 ring-slate-100 scale-[1.02]' 
                       : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
@@ -132,7 +132,7 @@ export const PreferencesPage: React.FC = () => {
 
         {/* Native Version Card (Android only) */}
         {deviceService.isAndroid() && !deviceService.isNative() && (
-          <div className="rounded-[32px] bg-gradient-to-br from-[#661489] to-[#4D0F67] border border-white/20 shadow-xl overflow-hidden p-6 text-white relative">
+          <div className="rounded-[32px] bg-gradient-to-br from-[#6344B6] to-[#4A3191] border border-white/20 shadow-xl overflow-hidden p-6 text-white relative">
             <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none" />
             <div className="flex items-start gap-4 relative z-10">
               <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0">
@@ -147,7 +147,7 @@ export const PreferencesPage: React.FC = () => {
                   onClick={() => {
                     window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/latest';
                   }}
-                  className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white text-[#661489] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                  className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white text-[#6344B6] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                 >
                   <Download size={14} />
                   Télécharger l'APK
@@ -162,7 +162,7 @@ export const PreferencesPage: React.FC = () => {
           <button
             onClick={handleSavePreferences}
             disabled={saving}
-            className="flex-[2] flex items-center justify-center gap-2 py-4 bg-[#661489] text-white font-black rounded-2xl shadow-xl shadow-[#661489]/20 hover:shadow-2xl hover:shadow-[#661489]/30 transition disabled:opacity-50 active:scale-95"
+            className="flex-[2] flex items-center justify-center gap-2 py-4 bg-[#6344B6] text-white font-black rounded-2xl shadow-xl shadow-[#6344B6]/20 hover:shadow-2xl hover:shadow-[#6344B6]/30 transition disabled:opacity-50 active:scale-95"
           >
             {saving ? <><Loader size={18} className="animate-spin" /> {t('saving')}</> : <><Save size={18} /> {t('save')}</>}
           </button>

@@ -27,7 +27,7 @@ const StatusBadge = ({ status }: { status: TransactionStatus }) => {
     pending: 'bg-[#ECE6F0] text-[#49454F]',
     proof_received: 'bg-[#EADDFF] text-[#21005D]',
     confirmed: 'bg-[#E8DEF8] text-[#1D192B]',
-    completed: 'bg-[#E8DEF8] text-[#1D192B] border border-[#661489]/10',
+    completed: 'bg-[#E8DEF8] text-[#1D192B] border border-[#6344B6]/10',
     failed: 'bg-[#F9DEDC] text-[#B3261E]',
     flagged_problem: 'bg-[#FFFBFE] text-[#B3261E] border border-[#B3261E]',
   };
@@ -127,7 +127,7 @@ const TransactionQueuePage: React.FC = () => {
             className={`
               px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all shadow-sm
               ${statusFilter === status 
-                ? 'bg-[#661489] text-white shadow-lg shadow-[#661489]/20' 
+                ? 'bg-[#6344B6] text-white shadow-lg shadow-[#6344B6]/20' 
                 : 'bg-white text-[#49454F] border border-[#E7E0EB] hover:bg-[#F3EDF7]'}
             `}
           >
@@ -156,7 +156,7 @@ const TransactionQueuePage: React.FC = () => {
                 <tr>
                   <td colSpan={7} className="px-8 py-32 text-center">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-12 h-12 border-4 border-[#6344B6] border-t-transparent rounded-full animate-spin"></div>
                       <span className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Analyse de la file d'attente...</span>
                     </div>
                   </td>
@@ -181,7 +181,7 @@ const TransactionQueuePage: React.FC = () => {
                          <div className="flex flex-col">
                             <span className="text-[#1D1B20] font-mono text-sm font-black tracking-tight">#{tx.id.substring(0, 10).toUpperCase()}</span>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[#661489] text-[9px] font-black uppercase tracking-widest">{tx.isBulk ? 'Multi-Envoi' : 'Unique'}</span>
+                              <span className="text-[#6344B6] text-[9px] font-black uppercase tracking-widest">{tx.isBulk ? 'Multi-Envoi' : 'Unique'}</span>
                               {tx.paymentMethod === 'bonus' && (
                                 <span className="text-emerald-600 text-[8px] font-black uppercase tracking-widest bg-emerald-100 px-1.5 py-0.5 rounded-sm">
                                   {tx.isHybrid ? 'Hybride' : 'Bonus'}
@@ -196,7 +196,7 @@ const TransactionQueuePage: React.FC = () => {
                         <span className="text-[#1D1B20] text-sm font-black tracking-tight">{tx.clientName || 'Anonyme'}</span>
                         <div className="flex flex-col mt-0.5">
                           {tx.clientPhone && (
-                            <a href={`tel:${tx.clientPhone}`} className="text-[#661489] text-[10px] font-bold hover:underline">{tx.clientPhone}</a>
+                            <a href={`tel:${tx.clientPhone}`} className="text-[#6344B6] text-[10px] font-bold hover:underline">{tx.clientPhone}</a>
                           )}
                           {tx.clientEmail && (
                             <div className="flex items-center gap-1">
@@ -207,7 +207,7 @@ const TransactionQueuePage: React.FC = () => {
                                   navigator.clipboard.writeText(tx.clientEmail!);
                                   toast.success('Email copié !');
                                 }}
-                                className="p-1 hover:bg-[#EADDFF] rounded text-[#661489] transition-colors"
+                                className="p-1 hover:bg-[#EADDFF] rounded text-[#6344B6] transition-colors"
                                 title="Copier l'email"
                               >
                                 <Copy size={10} />
@@ -222,7 +222,7 @@ const TransactionQueuePage: React.FC = () => {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
                            <span className="text-sm font-black text-[#1D1B20]">{tx.amount.toLocaleString()}</span>
-                           <span className="text-[10px] font-black text-[#661489] uppercase">{tx.currency}</span>
+                           <span className="text-[10px] font-black text-[#6344B6] uppercase">{tx.currency}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-40">
                            <ArrowUpRight size={10} /> {tx.operator || 'Système'}
@@ -231,7 +231,7 @@ const TransactionQueuePage: React.FC = () => {
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                         <div className="w-8 h-8 bg-[#F3EDF7] rounded-full flex items-center justify-center text-[#661489] border border-[#E7E0EB]">
+                         <div className="w-8 h-8 bg-[#F3EDF7] rounded-full flex items-center justify-center text-[#6344B6] border border-[#E7E0EB]">
                             <Globe size={14} />
                          </div>
                          <div className="flex flex-col">
@@ -256,7 +256,7 @@ const TransactionQueuePage: React.FC = () => {
                       <div className="flex justify-end gap-2">
                         <button 
                           onClick={() => navigate(`/queue/${tx.id}`)}
-                          className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#661489] hover:text-white rounded-xl transition-all shadow-sm" 
+                          className="p-2.5 bg-white border border-[#E7E0EB] text-[#49454F] hover:bg-[#6344B6] hover:text-white rounded-xl transition-all shadow-sm" 
                         >
                           <Eye size={18} />
                         </button>

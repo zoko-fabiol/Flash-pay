@@ -95,7 +95,7 @@ export const ReferralPage: React.FC = () => {
   };
 
   const stats = [
-    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#661489]',   bg: 'bg-[#F5E8FF]' },
+    { icon: Users,     label: t('referred_users'),   value: invitedCount,   color: 'text-[#6344B6]',   bg: 'bg-[#F5E8FF]' },
     { icon: Gift,      label: t('total_bonus'),       value: formatNumber(totalBonus, 'RUB'), color: 'text-emerald-700', bg: 'bg-emerald-50' },
     { icon: Clock,     label: t('pending_validated'), value: `${pendingCount} / ${rewardedCount}`, color: 'text-amber-700', bg: 'bg-amber-50' },
     { icon: TrendingUp,label: t('signup_commission'), value: formatNumber(referralBonusRUB, 'RUB'), color: 'text-blue-700', bg: 'bg-blue-50' },
@@ -106,7 +106,7 @@ export const ReferralPage: React.FC = () => {
       <div className="max-w-xl mx-auto space-y-6 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
         {/* Hero Section - Premium Design Matching Dashboard */}
-        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#661489] via-[#4D0F67] to-[#2A083B] p-8 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)]">
+        <section className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#6344B6] via-[#4A3191] to-[#2A083B] p-8 text-white shadow-[0_24px_60px_rgba(42,8,59,0.28)]">
           {/* Background Decorative Elements */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_30%)]" />
           <div className="absolute -right-6 -bottom-6 opacity-10 rotate-12">

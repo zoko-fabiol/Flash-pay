@@ -3,10 +3,10 @@
 @layer base {
   :root {
     /* M3 Expressive Palette - Soft Violet / Neutral Theme */
-    --m3-primary: #661489;
+    --m3-primary: #6344B6;
     --m3-on-primary: #FFFFFF;
-    --m3-primary-container: #EADDFF;
-    --m3-on-primary-container: #21005D;
+    --m3-primary-container: #F3E8FF;
+    --m3-on-primary-container: #2B005D;
     
     --m3-secondary: #625B71;
     --m3-on-secondary: #FFFFFF;
@@ -24,7 +24,7 @@
     
     /* Custom Tokens */
     --brand: var(--m3-primary);
-    --brand-dark: #4F378B;
+    --brand-dark: #4A3191;
   }
 
   body {

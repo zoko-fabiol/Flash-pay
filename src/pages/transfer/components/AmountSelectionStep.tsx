@@ -215,7 +215,7 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
       <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-6 space-y-4">
         <div className="space-y-4">
           {/* You Send */}
-          <div className={`p-6 rounded-[32px] transition-all border-2 ${isSendMode ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 bg-slate-50'}`}>
+          <div className={`p-6 rounded-[32px] transition-all border-2 ${isSendMode ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 bg-slate-50'}`}>
             <div className="flex justify-between items-start mb-2">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('you_send')}</span>
               
@@ -265,13 +265,13 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
           </div>
 
           <div className="flex justify-center -my-6 relative z-10">
-            <div className="w-12 h-12 rounded-2xl bg-[#661489] text-white shadow-lg shadow-[#661489]/30 flex items-center justify-center rotate-45">
+            <div className="w-12 h-12 rounded-2xl bg-[#6344B6] text-white shadow-lg shadow-[#6344B6]/30 flex items-center justify-center rotate-45">
               <ArrowRight className="-rotate-45" size={24} />
             </div>
           </div>
 
           {/* They Receive */}
-          <div className={`p-6 rounded-[32px] transition-all border-2 ${!isSendMode ? 'border-[#661489] bg-[#661489]/5 ring-4 ring-[#661489]/5' : 'border-slate-100 bg-slate-50'}`}>
+          <div className={`p-6 rounded-[32px] transition-all border-2 ${!isSendMode ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 bg-slate-50'}`}>
             <div className="flex justify-between items-start mb-2">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('recipient_receives')}</span>
               
@@ -378,7 +378,7 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
         <button
           onClick={nextStep}
           disabled={!isAmountValid}
-          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#661489] text-white shadow-xl shadow-[#661489]/20 disabled:opacity-50"
+          className="w-full px-8 py-5 rounded-full font-black transition-all flex items-center justify-center gap-3 bg-[#6344B6] text-white shadow-xl shadow-[#6344B6]/20 disabled:opacity-50"
         >
           {t('next')} <ChevronRight size={24} />
         </button>

@@ -300,7 +300,7 @@ export const ProfilePage: React.FC = () => {
         {success && <Success message={success} />}
 
         {/* ── Hero Card ── */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#661489] via-[#4D0F67] to-[#2A083B] p-6 text-white shadow-[0_16px_40px_rgba(42,8,59,0.28)]">
+        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6344B6] via-[#4A3191] to-[#2A083B] p-6 text-white shadow-[0_16px_40px_rgba(42,8,59,0.28)]">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
           <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-white/5" />
 
@@ -362,10 +362,10 @@ export const ProfilePage: React.FC = () => {
 
           <div className="flex flex-col gap-2 rounded-[24px] bg-gradient-to-br from-[#F5E8FF] to-[#FDF2F7] border border-[#F5E6F0] p-5">
             <div className="flex items-center gap-2">
-              <Gift size={16} className="text-[#661489]" />
+              <Gift size={16} className="text-[#6344B6]" />
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('referral_reward_label') || 'Parrainage'}</span>
             </div>
-            <p className="text-lg font-black text-[#661489]">
+            <p className="text-lg font-black text-[#6344B6]">
               {user?.solde_bonus ?? 0} <span className="text-sm font-bold uppercase tracking-wider opacity-60">RUB</span>
             </p>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
@@ -373,7 +373,7 @@ export const ProfilePage: React.FC = () => {
             </p>
             <button
               onClick={() => navigate('/referral')}
-              className="mt-auto text-[11px] font-bold text-[#661489] opacity-70 hover:opacity-100 text-left transition"
+              className="mt-auto text-[11px] font-bold text-[#6344B6] opacity-70 hover:opacity-100 text-left transition"
             >
               {t('view_details') || 'Voir détails'} →
             </button>
@@ -431,7 +431,7 @@ export const ProfilePage: React.FC = () => {
                     name="nom"
                     value={formData.nom}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#6344B6]/40"
                   />
                 ) : (
                   <p className="text-sm font-semibold text-slate-900">{user?.nom || '—'}</p>
@@ -461,7 +461,7 @@ export const ProfilePage: React.FC = () => {
                     name="tel"
                     value={formData.tel}
                     onChange={handleInputChange}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#6344B6]/40"
                   />
                 ) : (
                   <p className="text-sm font-semibold text-slate-900">{user?.tel || '—'}</p>
@@ -493,7 +493,7 @@ export const ProfilePage: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={loading}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#661489] text-white font-bold text-sm hover:bg-[#2D0723] transition disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl bg-[#6344B6] text-white font-bold text-sm hover:bg-[#2D0723] transition disabled:opacity-50"
               >
                 <Check size={16} /> {loading ? t('saving') : t('save')}
               </button>
@@ -513,7 +513,7 @@ export const ProfilePage: React.FC = () => {
             <h2 className="font-black text-slate-900">{t('security')}</h2>
             <button 
               onClick={() => setShowPasswordForm(!showPasswordForm)}
-              className="text-xs font-bold text-[#661489] hover:underline"
+              className="text-xs font-bold text-[#6344B6] hover:underline"
             >
               {showPasswordForm ? t('cancel') : t('change_password')}
             </button>
@@ -527,7 +527,7 @@ export const ProfilePage: React.FC = () => {
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6344B6]/40"
                   placeholder={t('placeholder_current_password')}
                 />
               </div>
@@ -537,7 +537,7 @@ export const ProfilePage: React.FC = () => {
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6344B6]/40"
                   placeholder={t('placeholder_new_password')}
                 />
               </div>
@@ -547,14 +547,14 @@ export const ProfilePage: React.FC = () => {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#6344B6]/40"
                   placeholder={t('placeholder_confirm_password')}
                 />
               </div>
               <button
                 onClick={handleUpdatePassword}
                 disabled={loading || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                className="w-full py-4 rounded-2xl bg-[#661489] text-white font-bold text-sm shadow-lg shadow-[#661489]/20 hover:bg-[#2D0723] transition disabled:opacity-50"
+                className="w-full py-4 rounded-2xl bg-[#6344B6] text-white font-bold text-sm shadow-lg shadow-[#6344B6]/20 hover:bg-[#2D0723] transition disabled:opacity-50"
               >
                 {loading ? t('updating_password') : t('update_password_btn')}
               </button>
@@ -578,7 +578,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="border-t border-slate-50 px-6 py-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${biometricEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${biometricEnabled ? 'bg-[#6344B6]/10 text-[#6344B6]' : 'bg-slate-50 text-slate-400'}`}>
                         <Fingerprint size={18} />
                       </div>
                       <div>
@@ -591,7 +591,7 @@ export const ProfilePage: React.FC = () => {
                     
                     <button
                       onClick={() => biometricEnabled ? handleDisableBiometric() : setShowBiometricConfirm(true)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${biometricEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${biometricEnabled ? 'bg-[#6344B6]' : 'bg-slate-200'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${biometricEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -606,12 +606,12 @@ export const ProfilePage: React.FC = () => {
                           value={confirmPasswordForBiometric}
                           onChange={(e) => setConfirmPasswordForBiometric(e.target.value)}
                           placeholder={t('password_placeholder_generic')}
-                          className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#661489]/40"
+                          className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#6344B6]/40"
                         />
                         <button
                           onClick={handleEnableBiometric}
                           disabled={!confirmPasswordForBiometric || loading}
-                          className="px-4 py-2 rounded-xl bg-[#661489] text-white text-xs font-bold disabled:opacity-50"
+                          className="px-4 py-2 rounded-xl bg-[#6344B6] text-white text-xs font-bold disabled:opacity-50"
                         >
                           {loading ? '...' : t('activate')}
                         </button>
@@ -630,7 +630,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="border-t border-slate-50 px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#6344B6]/10 text-[#6344B6]' : 'bg-slate-50 text-slate-400'}`}>
                         <Lock size={18} />
                       </div>
                       <div>
@@ -647,7 +647,7 @@ export const ProfilePage: React.FC = () => {
                         setAppLockEnabled(newValue);
                         localStorage.setItem('app_lock_enabled', String(newValue));
                       }}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#6344B6]' : 'bg-slate-200'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -661,7 +661,7 @@ export const ProfilePage: React.FC = () => {
               <div className="border-t border-slate-50 px-6 py-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${pinEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${pinEnabled ? 'bg-[#6344B6]/10 text-[#6344B6]' : 'bg-slate-50 text-slate-400'}`}>
                       <Key size={18} />
                     </div>
                     <div>
@@ -682,7 +682,7 @@ export const ProfilePage: React.FC = () => {
                         setShowPinModal(true);
                       }
                     }}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${pinEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${pinEnabled ? 'bg-[#6344B6]' : 'bg-slate-200'}`}
                   >
                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${pinEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
@@ -693,7 +693,7 @@ export const ProfilePage: React.FC = () => {
                 <div className="border-t border-slate-50 px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#661489]/10 text-[#661489]' : 'bg-slate-50 text-slate-400'}`}>
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${appLockEnabled ? 'bg-[#6344B6]/10 text-[#6344B6]' : 'bg-slate-50 text-slate-400'}`}>
                         <Lock size={18} />
                       </div>
                       <div>
@@ -710,7 +710,7 @@ export const ProfilePage: React.FC = () => {
                         setAppLockEnabled(newValue);
                         pinService.setAppLockEnabled(newValue);
                       }}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#661489]' : 'bg-slate-200'}`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${appLockEnabled ? 'bg-[#6344B6]' : 'bg-slate-200'}`}
                     >
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${appLockEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                     </button>
@@ -733,7 +733,7 @@ export const ProfilePage: React.FC = () => {
               className="w-full flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition border-b border-slate-50 last:border-0"
             >
               <div className="w-9 h-9 rounded-xl bg-[#F5E8FF] flex items-center justify-center shrink-0">
-                <Icon size={16} className="text-[#661489]" />
+                <Icon size={16} className="text-[#6344B6]" />
               </div>
               <span className="flex-1 text-sm font-semibold text-slate-800 text-left">{label}</span>
               <ChevronRight size={16} className="text-slate-300" />
@@ -746,7 +746,7 @@ export const ProfilePage: React.FC = () => {
             onClick={() => navigate('/support')}
             className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left"
           >
-            <HelpCircle size={20} className="text-[#661489]" />
+            <HelpCircle size={20} className="text-[#6344B6]" />
             <p className="font-bold text-slate-900 text-sm">{t('contact_support')}</p>
             <p className="text-xs text-slate-400">{t('support_desc')}</p>
           </button>
@@ -754,7 +754,7 @@ export const ProfilePage: React.FC = () => {
             onClick={() => setShowTerms(true)}
             className="flex flex-col items-start gap-2 p-5 rounded-[24px] bg-white border border-slate-100 shadow-sm hover:shadow-md transition text-left"
           >
-            <Star size={20} className="text-[#661489]" />
+            <Star size={20} className="text-[#6344B6]" />
             <p className="font-bold text-slate-900 text-sm">{t('about')}</p>
             <p className="text-xs text-slate-400">{t('legal_desc')}</p>
           </button>
@@ -845,7 +845,7 @@ export const ProfilePage: React.FC = () => {
             <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end">
               <button 
                 onClick={() => setShowTerms(false)}
-                className="px-8 py-3 rounded-2xl bg-[#661489] text-white font-bold text-sm shadow-lg shadow-[#661489]/20 hover:bg-[#2D0723] transition"
+                className="px-8 py-3 rounded-2xl bg-[#6344B6] text-white font-bold text-sm shadow-lg shadow-[#6344B6]/20 hover:bg-[#2D0723] transition"
               >
                 {t('close') || 'Fermer'}
               </button>

@@ -3,20 +3,20 @@
 
 @theme {
   /* Vibrant Fintech Palette */
-  --color-primary: #661489;
-  --color-primary-dark: #4D0F67;
-  --color-primary-light: #8E3DA8;
+  --color-primary: #6344B6;
+  --color-primary-dark: #4A3191;
+  --color-primary-light: #866ED1;
   
   --color-accent: #00D1FF; /* Cyan accent for contrast */
-  --color-flash: #c084fc;
-  --color-brand: #661489;
+  --color-flash: #866ED1;
+  --color-brand: #6344B6;
   --color-ink: #1f2937;
   
   --color-background: #F8F9FF;
   --color-surface: #FFFFFF;
   
-  --shadow-premium: 0 10px 40px -10px rgba(102, 20, 137, 0.12);
-  --shadow-glass: 0 8px 32px 0 rgba(102, 20, 137, 0.07);
+  --shadow-premium: 0 10px 40px -10px rgba(99, 68, 182, 0.12);
+  --shadow-glass: 0 8px 32px 0 rgba(99, 68, 182, 0.07);
 
   --font-sans: "Outfit", sans-serif;
 }
@@ -60,7 +60,7 @@ body {
 
 .premium-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 50px -12px rgba(102, 20, 137, 0.18);
+  box-shadow: 0 20px 50px -12px rgba(99, 68, 182, 0.18);
 }
 
 /* Gradients */

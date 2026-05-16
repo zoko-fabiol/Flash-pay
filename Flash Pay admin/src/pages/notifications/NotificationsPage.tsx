@@ -95,7 +95,7 @@ const NotificationsPage: React.FC = () => {
               }}
               className={`
                 group relative bg-white border rounded-[24px] p-5 flex items-start gap-4 transition-all cursor-pointer shadow-sm hover:shadow-md
-                ${notification.read ? 'border-slate-100 opacity-75' : 'border-[#EADDFF] ring-1 ring-[#661489]/5 shadow-[#661489]/5'}
+                ${notification.read ? 'border-slate-100 opacity-75' : 'border-[#EADDFF] ring-1 ring-[#6344B6]/5 shadow-[#6344B6]/5'}
               `}
             >
               <div className={`
@@ -111,7 +111,7 @@ const NotificationsPage: React.FC = () => {
                     {notification.title}
                   </h4>
                   {!notification.read && (
-                    <span className="w-1.5 h-1.5 bg-[#661489] rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-[#6344B6] rounded-full"></span>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">

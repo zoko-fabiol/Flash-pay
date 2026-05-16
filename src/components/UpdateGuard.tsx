@@ -16,13 +16,13 @@ export const UpdateGuard: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
-  useEffect(() => {
-    const checkVersion = async () => {
-      // Le popup de mise à jour ne doit s'afficher QUE sur l'application native (APK), JAMAIS sur le site web
-      if (Capacitor.getPlatform() === 'web') {
-        return;
-      }
+  // Sécurité absolue : si on est sur le Web, on ne fait RIEN
+  const isWeb = Capacitor.getPlatform() === 'web' || !Capacitor.isNativePlatform();
 
+  useEffect(() => {
+    if (isWeb) return;
+
+    const checkVersion = async () => {
       try {
         const info = await App.getInfo();
         const localVersionCode = parseInt(info.build, 10);
@@ -59,7 +59,7 @@ export const UpdateGuard: React.FC = () => {
     }
   };
 
-  if (!showModal || isDismissed) return null;
+  if (isWeb || !showModal || isDismissed) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 animate-in fade-in duration-500">
@@ -67,7 +67,7 @@ export const UpdateGuard: React.FC = () => {
       
       <div className="relative bg-white w-full max-w-sm rounded-[40px] shadow-2xl border border-[#E7E0EB] overflow-hidden animate-in zoom-in-95 duration-500">
         {/* Header Illustration */}
-        <div className="h-40 bg-[#661489] relative flex items-center justify-center overflow-hidden">
+        <div className="h-40 bg-[#6344B6] relative flex items-center justify-center overflow-hidden">
            <div className="absolute inset-0 opacity-20">
               <div className="absolute top-0 left-0 w-40 h-40 bg-white rounded-full -ml-20 -mt-20 blur-3xl" />
               <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mb-20 blur-3xl" />
@@ -86,7 +86,7 @@ export const UpdateGuard: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-2xl font-black text-[#1D1B20] tracking-tight mb-2">Mise à jour disponible</h3>
             <div className="inline-flex items-center gap-2 bg-[#F3EDF7] px-3 py-1 rounded-full border border-[#EADDFF]">
-              <span className="text-[10px] font-black text-[#661489] uppercase tracking-widest">Version {updateInfo?.version}</span>
+              <span className="text-[10px] font-black text-[#6344B6] uppercase tracking-widest">Version {updateInfo?.version}</span>
             </div>
           </div>
 
@@ -100,7 +100,7 @@ export const UpdateGuard: React.FC = () => {
           <div className="flex flex-col gap-3">
             <button 
               onClick={handleUpdate}
-              className="w-full bg-[#661489] text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-[#661489]/20 hover:bg-[#4D0F67] active:scale-95 transition-all flex items-center justify-center gap-3"
+              className="w-full bg-[#6344B6] text-white py-4 rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-[#6344B6]/20 hover:bg-[#4A3191] active:scale-95 transition-all flex items-center justify-center gap-3"
             >
               <Download size={18} /> Télécharger maintenant
             </button>

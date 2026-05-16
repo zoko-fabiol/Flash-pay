@@ -113,9 +113,9 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
       
       {/* Summary Bar - Premium Design */}
       <div className="mb-10 bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className={`p-6 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all ${isAmountMatching ? 'bg-emerald-50/30' : 'bg-[#661489]/5'}`}>
+        <div className={`p-6 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all ${isAmountMatching ? 'bg-emerald-50/30' : 'bg-[#6344B6]/5'}`}>
           <div className="space-y-1 text-center sm:text-left">
-            <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${isAmountMatching ? 'text-emerald-600' : 'text-[#661489]'}`}>
+            <p className={`text-[11px] font-black uppercase tracking-[0.2em] ${isAmountMatching ? 'text-emerald-600' : 'text-[#6344B6]'}`}>
               {isAmountMatching ? 'Distribution terminée ✓' : 'Répartition du montant'}
             </p>
             <div className="flex items-baseline justify-center sm:justify-start gap-2">
@@ -145,7 +145,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
         {/* Progress Bar */}
         <div className="h-2 bg-slate-100 w-full relative">
           <div 
-            className={`h-full transition-all duration-700 ease-out ${isAmountMatching ? 'bg-emerald-500' : (totalDistributed > targetAmount ? 'bg-rose-500' : 'bg-[#661489]')}`}
+            className={`h-full transition-all duration-700 ease-out ${isAmountMatching ? 'bg-emerald-500' : (totalDistributed > targetAmount ? 'bg-rose-500' : 'bg-[#6344B6]')}`}
             style={{ width: `${Math.min(100, (totalDistributed / targetAmount) * 100)}%` }}
           />
         </div>
@@ -156,7 +156,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
           <div key={i} className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-6 space-y-6 relative group overflow-hidden">
              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#661489]/10 flex items-center justify-center text-[#661489] font-black">
+                  <div className="w-10 h-10 rounded-2xl bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6] font-black">
                     {i + 1}
                   </div>
                   <span className="font-black text-slate-900 uppercase text-xs tracking-widest">{t('recipient')}</span>
@@ -165,7 +165,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => onSelectFromContacts(i)}
-                    className="p-3 rounded-2xl bg-slate-50 text-slate-500 hover:bg-[#661489]/10 hover:text-[#661489] transition-all"
+                    className="p-3 rounded-2xl bg-slate-50 text-slate-500 hover:bg-[#6344B6]/10 hover:text-[#6344B6] transition-all"
                     title={t('choose_saved_contact')}
                   >
                     <BookUser size={20} />
@@ -185,7 +185,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
                     value={r.name}
                     onChange={e => updateRecipient(i, { name: e.target.value })}
                     placeholder={t('recipient_name')}
-                    className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none text-slate-900 font-bold bg-slate-50 transition-all"
+                    className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-[#6344B6] outline-none text-slate-900 font-bold bg-slate-50 transition-all"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -195,7 +195,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
                       value={r.phone}
                       onChange={e => updateRecipient(i, { phone: e.target.value })}
                       placeholder={t('mobile_number')}
-                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none text-slate-900 font-bold bg-slate-50 transition-all"
+                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-[#6344B6] outline-none text-slate-900 font-bold bg-slate-50 transition-all"
                     />
                     {r.operator && (
                       <div className="mt-2 flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-xl w-fit border border-emerald-100/50">
@@ -210,7 +210,7 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
                       value={r.amount || ''}
                       onChange={e => updateRecipient(i, { amount: parseFloat(e.target.value) || 0 })}
                       placeholder={t('amount')}
-                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-[#661489] outline-none text-slate-900 font-bold bg-slate-50 transition-all pr-16"
+                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-[#6344B6] outline-none text-slate-900 font-bold bg-slate-50 transition-all pr-16"
                     />
                     <span className="absolute right-5 top-1/2 -translate-y-1/2 font-black text-slate-400">RUB</span>
                   </div>
@@ -221,9 +221,9 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
         
         <button 
           onClick={addRecipient}
-          className="w-full p-6 rounded-[40px] border-4 border-dashed border-slate-100 text-slate-300 font-black flex flex-col items-center justify-center gap-4 hover:border-[#661489]/20 hover:text-[#661489] hover:bg-[#661489]/5 transition-all"
+          className="w-full p-6 rounded-[40px] border-4 border-dashed border-slate-100 text-slate-300 font-black flex flex-col items-center justify-center gap-4 hover:border-[#6344B6]/20 hover:text-[#6344B6] hover:bg-[#6344B6]/5 transition-all"
         >
-          <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#661489]/10">
+          <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-[#6344B6]/10">
             <Plus size={32} />
           </div>
           <span className="text-lg tracking-tight">{t('add_another_recipient')}</span>
@@ -249,16 +249,16 @@ export const BulkRecipientStep: React.FC<BulkRecipientStepProps> = ({
                   <button 
                     key={contact.id} 
                     onClick={() => onContactPicked(contact)}
-                    className="w-full p-4 rounded-2xl border border-slate-100 hover:border-[#661489] hover:bg-[#661489]/5 flex items-center gap-4 transition-all text-left group"
+                    className="w-full p-4 rounded-2xl border border-slate-100 hover:border-[#6344B6] hover:bg-[#6344B6]/5 flex items-center gap-4 transition-all text-left group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-[#661489]/10 group-hover:text-[#661489] transition-colors font-bold">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-[#6344B6]/10 group-hover:text-[#6344B6] transition-colors font-bold">
                       {(contact.name || contact.recipientName || '?').charAt(0).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-900 truncate">{contact.name || contact.recipientName}</p>
                       <p className="text-xs text-slate-500 font-medium">{contact.phone || contact.beneficiaryAccount || contact.recipientPhone}</p>
                     </div>
-                    <ChevronRight size={18} className="text-slate-300 group-hover:text-[#661489] transition-colors" />
+                    <ChevronRight size={18} className="text-slate-300 group-hover:text-[#6344B6] transition-colors" />
                   </button>
                 ))
               )}

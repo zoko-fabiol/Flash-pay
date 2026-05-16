@@ -105,7 +105,7 @@ const ProblemsPage: React.FC = () => {
                 onClick={() => setFilter(f.id as any)}
                 className={`
                   px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all
-                  ${filter === f.id ? 'bg-[#661489] text-white shadow-md' : 'text-[#49454F] hover:bg-[#EADDFF] hover:text-[#21005D]'}
+                  ${filter === f.id ? 'bg-[#6344B6] text-white shadow-md' : 'text-[#49454F] hover:bg-[#EADDFF] hover:text-[#21005D]'}
                 `}
               >
                 {f.label}
@@ -118,7 +118,7 @@ const ProblemsPage: React.FC = () => {
       <div className="grid grid-cols-1 gap-6">
         {loading ? (
           <div className="py-32 flex flex-col items-center gap-4">
-            <div className="w-12 h-12 border-4 border-[#661489] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#6344B6] border-t-transparent rounded-full animate-spin"></div>
             <p className="text-[#49454F] text-[10px] font-black uppercase tracking-widest">Scan des anomalies en cours...</p>
           </div>
         ) : filteredProblems.length === 0 ? (
@@ -145,18 +145,18 @@ const ProblemsPage: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
                   <h3 className="text-[#1D1B20] font-black text-xl tracking-tight uppercase truncate">{(problem.type || 'Anomalie').replace('_', ' ')}</h3>
-                  <span className="text-[#661489] text-[9px] font-black tracking-widest bg-[#EADDFF] px-2.5 py-1 rounded-md">ID: {problem.id.substring(0, 10).toUpperCase()}</span>
+                  <span className="text-[#6344B6] text-[9px] font-black tracking-widest bg-[#EADDFF] px-2.5 py-1 rounded-md">ID: {problem.id.substring(0, 10).toUpperCase()}</span>
                 </div>
                 <p className="text-[#49454F] text-sm font-medium leading-relaxed line-clamp-2">{problem.description}</p>
                 
                 <div className="flex flex-wrap gap-6 mt-6">
                   <div className="flex items-center gap-2 text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-60">
-                    <User size={14} className="text-[#661489]" /> Client: {problem.userId.substring(0, 8)}...
+                    <User size={14} className="text-[#6344B6]" /> Client: {problem.userId.substring(0, 8)}...
                   </div>
                   <div className="flex items-center gap-2 text-[9px] font-black text-[#49454F] uppercase tracking-widest opacity-60">
-                    <Clock size={14} className="text-[#661489]" /> Signalé le {problem.createdAt.toDate().toLocaleDateString('fr-FR')}
+                    <Clock size={14} className="text-[#6344B6]" /> Signalé le {problem.createdAt.toDate().toLocaleDateString('fr-FR')}
                   </div>
-                  <div className="flex items-center gap-2 text-[9px] font-black text-[#661489] uppercase tracking-widest">
+                  <div className="flex items-center gap-2 text-[9px] font-black text-[#6344B6] uppercase tracking-widest">
                     <Activity size={14} /> Transaction: #{problem.transactionId.substring(0, 8)}...
                   </div>
                 </div>
@@ -208,7 +208,7 @@ const ProblemsPage: React.FC = () => {
           <textarea
             value={resolutionText}
             onChange={(e) => setResolutionText(e.target.value)}
-            className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] p-5 text-sm font-medium text-[#1D1B20] focus:ring-4 focus:ring-[#661489]/10 transition-all h-32"
+            className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] p-5 text-sm font-medium text-[#1D1B20] focus:ring-4 focus:ring-[#6344B6]/10 transition-all h-32"
             placeholder="Décrivez les actions menées..."
           />
           <div className="flex gap-4">
@@ -242,7 +242,7 @@ const ProblemsPage: React.FC = () => {
               </div>
               <div>
                 <h4 className="font-black text-[#1D1B20] text-lg uppercase tracking-tight">{selectedProblem.type}</h4>
-                <p className="text-[9px] font-black text-[#661489] uppercase tracking-widest opacity-60">ID: {selectedProblem.id}</p>
+                <p className="text-[9px] font-black text-[#6344B6] uppercase tracking-widest opacity-60">ID: {selectedProblem.id}</p>
               </div>
             </div>
 
@@ -265,11 +265,11 @@ const ProblemsPage: React.FC = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-white border border-[#E7E0EB] rounded-2xl">
                 <p className="text-[8px] font-black text-[#49454F] uppercase tracking-widest opacity-40 mb-1">Signalé par (UserID)</p>
-                <p className="text-[10px] font-mono font-black text-[#661489]">{selectedProblem.userId}</p>
+                <p className="text-[10px] font-mono font-black text-[#6344B6]">{selectedProblem.userId}</p>
               </div>
               <div className="p-4 bg-white border border-[#E7E0EB] rounded-2xl">
                 <p className="text-[8px] font-black text-[#49454F] uppercase tracking-widest opacity-40 mb-1">Transaction associée</p>
-                <p className="text-[10px] font-mono font-black text-[#661489]">#{selectedProblem.transactionId}</p>
+                <p className="text-[10px] font-mono font-black text-[#6344B6]">#{selectedProblem.transactionId}</p>
               </div>
             </div>
 

@@ -10,8 +10,8 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
     <div className="relative flex flex-col items-center">
       {/* Animated Rings Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none scale-150">
-        <div className="w-48 h-48 rounded-full border border-[#661489]/10 animate-[spin_6s_linear_infinite]" />
-        <div className="absolute w-32 h-32 rounded-full border-t border-[#661489] animate-spin" />
+        <div className="w-48 h-48 rounded-full border border-[#6344B6]/10 animate-[spin_6s_linear_infinite]" />
+        <div className="absolute w-32 h-32 rounded-full border-t border-[#6344B6] animate-spin" />
       </div>
 
       <div className="relative w-32 h-32 mb-10 flex items-center justify-center animate-[pulse_2s_ease-in-out_infinite]">
@@ -22,10 +22,10 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
       <div className="flex flex-col items-center gap-4 relative z-10">
         <div className="flex flex-col items-center">
            <span className="text-[11px] font-black uppercase tracking-[0.4em] text-[#1D1B20]">Flash Pay</span>
-           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#661489] opacity-60 mt-1">Initialisation...</span>
+           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#6344B6] opacity-60 mt-1">Initialisation...</span>
         </div>
         <div className="w-24 h-1 bg-[#F3EDF7] rounded-full overflow-hidden shadow-inner">
-          <div className="h-full bg-[#661489] w-full animate-[shimmer_1.5s_infinite] origin-left" />
+          <div className="h-full bg-[#6344B6] w-full animate-[shimmer_1.5s_infinite] origin-left" />
         </div>
       </div>
 

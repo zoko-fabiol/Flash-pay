@@ -67,7 +67,7 @@ export const ConfirmProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   onClick={handleConfirm}
                   className={`w-full py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95 ${
                     options.type === 'danger' ? 'bg-rose-500 text-white hover:bg-rose-600' : 
-                    'bg-[#661489] text-white hover:bg-[#4D0F67]'
+                    'bg-[#6344B6] text-white hover:bg-[#4A3191]'
                   }`}
                 >
                   {options.confirmLabel || 'Confirmer'}

@@ -252,7 +252,7 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-[#661489] flex flex-col items-center justify-center p-8 text-white">
+    <div className="fixed inset-0 z-[9999] bg-[#6344B6] flex flex-col items-center justify-center p-8 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.1),transparent_40%)]" />
       
       <div className="relative z-10 flex flex-col items-center gap-8 max-w-xs text-center">
@@ -279,10 +279,10 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
             <button
               onClick={() => isNative ? handleAuthenticate() : setShowPinModal(true)}
               disabled={isAuthenticating}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#661489] rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#6344B6] rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50"
             >
               {isAuthenticating ? (
-                <div className="w-5 h-5 border-2 border-[#661489] border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-[#6344B6] border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   {isNative ? <Fingerprint size={20} /> : <Key size={20} />}
@@ -334,10 +334,10 @@ export const BiometricGuard: React.FC<BiometricGuardProps> = ({ children }) => {
               <button
                 type="submit"
                 disabled={isVerifyingPassword || !password}
-                className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#661489] rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-3 py-4 bg-white text-[#6344B6] rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all disabled:opacity-50"
               >
                 {isVerifyingPassword ? (
-                  <div className="w-5 h-5 border-2 border-[#661489] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-[#6344B6] border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
                     <KeyRound size={20} />

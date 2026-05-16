@@ -10,8 +10,8 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
     <div className="relative flex flex-col items-center">
       {/* Animated Rings Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="w-48 h-48 rounded-full border-2 border-[#661489]/5 animate-[spin_3s_linear_infinite]" />
-        <div className="absolute w-40 h-40 rounded-full border-t-2 border-[#661489]/20 animate-spin" />
+        <div className="w-48 h-48 rounded-full border-2 border-[#6344B6]/5 animate-[spin_3s_linear_infinite]" />
+        <div className="absolute w-40 h-40 rounded-full border-t-2 border-[#6344B6]/20 animate-spin" />
       </div>
 
       {/* Branded Logo with Pulse Effect */}
@@ -21,9 +21,9 @@ export const Loading: React.FC<LoadingProps> = ({ fullScreen = false }) => {
 
       {/* Loading Text & Bar */}
       <div className="flex flex-col items-center gap-3">
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#661489]/50 ml-1">Chargement</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#6344B6]/50 ml-1">Chargement</span>
         <div className="w-12 h-1 bg-slate-200 rounded-full overflow-hidden">
-          <div className="h-full bg-[#661489] w-full animate-[shimmer_1.5s_infinite] origin-left" />
+          <div className="h-full bg-[#6344B6] w-full animate-[shimmer_1.5s_infinite] origin-left" />
         </div>
       </div>
 

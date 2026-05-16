@@ -139,12 +139,12 @@ const LoginPage: React.FC = () => {
     <div className="min-h-screen bg-[#FEF7FF] flex items-center justify-center p-6 relative overflow-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-[-10%] right-[-5%] w-[400px] h-[400px] bg-[#EADDFF] rounded-full blur-[100px] opacity-40"></div>
-      <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#661489] rounded-full blur-[120px] opacity-10"></div>
+      <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] bg-[#6344B6] rounded-full blur-[120px] opacity-10"></div>
       
       <div className="max-w-md w-full relative z-10">
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-12 animate-in fade-in slide-in-from-top-10 duration-1000">
-          <div className="w-20 h-20 bg-[#661489] rounded-[28px] flex items-center justify-center shadow-2xl shadow-[#661489]/30 mb-6 group hover:scale-110 transition-transform">
+          <div className="w-20 h-20 bg-[#6344B6] rounded-[28px] flex items-center justify-center shadow-2xl shadow-[#6344B6]/30 mb-6 group hover:scale-110 transition-transform">
             <CreditCardProIcon className="text-white" size={32} />
           </div>
           <h1 className="text-4xl font-black text-[#1D1B20] tracking-tighter">FLASH PAY</h1>
@@ -173,12 +173,12 @@ const LoginPage: React.FC = () => {
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#49454F] uppercase tracking-widest ml-1 opacity-60">Email professionnel</label>
               <div className="relative group">
-                <MessagesProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#661489] transition-colors" size={20} />
+                <MessagesProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6344B6] transition-colors" size={20} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                  className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#661489]/10 focus:border-[#661489] transition-all outline-none"
+                  className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#6344B6]/10 focus:border-[#6344B6] transition-all outline-none"
                   placeholder="admin@flashpay.com"
                   required
                 />
@@ -191,18 +191,18 @@ const LoginPage: React.FC = () => {
                 <button 
                   type="button" 
                   onClick={handleForgotPassword}
-                  className="text-[9px] font-black text-[#661489] uppercase tracking-wider hover:underline"
+                  className="text-[9px] font-black text-[#6344B6] uppercase tracking-wider hover:underline"
                 >
                   Oublié ?
                 </button>
               </div>
               <div className="relative group">
-                <LockProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#661489] transition-colors" size={20} />
+                <LockProIcon className="absolute left-5 top-1/2 -translate-y-1/2 text-[#49454F] group-focus-within:text-[#6344B6] transition-colors" size={20} />
                 <input
                   type="password"
                   value={password}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                  className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#661489]/10 focus:border-[#661489] transition-all outline-none"
+                  className="w-full bg-[#F3EDF7] border border-[#CAC4D0] rounded-[24px] py-4 pl-14 pr-6 text-[#1D1B20] font-bold text-sm focus:ring-4 focus:ring-[#6344B6]/10 focus:border-[#6344B6] transition-all outline-none"
                   placeholder="••••••••"
                   required={!resetSent}
                 />
@@ -213,7 +213,7 @@ const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#661489] hover:bg-[#21005D] text-white font-black py-5 rounded-full shadow-2xl shadow-[#661489]/40 flex items-center justify-center gap-3 transition-all transform active:scale-95 disabled:opacity-50 text-[11px] uppercase tracking-widest"
+                className="w-full bg-[#6344B6] hover:bg-[#21005D] text-white font-black py-5 rounded-full shadow-2xl shadow-[#6344B6]/40 flex items-center justify-center gap-3 transition-all transform active:scale-95 disabled:opacity-50 text-[11px] uppercase tracking-widest"
               >
                 {loading ? (
                   <LoaderProIcon className="animate-spin" size={20} />
@@ -229,7 +229,7 @@ const LoginPage: React.FC = () => {
                   type="button"
                   onClick={handleBiometricLogin}
                   disabled={loading}
-                  className="w-full bg-white border-2 border-[#661489]/20 text-[#661489] font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all transform active:scale-95 hover:bg-[#661489]/5 text-[10px] uppercase tracking-widest"
+                  className="w-full bg-white border-2 border-[#6344B6]/20 text-[#6344B6] font-black py-4 rounded-full flex items-center justify-center gap-3 transition-all transform active:scale-95 hover:bg-[#6344B6]/5 text-[10px] uppercase tracking-widest"
                 >
                   <Fingerprint size={20} />
                   Utiliser l'empreinte

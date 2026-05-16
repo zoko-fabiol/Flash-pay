@@ -68,7 +68,7 @@ const AndroidBackHandler: React.FC = () => {
 
         // Set branded status bar
         try {
-          await StatusBar.setBackgroundColor({ color: '#661489' });
+          await StatusBar.setBackgroundColor({ color: '#6344B6' });
           await StatusBar.setStyle({ style: Style.Dark });
         } catch {
           // Not on native — ignore
