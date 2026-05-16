@@ -1,6 +1,6 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -15,7 +15,16 @@ const firebaseConfig = {
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// Initialize Firestore
-export const db = getFirestore(app);
+// Initialisation sécurisée de Firestore (compatible HMR)
+// Désactive le cache persistant sur disque pour garantir une synchronisation instantanée.
+let firestore;
+try {
+  firestore = initializeFirestore(app, {
+    localCache: memoryLocalCache()
+  });
+} catch (e) {
+  firestore = getFirestore(app);
+}
 
+export const db = firestore;
 export const storage = getStorage(app);
