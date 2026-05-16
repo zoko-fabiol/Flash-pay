@@ -10,8 +10,9 @@ export const emailService = {
   async sendEmail(recipient: string | string[], subject: string, htmlBody: string) {
     const recipients = Array.isArray(recipient) ? recipient : [recipient];
     try {
-      // Priorité à la fonction proxy Netlify pour éviter CORS et avoir un meilleur suivi
-      const response = await fetch('/.netlify/functions/send-email', {
+      // URL absolue pour supporter l'APK (qui n'a pas de domaine relatif)
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://flash-pay.site';
+      const response = await fetch(`${baseUrl}/.netlify/functions/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
