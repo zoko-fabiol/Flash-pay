@@ -3,7 +3,7 @@ import { app } from './firebase';
 
 const db = getFirestore(app);
 
-const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbxMM0PgmUvuAyJ-5BP4R36u5aHbhSKF-OrwtmeW-ULdHJ3qzNOmM6_hI8Yopb65aAL6OQ/exec';
+const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbyfnpE8gpa-_uVnhEvlJN4WnvgUjdpekThBgfZHkvoyyCErm8O9QV0LuFoMGNvKN9sCZQ/exec';
 
 export interface AdminBroadcast {
   title: string;

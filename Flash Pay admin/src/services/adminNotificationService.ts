@@ -22,7 +22,7 @@ export async function sendBroadcastDirect(
   options: BroadcastOptions = { sendEmail: true, sendNotification: true }
 ): Promise<{ sent: number; failed: number }> {
   try {
-    const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbxMM0PgmUvuAyJ-5BP4R36u5aHbhSKF-OrwtmeW-ULdHJ3qzNOmM6_hI8Yopb65aAL6OQ/exec';
+    const GAS_URL = import.meta.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbyfnpE8gpa-_uVnhEvlJN4WnvgUjdpekThBgfZHkvoyyCErm8O9QV0LuFoMGNvKN9sCZQ/exec';
     const usersRef = collection(db, 'users');
     const usersSnap = await getDocs(usersRef);
 

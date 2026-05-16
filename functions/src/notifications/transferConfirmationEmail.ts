@@ -6,7 +6,7 @@ const db = admin.firestore();
 
 // Get Apps Script URL from runtime config
 const appsScriptUrl = functions.config().apps?.script_url || 
-  'https://script.google.com/macros/s/AKfycbxMM0PgmUvuAyJ-5BP4R36u5aHbhSKF-OrwtmeW-ULdHJ3qzNOmM6_hI8Yopb65aAL6OQ/exec';
+  'https://script.google.com/macros/s/AKfycbyfnpE8gpa-_uVnhEvlJN4WnvgUjdpekThBgfZHkvoyyCErm8O9QV0LuFoMGNvKN9sCZQ/exec';
 
 /**
  * Send confirmation email when transfer is confirmed
