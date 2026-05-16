@@ -19,6 +19,8 @@ dist_desktop
 !package.json
 !tsconfig.json
 !package-lock.json
+!public/version.json
+!public/manifest.json
 
 # Editor directories and files
 .vscode/*

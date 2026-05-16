@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, RefreshCw, X, ChevronRight, Sparkles } from 'lucide-react';
-
-// --- CONFIGURATION DE LA VERSION ACTUELLE ---
-const CURRENT_APP_VERSION = "1.0.2";
-const CURRENT_VERSION_CODE = 4;
-// --------------------------------------------
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 interface VersionData {
   version: string;
@@ -22,23 +19,26 @@ export const UpdateGuard: React.FC = () => {
   useEffect(() => {
     const checkVersion = async () => {
       try {
+        // Obtenir le vrai versionCode natif de l'APK (ou 4 par défaut sur le web)
+        let localVersionCode = 4;
+        if (Capacitor.isNativePlatform()) {
+          const info = await App.getInfo();
+          localVersionCode = parseInt(info.build, 10);
+        }
+
         // On récupère le fichier version.json sur le serveur Netlify
-        // Cache busting pour éviter de récupérer une vieille version du JSON
         const response = await fetch(`/version.json?t=${Date.now()}`);
         if (!response.ok) return;
 
-        // Défensive: certains hôtes renvoient la page HTML (index.html) sur 404s
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-          const body = await response.text();
-          console.warn('Version endpoint did not return JSON, skipping version check. Response:', body.slice(0, 256));
           return;
         }
 
         const data: VersionData = await response.json();
         
-        // Comparaison : Si le versionCode du serveur est plus grand que le local
-        if (data.versionCode > CURRENT_VERSION_CODE) {
+        // Comparaison : Si le versionCode du serveur est strictement plus grand que le local
+        if (data.versionCode > localVersionCode) {
           setUpdateInfo(data);
           setShowModal(true);
         }
