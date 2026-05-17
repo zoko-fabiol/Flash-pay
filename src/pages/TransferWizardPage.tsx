@@ -287,16 +287,31 @@ export const TransferWizardPage: React.FC = () => {
         const d = doc.data();
         
         // Helper to add to map if not present
-        const addToMap = (name: string, phone: string, operator: string, country: string) => {
+        const addToMap = (name: string, phone: string, operator: string, country: string, bankName?: string, bankAccount?: string) => {
           const key = (name || '').toLowerCase().trim();
           if (key && !contactsMap.has(key)) {
-            contactsMap.set(key, { id: Math.random().toString(), name, phone, operator, countryCode: country });
+            contactsMap.set(key, { 
+              id: Math.random().toString(), 
+              name, 
+              phone, 
+              operator, 
+              countryCode: country,
+              beneficiaryBankName: bankName,
+              beneficiaryBankAccount: bankAccount
+            });
           }
         };
 
         // 1. Check main recipient
         if (d.recipientName) {
-          addToMap(d.recipientName, d.recipientPhone || d.beneficiaryAccount, d.operator || d.recipientOperator, d.destinationCountry || d.toCountry);
+          addToMap(
+            d.recipientName, 
+            d.recipientPhone || d.beneficiaryAccount, 
+            d.operator || d.recipientOperator, 
+            d.destinationCountry || d.toCountry,
+            d.beneficiaryBankName,
+            d.beneficiaryBankAccount
+          );
         }
 
         // 2. Check bulk recipients if applicable
@@ -358,7 +373,9 @@ export const TransferWizardPage: React.FC = () => {
       updateTransferData({
         recipientName: contact.name || contact.recipientName,
         beneficiaryAccount: contact.accountNumber || contact.beneficiaryAccount || contact.phone,
-        selectedOperator: contact.operator || contact.selectedOperator || 'SBP'
+        selectedOperator: contact.operator || contact.selectedOperator || 'SBP',
+        beneficiaryBankName: contact.beneficiaryBankName || '',
+        beneficiaryBankAccount: contact.beneficiaryBankAccount || ''
       });
     } else if (transferData.transferType === 'africa-africa') {
       updateTransferData({
@@ -588,6 +605,8 @@ export const TransferWizardPage: React.FC = () => {
         operator: transferData.recipientOperator || transferData.selectedOperator || '',
         countryCode: transferData.destinationCountry || 'CM',
         transactionId: txDocRef.id,
+        beneficiaryBankName: transferData.beneficiaryBankName || null,
+        beneficiaryBankAccount: transferData.beneficiaryBankAccount || null,
       };
 
       if (recentContactPayload.name || recentContactPayload.phone) {
@@ -1126,10 +1145,11 @@ export const TransferWizardPage: React.FC = () => {
   if (transferType === 'africa-russia') {
     switch (currentStep) {
       case 2: // Beneficiary Info (Combined)
-        const isNameValidAfRu = (transferData.recipientName?.length || 0) > 2;
+        const isNameValidAfRu = (transferData.recipientName?.trim().length || 0) > 2;
         const cleanBeneficiaryAccount = (transferData.beneficiaryAccount || '').replace(/\D/g, '');
         const isAccountValidAfRu = cleanBeneficiaryAccount.length >= 10;
-        const isStep2ValidAfRu = isNameValidAfRu && isAccountValidAfRu;
+        const isBankValidAfRu = (transferData.beneficiaryBankName?.trim().length || 0) > 1;
+        const isStep2ValidAfRu = isNameValidAfRu && isAccountValidAfRu && isBankValidAfRu;
 
         return (
           <Layout>
@@ -1170,13 +1190,13 @@ export const TransferWizardPage: React.FC = () => {
                     />
                   </div>
 
-                  {/* Bank Name (Optional) */}
+                  {/* Bank Name */}
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
                         <Landmark size={20} />
                       </div>
-                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">NOM DE LA BANQUE <span className="text-slate-400 font-medium normal-case">(Optionnel)</span></span>
+                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">NOM DE LA BANQUE</span>
                     </div>
                     <input
                       type="text"

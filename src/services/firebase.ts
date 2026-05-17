@@ -1864,7 +1864,15 @@ export const contactService = {
 
   async touchRecentContact(
     userId: string,
-    contactData: { name: string; phone: string; operator: string; countryCode: string; transactionId?: string }
+    contactData: { 
+      name: string; 
+      phone: string; 
+      operator: string; 
+      countryCode: string; 
+      transactionId?: string;
+      beneficiaryBankName?: string | null;
+      beneficiaryBankAccount?: string | null;
+    }
   ) {
     const normalizedPhone = (contactData.phone || '').replace(/\D/g, '');
     const normalizedName = (contactData.name || '').trim().toLowerCase();
@@ -1881,11 +1889,14 @@ export const contactService = {
     });
 
     if (match) {
+      const matchData = match.data() as any;
       await updateDoc(match.ref, {
         lastUsedAt: serverTimestamp(),
         lastTransactionId: contactData.transactionId || null,
         operator: contactData.operator,
         countryCode: contactData.countryCode,
+        beneficiaryBankName: contactData.beneficiaryBankName || matchData.beneficiaryBankName || null,
+        beneficiaryBankAccount: contactData.beneficiaryBankAccount || matchData.beneficiaryBankAccount || null,
         updatedAt: serverTimestamp()
       });
       return match.ref;
