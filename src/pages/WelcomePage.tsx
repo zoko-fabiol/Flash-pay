@@ -48,6 +48,7 @@ export const WelcomePage: React.FC = () => {
   }, []);
 
   const handleGoogleLogin = async () => {
+    if (loadingGoogle) return;
     setLoadingGoogle(true);
     try {
       await loginWithGoogle();

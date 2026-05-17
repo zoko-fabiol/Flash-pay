@@ -290,6 +290,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={async () => {
+                if (loading) return;
                 setLoading(true);
                 setError('');
                 try {
@@ -301,7 +302,6 @@ export const LoginPage: React.FC = () => {
                   setLoading(false);
                 }
               }}
-              disabled={loading}
               className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
             >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
