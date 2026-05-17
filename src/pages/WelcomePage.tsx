@@ -4,9 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Globe, Loader } from 'lucide-react';
 import { deviceService } from '../services/deviceService';
-import { Capacitor } from '@capacitor/core';
-
-const isNative = Capacitor.isNativePlatform();
 
 const slides = [
   {
@@ -116,33 +113,20 @@ export const WelcomePage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            {!isNative && (
-              <>
-                <button
-                  onClick={handleGoogleLogin}
-                  disabled={loadingGoogle}
-                  className="w-full flex items-center justify-center gap-3 py-4.5 bg-white rounded-full font-bold text-slate-800 shadow-xl active:scale-95 transition-all text-sm"
-                >
-                  {loadingGoogle ? (
-                    <Loader size={20} className="animate-spin text-[#6344B6]" />
-                  ) : (
-                    <>
-                      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-                      {t('google_signup')}
-                    </>
-                  )}
-                </button>
-
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/30"></div>
-                  </div>
-                  <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
-                    <span className="bg-transparent px-3 text-white font-black">{t('or')}</span>
-                  </div>
-                </div>
-              </>
-            )}
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loadingGoogle}
+              className="w-full flex items-center justify-center gap-3 py-4.5 bg-white rounded-full font-bold text-slate-800 shadow-xl active:scale-95 transition-all text-sm"
+            >
+              {loadingGoogle ? (
+                <Loader size={20} className="animate-spin text-[#6344B6]" />
+              ) : (
+                <>
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                  {t('google_signup')}
+                </>
+              )}
+            </button>
 
             <button
               onClick={() => navigate('/signup')}
@@ -150,6 +134,15 @@ export const WelcomePage: React.FC = () => {
             >
               {t('create_account')}
             </button>
+
+            <div className="relative py-2">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/30"></div>
+              </div>
+              <div className="relative flex justify-center text-[10px] uppercase font-black tracking-widest">
+                <span className="bg-transparent px-3 text-white font-black">{t('or')}</span>
+              </div>
+            </div>
 
             <button
               onClick={() => navigate('/login')}
