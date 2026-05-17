@@ -136,9 +136,14 @@ export const TransferWizardPage: React.FC = () => {
   );
 
   const senderCountries = useMemo(() => {
-    // On s'assure que la Russie est présente si elle n'est pas dans la collection Firestore
-    const hasRussia = countries.some(c => c.code === 'RU');
-    const list = hasRussia ? [...countries] : [...countries, { code: 'RU', name: 'Russie', currency: 'RUB' }];
+    // Filtrer les pays africains inactifs ou n'étant pas configurés pour envoyer vers la Russie
+    const activeCountries = countries.filter(c => {
+      if (c.code === 'RU') return true;
+      return c.enabled !== false && c.canSendToRussia !== false;
+    });
+
+    const hasRussia = activeCountries.some(c => c.code === 'RU');
+    const list = hasRussia ? [...activeCountries] : [...activeCountries, { code: 'RU', name: 'Russie', currency: 'RUB' }];
     return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
   }, [countries]);
 
@@ -146,21 +151,25 @@ export const TransferWizardPage: React.FC = () => {
     if (!transferData.originCountry) return [];
     
     const originCode = transferData.originCountry;
-    const origin = senderCountries.find(c => c.code === originCode);
     
     let list = [];
     if (originCode === 'RU') {
-      // Russia sends to any African country
-      list = countries.filter(c => c.code !== 'RU');
+      // La Russie envoie uniquement vers les pays africains actifs ET configurés pour recevoir de Russie
+      list = countries.filter(c => c.code !== 'RU' && c.enabled !== false && c.canReceiveFromRussia !== false);
     } else {
-      // African country sends ONLY to Russia (Africa-Africa disabled)
-      const ruObj = countries.find(c => c.code === 'RU') || { code: 'RU', name: 'Russie', currency: 'RUB' };
-      list = [ruObj];
+      // Un pays africain envoie uniquement vers la Russie (si ce pays est actif et autorisé à envoyer vers la Russie)
+      const originCountryObj = countries.find(c => c.code === originCode);
+      if (originCountryObj && originCountryObj.enabled !== false && originCountryObj.canSendToRussia !== false) {
+        const ruObj = countries.find(c => c.code === 'RU') || { code: 'RU', name: 'Russie', currency: 'RUB' };
+        list = [ruObj];
+      } else {
+        list = [];
+      }
     }
 
-    // Strictly alphabetical sort as requested
+    // Strictly alphabetical sort
     return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
-  }, [transferData.originCountry, countries, senderCountries]);
+  }, [transferData.originCountry, countries]);
 
   const sortedBanks = useMemo(
     () => [...banks].sort((left, right) => left.name.localeCompare(right.name, 'fr', { sensitivity: 'base' })),
