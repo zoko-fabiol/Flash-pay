@@ -167,12 +167,10 @@ const TransactionDetailsPage: React.FC = () => {
     const t_toast = toast.loading('Génération du reçu...');
     
     try {
-      const isA5 = !!recipient || transaction.isBulk;
-      
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: isA5 ? 'a5' : 'a6'
+        format: 'a5'
       });
 
       const pageWidth = pdf.internal.pageSize.getWidth();

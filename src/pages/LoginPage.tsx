@@ -218,8 +218,8 @@ export const LoginPage: React.FC = () => {
           <p className="text-slate-500 mt-2 font-medium">{t('welcome_back')}</p>
         </div>
 
-        {/* Card */}
-        <div className="premium-card p-10 bg-white/80 backdrop-blur-xl border-white/50">
+        {/* Card (background removed) */}
+        <div className="p-10">
           {error && <Error message={error} onDismiss={() => setError('')} />}
           {resetSent && (
             <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3 animate-in fade-in zoom-in duration-300">

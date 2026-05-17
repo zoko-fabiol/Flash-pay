@@ -72,38 +72,37 @@ export const TransactionDetailPage: React.FC = () => {
     const t_toast = toast.loading('Génération du reçu...');
     
     try {
-      const isBulkRec = !!recipient;
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: isBulkRec ? 'a5' : 'a6'
+        format: 'a5'
       });
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = isBulkRec ? 12 : 10;
+      const margin = 12;
       let y = 15;
 
       const mainColor = [102, 20, 137]; // #6344B6
 
       // Header background
       pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.rect(0, 0, pageWidth, isBulkRec ? 28 : 22, 'F');
+      pdf.rect(0, 0, pageWidth, 28, 'F');
 
       // Title
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(isBulkRec ? 22 : 16);
+      pdf.setFontSize(22);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('FLASH PAY', pageWidth / 2, isBulkRec ? 12 : 10, { align: 'center' });
-      pdf.setFontSize(isBulkRec ? 11 : 9);
+      pdf.text('FLASH PAY', pageWidth / 2, 12, { align: 'center' });
+      pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
-      pdf.text(isBulkRec ? 'RECU DE TRANSFERT OFFICIEL' : 'RECU OFFICIEL', pageWidth / 2, isBulkRec ? 18 : 16, { align: 'center' });
+      pdf.text('RECU DE TRANSFERT OFFICIEL', pageWidth / 2, 18, { align: 'center' });
 
-      y = isBulkRec ? 40 : 34;
+      y = 40;
       pdf.setTextColor(60, 60, 60);
       
       // Transaction Header
-      pdf.setFontSize(isBulkRec ? 9 : 8);
+      pdf.setFontSize(9);
       pdf.setFont('helvetica', 'bold');
       pdf.text('REFERENCE', margin, y);
       pdf.setFont('helvetica', 'normal');
@@ -123,14 +122,14 @@ export const TransactionDetailPage: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       pdf.text(formatDate(transaction.createdAt?.toDate ? transaction.createdAt.toDate() : new Date()), pageWidth - margin, y + 5, { align: 'right' });
 
-      y += 14;
+      y += 18;
 
       // Parties Section
       pdf.setDrawColor(240, 240, 240);
       pdf.line(margin, y, pageWidth - margin, y);
-      y += 6;
+      y += 8;
       
-      pdf.setFontSize(isBulkRec ? 10 : 8.5);
+      pdf.setFontSize(10);
       pdf.setFont('helvetica', 'bold');
       pdf.text('EXPEDITEUR', margin, y);
       pdf.setFont('helvetica', 'normal');
@@ -142,11 +141,11 @@ export const TransactionDetailPage: React.FC = () => {
       pdf.text(recipient ? recipient.name : (transaction.recipientName || 'N/A'), pageWidth - margin, y + 5, { align: 'right' });
       pdf.text(recipient ? (recipient.phone || '') : (transaction.recipientPhone || ''), pageWidth - margin, y + 9, { align: 'right' });
 
-      y += isBulkRec ? 22 : 18;
+      y += 24;
 
       // Financials
       pdf.setFillColor(250, 250, 252);
-      pdf.roundedRect(margin, y, pageWidth - (margin * 2), isBulkRec ? 38 : 34, 4, 4, 'F');
+      pdf.roundedRect(margin, y, pageWidth - (margin * 2), 38, 4, 4, 'F');
       y += 6;
       
       const sendAmt = recipient ? recipient.amount : transaction.amount;
@@ -156,7 +155,7 @@ export const TransactionDetailPage: React.FC = () => {
       // Helper to format number with space
       const formatNum = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
-      pdf.setFontSize(isBulkRec ? 9 : 8);
+      pdf.setFontSize(9);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 100, 100);
       pdf.text('Montant envoye:', margin + 6, y);
@@ -171,25 +170,25 @@ export const TransactionDetailPage: React.FC = () => {
       pdf.text(`1 ${transaction.currency} = ${rate.toFixed(2)} ${transaction.destinationCurrency}`, pageWidth - margin - 6, y, { align: 'right' });
       
       y += 10;
-      pdf.setFontSize(isBulkRec ? 12 : 10.5);
+      pdf.setFontSize(12);
       pdf.setTextColor(mainColor[0], mainColor[1], mainColor[2]);
       pdf.text('NET A RECEVOIR:', margin + 6, y);
-      pdf.setFontSize(isBulkRec ? 15 : 12.5);
+      pdf.setFontSize(15);
       pdf.setFont('helvetica', 'bold');
       pdf.text(`${formatNum(recvAmt)} ${transaction.destinationCurrency}`, pageWidth - margin - 6, y, { align: 'right' });
 
-      y += isBulkRec ? 18 : 14;
+      y += 18;
 
       // Status Badge (For all transactions)
       const status = recipient ? (recipient.status || 'pending') : transaction.status;
       const isComp = status === 'completed';
       
       pdf.setFillColor(isComp ? 232 : 255, isComp ? 252 : 241, isComp ? 241 : 242);
-      pdf.roundedRect(pageWidth / 2 - 25, y, 50, isBulkRec ? 10 : 9, isBulkRec ? 5 : 4.5, isBulkRec ? 5 : 4.5, 'F');
+      pdf.roundedRect(pageWidth / 2 - 25, y, 50, 10, 5, 5, 'F');
       pdf.setTextColor(isComp ? 16 : 225, isComp ? 124 : 29, isComp ? 65 : 72);
-      pdf.setFontSize(isBulkRec ? 9 : 8.5);
+      pdf.setFontSize(9);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(isComp ? 'TRANSFERT EFFECTUE' : 'EN ATTENTE', pageWidth / 2, y + (isBulkRec ? 6.5 : 6), { align: 'center' });
+      pdf.text(isComp ? 'TRANSFERT EFFECTUE' : 'EN ATTENTE', pageWidth / 2, y + 6.5, { align: 'center' });
 
       const fileName = `FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}.pdf`;
 

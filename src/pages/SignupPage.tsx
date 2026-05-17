@@ -75,8 +75,8 @@ export const SignupPage: React.FC = () => {
           <p className="text-slate-500 mt-2 font-medium">{t('signup_desc')}</p>
         </div>
 
-        {/* Card */}
-        <div className="premium-card p-10 bg-white/80 backdrop-blur-xl border-white/50">
+        {/* Card (background removed) */}
+        <div className="p-10">
           {error && <Error message={error} onDismiss={() => setError('')} />}
 
           <form onSubmit={handleSubmit} className="space-y-5">
