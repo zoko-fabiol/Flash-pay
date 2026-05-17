@@ -117,6 +117,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError(null);
       const fbUser = await authService.login(email, password);
       const userData = await userService.getUserData(fbUser.uid);
+      
+      if (userData && userData.emailVerified === false) {
+        sessionStorage.setItem('trigger_verification_email', 'true');
+      }
+      
       setUser(userData as User);
       setFirebaseUser(fbUser);
     } catch (err: any) {
@@ -131,6 +136,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError(null);
       const fbUser = await authService.loginWithGoogle();
       const userData = await userService.getUserData(fbUser.uid);
+      
+      if (userData && userData.emailVerified === false) {
+        sessionStorage.setItem('trigger_verification_email', 'true');
+      }
+      
       setUser(userData as User);
       setFirebaseUser(fbUser);
     } catch (err: any) {

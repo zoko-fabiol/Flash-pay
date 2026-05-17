@@ -50,6 +50,14 @@ export const EmailVerificationPage: React.FC = () => {
     }
   }, [user, navigate]);
 
+  // Envoi automatique de code si redirection depuis le login
+  useEffect(() => {
+    if (firebaseUser && sessionStorage.getItem('trigger_verification_email') === 'true') {
+      sessionStorage.removeItem('trigger_verification_email');
+      handleResendCode();
+    }
+  }, [firebaseUser]);
+
   const handleChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return; // Uniquement des chiffres
 
