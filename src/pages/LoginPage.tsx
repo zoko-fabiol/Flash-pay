@@ -278,35 +278,39 @@ export const LoginPage: React.FC = () => {
               {loading ? t('connecting') : t('login')}
             </button>
 
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-100"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase tracking-widest font-black">
-                <span className="bg-white px-4 text-slate-400">{t('or_separator') || 'OU'}</span>
-              </div>
-            </div>
+            {!isNative && (
+              <>
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-100"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase tracking-widest font-black">
+                    <span className="bg-white px-4 text-slate-400">{t('or_separator') || 'OU'}</span>
+                  </div>
+                </div>
 
-            <button
-              type="button"
-              onClick={async () => {
-                setLoading(true);
-                setError('');
-                try {
-                  await loginWithGoogle();
-                  navigate('/');
-                } catch (err: any) {
-                  setError(err.message || t('login_error'));
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-            >
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-              {t('google_login') || 'Se connecter avec Google'}
-            </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setLoading(true);
+                    setError('');
+                    try {
+                      await loginWithGoogle();
+                      navigate('/');
+                    } catch (err: any) {
+                      setError(err.message || t('login_error'));
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+                >
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                  {t('google_login') || 'Se connecter avec Google'}
+                </button>
+              </>
+            )}
 
             {isNative ? (
               biometricAvailable && biometricEnabled && (
