@@ -27,7 +27,9 @@ import {
   Zap,
   ArrowRightLeft,
   X,
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  Download
 } from 'lucide-react';
 
 const CountriesListPage: React.FC = () => {
@@ -202,12 +204,25 @@ const CountriesListPage: React.FC = () => {
                       </span>
                     </div>
                     {country.enabled && (
-                      <div className="flex items-center gap-1 bg-[#6344B6]/5 text-[#6344B6] border border-[#6344B6]/10 px-2 py-1 rounded-md">
-                        <span className="text-[9px] font-black uppercase tracking-widest">
-                          {country.canSendToRussia !== false && country.canReceiveFromRussia !== false && 'Service Complet (🔄)'}
-                          {country.canSendToRussia === false && country.canReceiveFromRussia !== false && 'RU ➔ AF (📥)'}
-                          {country.canSendToRussia !== false && country.canReceiveFromRussia === false && 'AF ➔ RU (📤)'}
-                        </span>
+                      <div className="flex items-center gap-1.5 bg-[#6344B6]/5 text-[#6344B6] border border-[#6344B6]/10 px-2.5 py-1 rounded-md">
+                        {country.canSendToRussia !== false && country.canReceiveFromRussia !== false && (
+                          <>
+                            <RefreshCw size={10} className="text-[#6344B6]" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Service Complet</span>
+                          </>
+                        )}
+                        {country.canSendToRussia === false && country.canReceiveFromRussia !== false && (
+                          <>
+                            <Download size={10} className="text-[#6344B6]" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">RU ➔ AF</span>
+                          </>
+                        )}
+                        {country.canSendToRussia !== false && country.canReceiveFromRussia === false && (
+                          <>
+                            <Upload size={10} className="text-[#6344B6]" />
+                            <span className="text-[9px] font-black uppercase tracking-widest">AF ➔ RU</span>
+                          </>
+                        )}
                       </div>
                     )}
                  </div>
