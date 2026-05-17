@@ -158,28 +158,59 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
         <div className="p-6 space-y-4">
           {/* Recipient Details */}
           {!transferData.isBulk && (
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <User size={10} /> {t('recipient') || 'Destinataire'}
-                </p>
-                <p className="font-bold text-slate-900 truncate">{transferData.recipientName}</p>
+            transferData.transferType === 'africa-russia' ? (
+              <div className="grid grid-cols-2 gap-6 bg-slate-50/50 p-5 rounded-[24px] border border-slate-100/50">
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User size={12} /> BÉNÉFICIAIRE
+                  </p>
+                  <p className="font-bold text-slate-900 truncate">{transferData.recipientName}</p>
+                </div>
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Smartphone size={12} /> NUMÉRO SBP
+                  </p>
+                  <p className="font-bold text-slate-900 truncate">{transferData.beneficiaryAccount}</p>
+                </div>
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="font-black text-[#6344B6] text-[10px]">🏦</span> NOM DE LA BANQUE
+                  </p>
+                  <p className="font-bold text-[#6344B6] truncate uppercase">{transferData.beneficiaryBankName}</p>
+                </div>
+                {transferData.beneficiaryBankAccount && (
+                  <div className="space-y-1 col-span-2 sm:col-span-1 animate-in fade-in duration-300">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <span className="font-black text-[#6344B6] text-[10px]">💳</span> NUMÉRO DE CARTE
+                    </p>
+                    <p className="font-bold text-[#6344B6] truncate">{transferData.beneficiaryBankAccount}</p>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Smartphone size={10} /> {t('operator') || 'Opérateur'}
-                </p>
-                <p className="font-bold text-slate-900 truncate">
-                  {transferData.recipientOperator || transferData.selectedOperator || 'N/A'}
-                </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-6 bg-slate-50/50 p-5 rounded-[24px] border border-slate-100/50">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <User size={12} /> {t('recipient') || 'Destinataire'}
+                  </p>
+                  <p className="font-bold text-slate-900 truncate">{transferData.recipientName}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Smartphone size={12} /> {t('operator') || 'Opérateur'}
+                  </p>
+                  <p className="font-bold text-slate-900 truncate">
+                    {transferData.recipientOperator || transferData.selectedOperator || 'N/A'}
+                  </p>
+                </div>
+                <div className="col-span-2 space-y-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Phone size={12} /> {t('phone_number') || 'Numéro de téléphone'}
+                  </p>
+                  <p className="font-bold text-slate-900">{transferData.recipientPhone || transferData.beneficiaryAccount}</p>
+                </div>
               </div>
-              <div className="col-span-2 space-y-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                  <Phone size={10} /> {t('phone_number') || 'Numéro de téléphone'}
-                </p>
-                <p className="font-bold text-slate-900">{transferData.recipientPhone || transferData.beneficiaryAccount}</p>
-              </div>
-            </div>
+            )
           )}
 
           {/* Breakdown Table */}
