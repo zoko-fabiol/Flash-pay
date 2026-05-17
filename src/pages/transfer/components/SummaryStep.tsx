@@ -9,7 +9,9 @@ import {
   Smartphone,
   Pencil,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Landmark,
+  CreditCard
 } from 'lucide-react';
 
 interface SummaryStepProps {
@@ -174,14 +176,14 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
                 </div>
                 <div className="space-y-1 col-span-2 sm:col-span-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <span className="font-black text-[#6344B6] text-[10px]">🏦</span> NOM DE LA BANQUE
+                    <Landmark size={12} className="text-[#6344B6]" /> NOM DE LA BANQUE
                   </p>
                   <p className="font-bold text-[#6344B6] truncate uppercase">{transferData.beneficiaryBankName}</p>
                 </div>
                 {transferData.beneficiaryBankAccount && (
                   <div className="space-y-1 col-span-2 sm:col-span-1 animate-in fade-in duration-300">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <span className="font-black text-[#6344B6] text-[10px]">💳</span> NUMÉRO DE CARTE
+                      <CreditCard size={12} className="text-[#6344B6]" /> NUMÉRO DE CARTE
                     </p>
                     <p className="font-bold text-[#6344B6] truncate">{transferData.beneficiaryBankAccount}</p>
                   </div>
