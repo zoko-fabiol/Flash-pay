@@ -46,16 +46,9 @@ import {
 } from 'firebase/storage';
 import { emailService } from './emailService';
 
-// Firebase Configuration
-// On native APK (Capacitor), use firebaseapp.com as authDomain — it is whitelisted
-// by Google OAuth and enables Chrome Custom Tabs flow on Android WebViews.
-// On Web/PWA, use the custom domain flash-pay.site for branded OAuth popup.
-const isNativePlatform = Capacitor.isNativePlatform();
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCEffnRzBjjgyOh9IIUqmyqSd5jNJUQM_k",
-  authDomain: isNativePlatform
-    ? "flash-pay-937d7.firebaseapp.com"
-    : (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flash-pay.site"),
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "flash-pay-937d7.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "flash-pay-937d7",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "flash-pay-937d7.firebasestorage.app",
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "4504627700",
