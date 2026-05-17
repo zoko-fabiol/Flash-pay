@@ -11,11 +11,6 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'script',
       includeAssets: ['icon.png'],
-      workbox: {
-        navigateFallbackDenylist: [/^\/__\/auth/],
-        skipWaiting: true,
-        clientsClaim: true,
-      },
       manifest: {
         name: 'Flash Pay',
         short_name: 'Flash Pay',
@@ -57,11 +52,6 @@ export default defineConfig({
         target: 'https://firebasestorage.googleapis.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/storage-proxy/, ''),
-        secure: true,
-      },
-      '/__/auth': {
-        target: 'https://flash-pay-937d7.firebaseapp.com',
-        changeOrigin: true,
         secure: true,
       },
     },

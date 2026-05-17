@@ -3,11 +3,6 @@
   publish = "dist"
   functions = "netlify/functions"
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
-
 [build.environment]
   NODE_VERSION = "20"
 
