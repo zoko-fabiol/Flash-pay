@@ -12,7 +12,7 @@ export const NotificationBell: React.FC = () => {
   return (
     <button
       onClick={() => navigate('/notifications')}
-      className="relative p-2 hover:bg-[#efe6ff] rounded-2xl transition"
+      className="relative flex items-center justify-center p-2 hover:bg-[#efe6ff] rounded-2xl transition"
       aria-label={t('notifications_open')}
     >
       <Bell size={20} />

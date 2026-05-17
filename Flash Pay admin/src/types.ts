@@ -71,6 +71,7 @@ export interface Transaction {
   recipientAccount?: string;
   beneficiaryAccount?: string;
   beneficiaryBankAccount?: string;
+  beneficiaryBankName?: string;
   narration?: string;
   route?: string;
   country?: string;

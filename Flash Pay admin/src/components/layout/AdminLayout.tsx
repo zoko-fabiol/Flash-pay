@@ -58,7 +58,7 @@ const AdminLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FEF7FF] flex flex-col lg:flex-row">
-      <div className="lg:hidden bg-white border-b border-[#E7E0EB] p-4 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
+      <div className="lg:hidden bg-white border-b border-[#E7E0EB] px-4 pt-[calc(0.8rem+env(safe-area-inset-top))] pb-2 flex justify-between items-center sticky top-0 z-[100] shadow-sm">
         <div className="flex items-center gap-3">
           <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
           <span className="text-xl font-black text-[#6344B6] tracking-tighter">

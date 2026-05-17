@@ -25,9 +25,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="glass-effect px-5 py-4 flex justify-between items-center sticky top-0 z-50 border-b border-white/50 shadow-sm">
+    <header className="glass-effect px-5 pt-[calc(1.2rem+env(safe-area-inset-top))] pb-1.5 flex justify-between items-center sticky top-0 z-50 border-b border-white/50 shadow-sm">
       <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-        <img src="/header-logo.png" alt="Flash Pay" className="h-12 w-auto object-contain" />
+        <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
       </div>
       
       <div className="flex items-center gap-4">
@@ -46,9 +46,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         </button>
         <button
           onClick={onMenuClick}
-          className="hamburger-btn p-2 hover:bg-[#efe6ff] rounded-2xl transition"
+          className="hamburger-btn flex items-center justify-center p-2 hover:bg-[#efe6ff] rounded-2xl transition"
         >
-          <Menu size={24} />
+          <Menu size={20} />
         </button>
       </div>
     </header>

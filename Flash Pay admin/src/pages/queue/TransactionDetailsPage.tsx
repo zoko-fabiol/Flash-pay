@@ -260,7 +260,7 @@ const TransactionDetailsPage: React.FC = () => {
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(100, 100, 100);
       pdf.text('Taux appliqué:', margin + 8, y);
-      pdf.text(`1 RUB = ${rate.toFixed(2)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
+      pdf.text(`1 ${transaction.currency || 'RUB'} = ${rate.toFixed(2)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
       
       y += 14;
       pdf.setFontSize(12);
@@ -280,7 +280,7 @@ const TransactionDetailsPage: React.FC = () => {
         pdf.setTextColor(16, 124, 65);
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('TRANSFERE', pageWidth / 2, y + 7.5, { align: 'center' });
+        pdf.text('TRANSFERT EFFECTUE', pageWidth / 2, y + 7.5, { align: 'center' });
       } else {
         pdf.setFillColor(255, 241, 242);
         pdf.roundedRect(pageWidth / 2 - 25, y, 50, 12, 6, 6, 'F');
@@ -629,25 +629,42 @@ const TransactionDetailsPage: React.FC = () => {
                     <div className="bg-[#F3EDF7] p-5 rounded-[24px] group flex justify-between items-end">
                       <div>
                         <p className="text-[#49454F] text-[9px] font-black uppercase tracking-widest mb-1">
-                          {transaction.type === 'russia-africa' ? 'Numéro de Téléphone' : 'Coordonnées (Compte/Carte)'}
+                          {transaction.type === 'russia-africa' ? 'Numéro de Téléphone' : 
+                           transaction.type === 'africa-russia' ? 'Numéro SBP (Téléphone)' : 'Coordonnées (Compte/Carte)'}
                         </p>
-                        <div className="text-[#1D1B20] font-black text-lg tracking-tight">
+                        <div className="text-[#1D1B20] font-black text-lg tracking-tight animate-in fade-in duration-300">
                            {transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount ? (
                              <span className="text-[#6344B6] block">
                                {transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount}
                              </span>
                            ) : 'N/A'}
-                           {transaction.beneficiaryBankAccount && (
-                             <span className="text-[#49454F] block text-sm mt-1 bg-white/50 inline-block px-2 py-0.5 rounded-md">
-                               Acc: <span className="text-[#6344B6]">{transaction.beneficiaryBankAccount}</span>
-                             </span>
+                           {transaction.type === 'africa-russia' ? (
+                             <div className="flex flex-wrap gap-2 mt-1.5">
+                               {transaction.beneficiaryBankName && (
+                                 <span className="text-[#49454F] text-xs bg-white/60 px-2.5 py-1 rounded-xl shadow-sm border border-slate-100/50">
+                                   Banque : <span className="text-[#6344B6] font-bold">{transaction.beneficiaryBankName}</span>
+                                 </span>
+                               )}
+                               {transaction.beneficiaryBankAccount && (
+                                 <span className="text-[#49454F] text-xs bg-white/60 px-2.5 py-1 rounded-xl shadow-sm border border-slate-100/50">
+                                   Carte : <span className="text-[#6344B6] font-bold">{transaction.beneficiaryBankAccount}</span>
+                                 </span>
+                               )}
+                             </div>
+                           ) : (
+                             transaction.beneficiaryBankAccount && (
+                               <span className="text-[#49454F] block text-sm mt-1 bg-white/50 inline-block px-2 py-0.5 rounded-md">
+                                 Acc: <span className="text-[#6344B6]">{transaction.beneficiaryBankAccount}</span>
+                               </span>
+                             )
                            )}
                         </div>
                       </div>
                       <button onClick={() => { 
                         const value = transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '';
-                        const extra = transaction.beneficiaryBankAccount ? ` / ${transaction.beneficiaryBankAccount}` : '';
-                        navigator.clipboard.writeText(value + extra); 
+                        const bank = transaction.type === 'africa-russia' && transaction.beneficiaryBankName ? ` / Banque: ${transaction.beneficiaryBankName}` : '';
+                        const card = transaction.beneficiaryBankAccount ? ` / ${transaction.type === 'africa-russia' ? 'Carte' : 'Acc'}: ${transaction.beneficiaryBankAccount}` : '';
+                        navigator.clipboard.writeText(value + bank + card); 
                         toast.success('Copié'); 
                       }} className="p-2 bg-white text-[#6344B6] rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-all"><Copy size={16} /></button>
                     </div>

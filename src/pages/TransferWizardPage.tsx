@@ -11,7 +11,7 @@ import { SummaryStep } from './transfer/components/SummaryStep';
 import { PaymentStep } from './transfer/components/PaymentStep';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
-import { ChevronLeft, ChevronRight, Globe, CreditCard, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send, X, Pencil, Plus, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Globe, CreditCard, Landmark, Smartphone, Upload, CheckCircle2, Banknote, Info, ArrowRight, Gift, User, Phone, BookUser, Copy, Clock, Zap, ShieldCheck, CloudUpload, Send, X, Pencil, Plus, Check } from 'lucide-react';
 import { 
   collection, 
   onSnapshot, 
@@ -1166,23 +1166,40 @@ export const TransferWizardPage: React.FC = () => {
                       value={transferData.beneficiaryAccount || ''}
                       onChange={e => updateTransferData({ beneficiaryAccount: e.target.value })}
                       placeholder={t('sbp_number_placeholder')}
-                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-brand outline-none text-slate-900 font-bold bg-slate-50 transition-all mb-8"
+                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-brand outline-none text-slate-900 font-bold bg-slate-50 transition-all"
                     />
                   </div>
 
-                  {/* Account Number (Optional) */}
+                  {/* Bank Name (Optional) */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
+                        <Landmark size={20} />
+                      </div>
+                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">NOM DE LA BANQUE <span className="text-slate-400 font-medium normal-case">(Optionnel)</span></span>
+                    </div>
+                    <input
+                      type="text"
+                      value={transferData.beneficiaryBankName || ''}
+                      onChange={e => updateTransferData({ beneficiaryBankName: e.target.value })}
+                      placeholder="Ex: Sberbank, Tinkoff..."
+                      className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-brand outline-none text-slate-900 font-bold bg-slate-50 transition-all"
+                    />
+                  </div>
+
+                  {/* Card Number (Optional) */}
                   <div>
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-2xl bg-brand/10 flex items-center justify-center text-brand">
                         <CreditCard size={20} />
                       </div>
-                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">{t('account_number_label')} <span className="text-slate-400 font-medium normal-case">(Optionnel)</span></span>
+                      <span className="font-black text-slate-900 uppercase text-xs tracking-widest">NUMÉRO DE CARTE <span className="text-slate-400 font-medium normal-case">(Optionnel)</span></span>
                     </div>
                     <input
                       type="text"
                       value={transferData.beneficiaryBankAccount || ''}
                       onChange={e => updateTransferData({ beneficiaryBankAccount: e.target.value })}
-                      placeholder="Ex: 40817810..."
+                      placeholder="Ex: 2200 1234 5678 9012"
                       className="w-full p-5 rounded-2xl border-2 border-slate-100 focus:border-brand outline-none text-slate-900 font-bold bg-slate-50 transition-all"
                     />
                   </div>

@@ -54,6 +54,11 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/storage-proxy/, ''),
         secure: true,
       },
+      '/__/auth': {
+        target: 'https://flash-pay-937d7.firebaseapp.com',
+        changeOrigin: true,
+        secure: true,
+      },
     },
   },
 })

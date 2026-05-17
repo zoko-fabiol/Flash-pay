@@ -32,7 +32,8 @@ interface TransferData {
   
   // For Afrique→Russie
   beneficiaryAccount?: string; // TÉLÉPHONE SBP (Required)
-  beneficiaryBankAccount?: string; // NUMÉRO DE COMPTE (Optional)
+  beneficiaryBankAccount?: string; // NUMÉRO DE COMPTE/CARTE (Optional)
+  beneficiaryBankName?: string; // NOM DE LA BANQUE (Optional)
   selectedOperator?: string;
   
   // For Russie→Afrique

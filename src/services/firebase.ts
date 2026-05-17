@@ -12,6 +12,8 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   type Auth,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -229,40 +231,86 @@ export const authService = {
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    
-    // Check if user document exists
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
-    if (!userDoc.exists()) {
-      // New user via Google!
-      // We create a partial profile and they will be redirected to Onboarding
-      const referralCode = await generateUniqueReferralCode();
-      await setDoc(doc(db, 'users', user.uid), {
-        id: user.uid,
-        email: user.email,
-        nom: user.displayName || '',
-        tel: '',
-        countryCode: '', // To be filled in Onboarding
-        referralCode,
-        referredBy: null,
-        referralStatus: 'none',
-        referralStats: { invited: 0, rewarded: 0, pending: 0 },
-        statut_kyc: 'Standard',
-        kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
-        solde_bonus: 0,
-        solde_points: 0,
-        emailVerified: true, // Google accounts are verified
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        isOnboardingComplete: false, // Flag for redirection
-        referredUsers: [],
-        referralRewards: [],
-      });
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if user document exists
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
+      if (!userDoc.exists()) {
+        // New user via Google!
+        // We create a partial profile and they will be redirected to Onboarding
+        const referralCode = await generateUniqueReferralCode();
+        await setDoc(doc(db, 'users', user.uid), {
+          id: user.uid,
+          email: user.email,
+          nom: user.displayName || '',
+          tel: '',
+          countryCode: '', // To be filled in Onboarding
+          referralCode,
+          referredBy: null,
+          referralStatus: 'none',
+          referralStats: { invited: 0, rewarded: 0, pending: 0 },
+          statut_kyc: 'Standard',
+          kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
+          solde_bonus: 0,
+          solde_points: 0,
+          emailVerified: true, // Google accounts are verified
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          isOnboardingComplete: false, // Flag for redirection
+          referredUsers: [],
+          referralRewards: [],
+        });
+      }
+      return user;
+    } catch (popupError: any) {
+      console.warn("Popup blocked or COOP error, falling back to redirect:", popupError);
+      // Fallback directly to redirect
+      await signInWithRedirect(auth, provider);
+      // Return a dummy promise that won't resolve (page will redirect anyway)
+      return new Promise<FirebaseUser>(() => {});
     }
-    
-    return user;
+  },
+
+  async handleRedirectResult() {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result && result.user) {
+        const user = result.user;
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+          const referralCode = await generateUniqueReferralCode();
+          await setDoc(doc(db, 'users', user.uid), {
+            id: user.uid,
+            email: user.email,
+            nom: user.displayName || '',
+            tel: '',
+            countryCode: '',
+            referralCode,
+            referredBy: null,
+            referralStatus: 'none',
+            referralStats: { invited: 0, rewarded: 0, pending: 0 },
+            statut_kyc: 'Standard',
+            kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
+            solde_bonus: 0,
+            solde_points: 0,
+            emailVerified: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            isOnboardingComplete: false,
+            referredUsers: [],
+            referralRewards: [],
+          });
+        }
+        return user;
+      }
+    } catch (err) {
+      console.error("Error handling Google redirect result:", err);
+    }
+    return null;
   },
 
   async logout() {
