@@ -5,6 +5,7 @@ import { Zap, User, Mail, Phone, Lock, Hash, MapPin } from 'lucide-react';
 import { Error } from '../components/UI';
 import { useLanguage } from '../context/LanguageContext';
 import { CountrySelector } from '../components/CountrySelector';
+import { Capacitor } from '@capacitor/core';
 
 export const SignupPage: React.FC = () => {
   const [nom, setNom] = useState('');
@@ -150,26 +151,28 @@ export const SignupPage: React.FC = () => {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={async () => {
-              setLoading(true);
-              setError('');
-              try {
-                await loginWithGoogle();
-                navigate('/');
-              } catch (err: any) {
-                setError(err.message || t('login_error'));
-              } finally {
-                setLoading(false);
-              }
-            }}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-            {t('google_signup') || 'Continuer avec Google'}
-          </button>
+          {!Capacitor.isNativePlatform() && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (loading) return;
+                setLoading(true);
+                setError('');
+                try {
+                  await loginWithGoogle();
+                  navigate('/');
+                } catch (err: any) {
+                  setError(err.message || t('login_error'));
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+              {t('google_signup') || 'Continuer avec Google'}
+            </button>
+          )}
 
           <div className="text-center mt-6 text-sm text-slate-500 font-medium">
             {t('already_account')}{' '}

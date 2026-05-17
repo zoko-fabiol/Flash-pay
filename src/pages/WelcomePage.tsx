@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Globe, Loader } from 'lucide-react';
 import { deviceService } from '../services/deviceService';
+import { Capacitor } from '@capacitor/core';
 
 const slides = [
   {
@@ -114,20 +115,21 @@ export const WelcomePage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="space-y-3">
-            <button
-              onClick={handleGoogleLogin}
-              disabled={loadingGoogle}
-              className="w-full flex items-center justify-center gap-3 py-4.5 bg-white rounded-full font-bold text-slate-800 shadow-xl active:scale-95 transition-all text-sm"
-            >
-              {loadingGoogle ? (
-                <Loader size={20} className="animate-spin text-[#6344B6]" />
-              ) : (
-                <>
-                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
-                  {t('google_signup')}
-                </>
-              )}
-            </button>
+            {!Capacitor.isNativePlatform() && (
+              <button
+                onClick={handleGoogleLogin}
+                className="w-full flex items-center justify-center gap-3 py-4.5 bg-white rounded-full font-bold text-slate-800 shadow-xl active:scale-95 transition-all text-sm"
+              >
+                {loadingGoogle ? (
+                  <Loader size={20} className="animate-spin text-[#6344B6]" />
+                ) : (
+                  <>
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
+                    {t('google_signup')}
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               onClick={() => navigate('/signup')}
