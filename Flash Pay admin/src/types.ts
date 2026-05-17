@@ -138,6 +138,8 @@ export interface Country {
   depositAccounts: DepositAccount[];
   enabled: boolean;
   allowedDestinations?: string[];
+  canSendToRussia?: boolean;
+  canReceiveFromRussia?: boolean;
   updatedAt: Timestamp;
   updatedBy: string;
 }

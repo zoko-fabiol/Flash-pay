@@ -193,12 +193,23 @@ const CountriesListPage: React.FC = () => {
 
             <div className="pt-6 border-t border-[#E7E0EB] flex justify-between items-center">
               <div>
-                 <p className="text-[9px] font-black text-[#6344B6] uppercase tracking-widest mb-1">Status Réseau</p>
-                 <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${country.enabled ? 'bg-emerald-500' : 'bg-[#CAC4D0]'}`}></div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${country.enabled ? 'text-emerald-600' : 'text-[#49454F]'}`}>
-                      {country.enabled ? 'Opérationnel' : 'Désactivé'}
-                    </span>
+                 <p className="text-[9px] font-black text-[#6344B6] uppercase tracking-widest mb-1.5">Status & Flux</p>
+                 <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                      <div className={`w-1.5 h-1.5 rounded-full ${country.enabled ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                      <span className={`text-[9px] font-black uppercase tracking-widest ${country.enabled ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {country.enabled ? 'Opérationnel' : 'Désactivé'}
+                      </span>
+                    </div>
+                    {country.enabled && (
+                      <div className="flex items-center gap-1 bg-[#6344B6]/5 text-[#6344B6] border border-[#6344B6]/10 px-2 py-1 rounded-md">
+                        <span className="text-[9px] font-black uppercase tracking-widest">
+                          {country.canSendToRussia !== false && country.canReceiveFromRussia !== false && 'Service Complet (🔄)'}
+                          {country.canSendToRussia === false && country.canReceiveFromRussia !== false && 'RU ➔ AF (📥)'}
+                          {country.canSendToRussia !== false && country.canReceiveFromRussia === false && 'AF ➔ RU (📤)'}
+                        </span>
+                      </div>
+                    )}
                  </div>
               </div>
               <div className="flex gap-2">
