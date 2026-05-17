@@ -11,6 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: 'script',
       includeAssets: ['icon.png'],
+      workbox: {
+        navigateFallbackDenylist: [/^\/__\/auth/]
+      },
       manifest: {
         name: 'Flash Pay',
         short_name: 'Flash Pay',
