@@ -25,7 +25,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="glass-effect px-5 pt-[calc(1.2rem+env(safe-area-inset-top))] pb-1.5 flex justify-between items-center sticky top-0 z-50 border-b border-white/50 shadow-sm">
+    <header className="glass-effect px-5 pb-1.5 flex justify-between items-center sticky top-0 z-50 border-b border-white/50 shadow-sm safe-top-padding">
       <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
         <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
       </div>

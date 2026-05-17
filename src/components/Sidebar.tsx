@@ -48,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         transform transition-all duration-300 z-[70] overflow-y-auto
         ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full lg:translate-x-0 opacity-0 lg:opacity-100'}
       `}>
-        <div className="p-6 flex justify-between items-center lg:hidden">
+        <div className="p-6 flex justify-between items-center lg:hidden sidebar-safe-top">
           <span className="font-bold text-primary text-xl">Flash Pay</span>
           <button onClick={onClose} className="p-2 hover:bg-primary/10 rounded-xl">
             <X size={20} />

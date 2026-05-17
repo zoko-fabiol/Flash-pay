@@ -103,3 +103,21 @@ body {
   @apply w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold text-slate-900 transition-all;
 }
 
+/* --- Mobile Safe Areas Helper Classes --- */
+.safe-top-padding {
+  padding-top: calc(1.2rem + env(safe-area-inset-top, 0px)) !important;
+}
+
+.sidebar-safe-top {
+  padding-top: calc(1.5rem + env(safe-area-inset-top, 0px)) !important;
+}
+
+.login-safe-top {
+  top: calc(1.5rem + env(safe-area-inset-top, 0px)) !important;
+}
+
+.footer-safe-bottom {
+  padding-bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+

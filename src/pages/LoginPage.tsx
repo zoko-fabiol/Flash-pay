@@ -195,7 +195,7 @@ export const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-mesh px-4 relative">
       {/* Language Selector */}
-      <div className="absolute top-6 right-6 flex items-center gap-1 bg-white/30 backdrop-blur-md p-1 rounded-2xl border border-white/50 shadow-sm z-10">
+      <div className="absolute right-6 flex items-center gap-1 bg-white/30 backdrop-blur-md p-1 rounded-2xl border border-white/50 shadow-sm z-10 login-safe-top">
         <button 
           onClick={() => setLanguage('fr')}
           className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${language === 'fr' ? 'bg-[#6344B6] text-white shadow-md' : 'text-slate-600 hover:bg-white/40'}`}
