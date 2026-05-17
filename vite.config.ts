@@ -12,7 +12,9 @@ export default defineConfig({
       injectRegister: 'script',
       includeAssets: ['icon.png'],
       workbox: {
-        navigateFallbackDenylist: [/^\/__\/auth/]
+        navigateFallbackDenylist: [/^\/__\/auth/],
+        skipWaiting: true,
+        clientsClaim: true,
       },
       manifest: {
         name: 'Flash Pay',
