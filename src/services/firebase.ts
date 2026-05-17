@@ -38,6 +38,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
+import { deviceService } from './deviceService';
 import {
   getStorage,
   ref,
@@ -231,6 +232,14 @@ export const authService = {
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
+    const isMobile = deviceService.isIOS() || deviceService.isAndroid() || deviceService.isNative();
+
+    if (isMobile) {
+      console.log("[GoogleAuth] Mobile / PWA platform detected, bypassing popup flow and using signInWithRedirect directly to avoid COOP errors.");
+      await signInWithRedirect(auth, provider);
+      return new Promise<FirebaseUser>(() => {});
+    }
+
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
