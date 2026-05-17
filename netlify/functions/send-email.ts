@@ -5,7 +5,7 @@ const handler: Handler = async (event: HandlerEvent, _context: HandlerContext) =
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const GAS_URL = process.env.VITE_GAS_URL;
+  const GAS_URL = process.env.VITE_GAS_URL || 'https://script.google.com/macros/s/AKfycbyfnpE8gpa-_uVnhEvlJN4WnvgUjdpekThBgfZHkvoyyCErm8O9QV0LuFoMGNvKN9sCZQ/exec';
 
   if (!GAS_URL) {
     return { 

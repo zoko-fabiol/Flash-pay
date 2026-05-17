@@ -87,7 +87,7 @@ export const emailService = {
             <div style="margin-bottom: 8px;"><strong>Pays :</strong> ${txData.country}</div>
             <div style="margin-bottom: 8px;"><strong>ID Transaction :</strong> ${txData.txId}</div>
           </div>
-          <p style="margin-top: 20px;"><a href="https://flashpay-admin.web.app" style="background-color: #6344B6; color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">Accéder au Panel Admin</a></p>
+          <p style="margin-top: 20px;"><a href="https://admin.flash-pay.site/#/queue/${txData.txId}" style="background-color: #6344B6; color: white; padding: 12px 24px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block;">Accéder au Panel Admin</a></p>
         </div>
       </div>
     `;

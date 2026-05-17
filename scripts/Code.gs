@@ -16,16 +16,19 @@ function doPost(e) {
     }
 
     var subject = title;
-    // Allow overriding logo URL via payload, otherwise default to hosting public asset
-    var logoUrl = data.logoUrl || 'https://flash-pay-937d7.web.app/logo.png';
-    // Build a simple HTML template with logo + content
-    var htmlBody = '<div style="font-family: Arial, Helvetica, sans-serif; color: #111; line-height:1.4;">' +
-      '<div style="padding:16px; text-align:left;">' +
-      '<img src="' + logoUrl + '" alt="Flash Pay" style="width:140px; height:auto; display:block; margin-bottom:12px;" />' +
-      '<div style="padding:8px 0;">' + body + '</div>' +
-      '<hr style="border:none; border-top:1px solid #eee; margin-top:18px;" />' +
-      '<div style="font-size:12px; color:#666; margin-top:8px;">Vous recevez cet email de la part de Flash Pay.</div>' +
-      '</div></div>';
+    var htmlBody = body;
+
+    // Si le corps du message n'est pas un template HTML complet (ne commence pas par un conteneur style), on l'emballe proprement avec le logo
+    if (body.indexOf('<div') === -1) {
+      var logoUrl = data.logoUrl || 'https://flash-pay.site/header-logo.png';
+      htmlBody = '<div style="font-family: Arial, Helvetica, sans-serif; color: #111; line-height:1.4;">' +
+        '<div style="padding:16px; text-align:left;">' +
+        '<img src="' + logoUrl + '" alt="Flash Pay" style="height:40px; width:auto; display:block; margin-bottom:12px;" />' +
+        '<div style="padding:8px 0;">' + body + '</div>' +
+        '<hr style="border:none; border-top:1px solid #eee; margin-top:18px;" />' +
+        '<div style="font-size:12px; color:#666; margin-top:8px;">Vous recevez cet email de la part de Flash Pay.</div>' +
+        '</div></div>';
+    }
 
     // Envoi par lot — garder un petit délai pour éviter les limites
     var sent = 0;
