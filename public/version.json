@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0",
-  "versionCode": 150,
+  "version": "1.1.1",
+  "versionCode": 151,
   "downloadUrl": "https://github.com/zoko-fabiol/Flash-pay/releases/latest",
-  "changelog": "Authentification Google 100% native intégrée.",
+  "changelog": "Désactivation temporaire de la PWA au profit de l'APK Android.",
   "forceUpdate": false
 }
