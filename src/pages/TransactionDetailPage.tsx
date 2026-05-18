@@ -194,8 +194,14 @@ export const TransactionDetailPage: React.FC = () => {
 
       if (isNativeApp()) {
         const pdfBase64 = pdf.output('datauristring');
-        await downloadPdfNative(pdfBase64, fileName);
-        toast.success('Prêt à partager !', { id: t_toast });
+        const status = await downloadPdfNative(pdfBase64, fileName);
+        if (status === 'saved') {
+          toast.success('Reçu enregistré dans vos Documents !', { id: t_toast });
+        } else if (status === 'shared') {
+          toast.success('Reçu prêt à partager !', { id: t_toast });
+        } else {
+          toast.error('Échec de l\'enregistrement', { id: t_toast });
+        }
       } else {
         pdf.save(fileName);
         toast.success('Reçu téléchargé !', { id: t_toast });

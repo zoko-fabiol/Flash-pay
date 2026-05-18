@@ -104,32 +104,55 @@ export const isNativeApp = (): boolean => {
 };
 
 // ─── PDF Download / Share (Native) ────────────────────────────────────────────
-export const downloadPdfNative = async (base64Data: string, fileName: string): Promise<boolean> => {
+export const downloadPdfNative = async (
+  base64Data: string, 
+  fileName: string
+): Promise<'saved' | 'shared' | 'failed'> => {
   try {
     const { Filesystem, Directory } = await import('@capacitor/filesystem');
-    const { Share } = await import('@capacitor/share');
 
     // Remove the prefix if present (e.g., data:application/pdf;base64,)
     const base64 = base64Data.includes('base64,') 
       ? base64Data.split('base64,')[1] 
       : base64Data;
 
-    // Save to Cache directory for sharing
-    const result = await Filesystem.writeFile({
+    // Save directly to the public Documents folder (extremely clean, no popups, works on modern Android)
+    await Filesystem.writeFile({
       path: fileName,
       data: base64,
-      directory: Directory.Cache,
+      directory: Directory.Documents,
+      recursive: true,
     });
 
-    // Share the file (this allows user to "Save to Files" or send via WhatsApp/Email)
-    await Share.share({
-      title: fileName,
-      url: result.uri,
-    });
-
-    return true;
+    console.log('[Capacitor] PDF written directly to Documents folder:', fileName);
+    return 'saved';
   } catch (error) {
-    console.error('PDF Native Error:', error);
-    return false;
+    console.error('[Capacitor] PDF Direct Write to Documents failed, falling back to Share sheet:', error);
+    
+    // Fallback to cache directory + Native Share sheet
+    try {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const { Share } = await import('@capacitor/share');
+
+      const base64 = base64Data.includes('base64,') 
+        ? base64Data.split('base64,')[1] 
+        : base64Data;
+
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Cache,
+      });
+
+      await Share.share({
+        title: fileName,
+        url: result.uri,
+      });
+
+      return 'shared';
+    } catch (fallbackError) {
+      console.error('[Capacitor] PDF Native share fallback failed completely:', fallbackError);
+      return 'failed';
+    }
   }
 };
