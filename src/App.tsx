@@ -10,7 +10,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { deviceService } from './services/deviceService';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from './services/firebase';
+import { db, userService } from './services/firebase';
 
 // --- Scroll To Top Handler ---
 const ScrollToTop = () => {
@@ -118,7 +118,32 @@ const PushNotificationHandler: React.FC = () => {
 const PreferenceSyncHandler: React.FC = () => {
   const { user } = useAuth();
   const { setLanguage, setFontSize, language, fontSize } = useLanguage();
+  const lastDbLangRef = React.useRef<string | null>(null);
+  const lastDbFontSizeRef = React.useRef<string | null>(null);
+  const lastLocalPreferenceWriteRef = React.useRef(0);
+  const latestLangRef = React.useRef(language);
+  const latestFontSizeRef = React.useRef(fontSize);
 
+  const getPreferenceUpdatedAtMs = (value: unknown) => {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    if (value instanceof Date) return value.getTime();
+    if (typeof value === 'object' && value !== null && 'toMillis' in value && typeof (value as { toMillis?: () => number }).toMillis === 'function') {
+      return (value as { toMillis: () => number }).toMillis();
+    }
+    return 0;
+  };
+
+  // Keep refs in sync with latest local state
+  useEffect(() => {
+    latestLangRef.current = language;
+  }, [language]);
+
+  useEffect(() => {
+    latestFontSizeRef.current = fontSize;
+  }, [fontSize]);
+
+  // 1. Listen to Firestore changes (Incoming remote changes)
   useEffect(() => {
     if (!user?.id) return;
 
@@ -128,11 +153,22 @@ const PreferenceSyncHandler: React.FC = () => {
         if (userData.preferences) {
           const dbLang = userData.preferences.language;
           const dbFontSize = userData.preferences.fontSize;
+          const dbUpdatedAt = getPreferenceUpdatedAtMs(userData.preferences.updatedAt);
 
-          if (dbLang && dbLang !== language) {
+          if (
+            lastLocalPreferenceWriteRef.current > 0 &&
+            (dbUpdatedAt === 0 || dbUpdatedAt <= lastLocalPreferenceWriteRef.current)
+          ) {
+            return;
+          }
+
+          lastDbLangRef.current = dbLang || null;
+          lastDbFontSizeRef.current = dbFontSize || null;
+
+          if (dbLang && dbLang !== latestLangRef.current) {
             setLanguage(dbLang as any);
           }
-          if (dbFontSize && dbFontSize !== fontSize) {
+          if (dbFontSize && dbFontSize !== latestFontSizeRef.current) {
             setFontSize(dbFontSize as any);
           }
         }
@@ -140,7 +176,39 @@ const PreferenceSyncHandler: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [user?.id, language, fontSize, setLanguage, setFontSize]);
+  }, [user?.id, setLanguage, setFontSize]);
+
+  // 2. Propagate local changes to Firestore (Outgoing local changes)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const syncLocalPreferences = async () => {
+      const isLangChanged = language !== lastDbLangRef.current;
+      const isFontSizeChanged = fontSize !== lastDbFontSizeRef.current;
+
+      if (isLangChanged || isFontSizeChanged) {
+        try {
+          const updatedAt = Date.now();
+          lastLocalPreferenceWriteRef.current = updatedAt;
+
+          await userService.updateUserProfile(user.id, {
+            preferences: {
+              language,
+              fontSize,
+              updatedAt: new Date(updatedAt)
+            }
+          });
+
+          lastDbLangRef.current = language;
+          lastDbFontSizeRef.current = fontSize;
+        } catch (error) {
+          console.error('Error syncing local preferences to Firestore:', error);
+        }
+      }
+    };
+
+    syncLocalPreferences();
+  }, [user?.id, language, fontSize]);
 
   return null;
 };
