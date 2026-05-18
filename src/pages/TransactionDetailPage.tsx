@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { ArrowLeft, Banknote, CheckCircle2, Clock3, Copy, Download, FileText, Info, Send, Smartphone, User } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle2, Clock3, Copy, Download, FileText, Info, Send, Share2, Smartphone, User } from 'lucide-react';
 import { db } from '../services/firebase';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
@@ -67,9 +67,9 @@ export const TransactionDetailPage: React.FC = () => {
     return index === -1 ? 0 : index;
   }, [currentStatus, steps]);
 
-  const handleReceiptDownload = async (recipient?: any) => {
+  const handleReceiptDownload = async (recipient?: any, mode: 'download' | 'share' = 'download') => {
     if (!transaction) return;
-    const t_toast = toast.loading('Génération du reçu...');
+    const t_toast = toast.loading(mode === 'share' ? 'Préparation du partage...' : 'Génération du reçu...');
     
     try {
       const pdf = new jsPDF({
@@ -194,13 +194,13 @@ export const TransactionDetailPage: React.FC = () => {
 
       if (isNativeApp()) {
         const pdfBase64 = pdf.output('datauristring');
-        const status = await downloadPdfNative(pdfBase64, fileName);
+        const status = await downloadPdfNative(pdfBase64, fileName, mode);
         if (status === 'saved') {
-          toast.success('Reçu enregistré dans vos Documents !', { id: t_toast });
+          toast.success('Enregistré dans Documents/Flash Pay !', { id: t_toast });
         } else if (status === 'shared') {
-          toast.success('Reçu prêt à partager !', { id: t_toast });
+          toast.success('Prêt à partager !', { id: t_toast });
         } else {
-          toast.error('Échec de l\'enregistrement', { id: t_toast });
+          toast.error('Échec de l\'action', { id: t_toast });
         }
       } else {
         pdf.save(fileName);
@@ -373,13 +373,24 @@ export const TransactionDetailPage: React.FC = () => {
                           </div>
                         </div>
                         {rec.status === 'completed' && (
-                          <button
-                            onClick={() => handleReceiptDownload(rec)}
-                            className="p-4 bg-[#6344B6]/5 text-[#6344B6] rounded-[20px] hover:bg-[#6344B6] hover:text-white transition-all shadow-sm border border-[#6344B6]/10"
-                            title="Télécharger le reçu A5"
-                          >
-                            <Download size={20} />
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleReceiptDownload(rec, 'download')}
+                              className="p-3.5 bg-[#6344B6]/5 text-[#6344B6] rounded-[18px] hover:bg-[#6344B6] hover:text-white transition-all shadow-sm border border-[#6344B6]/10"
+                              title="Télécharger"
+                            >
+                              <Download size={18} />
+                            </button>
+                            {isNativeApp() && (
+                              <button
+                                onClick={() => handleReceiptDownload(rec, 'share')}
+                                className="p-3.5 bg-white text-[#6344B6] rounded-[18px] hover:bg-[#6344B6]/5 transition-all shadow-sm border border-[#6344B6]/20"
+                                title="Partager"
+                              >
+                                <Share2 size={18} />
+                              </button>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -439,16 +450,34 @@ export const TransactionDetailPage: React.FC = () => {
                     <FileText size={30} />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <h4 className="font-black text-slate-900 text-xl tracking-tight">Télécharger le reçu de la transaction</h4>
-                    <p className="text-sm text-slate-500 font-medium">Cliquez pour télécharger le reçu de votre transaction.</p>
+                    <h4 className="font-black text-slate-900 text-xl tracking-tight">Reçu de transaction</h4>
+                    <p className="text-sm text-slate-500 font-medium">Téléchargez votre reçu ou partagez-le directement.</p>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleReceiptDownload()}
-                  className="mt-6 w-full px-6 py-4 bg-[#6344B6] text-white font-black rounded-full shadow-[0_14px_30px_rgba(98,54,204,0.24)] active:scale-95 transition-all flex items-center justify-center gap-4"
-                >
-                  <Download size={20} /> Télécharger le reçu
-                </button>
+                
+                {isNativeApp() ? (
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      onClick={() => handleReceiptDownload(null, 'download')}
+                      className="flex-1 py-4 bg-[#6344B6] text-white font-black rounded-full shadow-[0_14px_30px_rgba(98,54,204,0.2)] active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
+                    >
+                      <Download size={18} /> Télécharger
+                    </button>
+                    <button
+                      onClick={() => handleReceiptDownload(null, 'share')}
+                      className="flex-1 py-4 bg-white text-[#6344B6] border border-[#6344B6]/20 font-black rounded-full shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2 text-sm hover:bg-[#6344B6]/5"
+                    >
+                      <Share2 size={18} /> Partager
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleReceiptDownload(null, 'download')}
+                    className="mt-6 w-full px-6 py-4 bg-[#6344B6] text-white font-black rounded-full shadow-[0_14px_30px_rgba(98,54,204,0.24)] active:scale-95 transition-all flex items-center justify-center gap-4"
+                  >
+                    <Download size={20} /> Télécharger le reçu
+                  </button>
+                )}
               </div>
             )}
             </>

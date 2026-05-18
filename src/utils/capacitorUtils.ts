@@ -106,7 +106,8 @@ export const isNativeApp = (): boolean => {
 // ─── PDF Download / Share (Native) ────────────────────────────────────────────
 export const downloadPdfNative = async (
   base64Data: string, 
-  fileName: string
+  fileName: string,
+  mode: 'download' | 'share' = 'download'
 ): Promise<'saved' | 'shared' | 'failed'> => {
   try {
     const { Filesystem, Directory } = await import('@capacitor/filesystem');
@@ -116,20 +117,38 @@ export const downloadPdfNative = async (
       ? base64Data.split('base64,')[1] 
       : base64Data;
 
-    // Save directly to the public Documents folder (extremely clean, no popups, works on modern Android)
-    await Filesystem.writeFile({
-      path: fileName,
-      data: base64,
-      directory: Directory.Documents,
-      recursive: true,
-    });
+    if (mode === 'download') {
+      // Save directly to the public Documents/Flash Pay folder (extremely clean, creates subfolder automatically)
+      await Filesystem.writeFile({
+        path: `Flash Pay/${fileName}`,
+        data: base64,
+        directory: Directory.Documents,
+        recursive: true,
+      });
 
-    console.log('[Capacitor] PDF written directly to Documents folder:', fileName);
-    return 'saved';
+      console.log('[Capacitor] PDF written directly to Documents/Flash Pay folder:', fileName);
+      return 'saved';
+    } else {
+      // Save to cache directory + Native Share sheet
+      const { Share } = await import('@capacitor/share');
+
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: base64,
+        directory: Directory.Cache,
+      });
+
+      await Share.share({
+        title: fileName,
+        url: result.uri,
+      });
+
+      return 'shared';
+    }
   } catch (error) {
-    console.error('[Capacitor] PDF Direct Write to Documents failed, falling back to Share sheet:', error);
+    console.error('[Capacitor] PDF Native Action failed, trying fallback:', error);
     
-    // Fallback to cache directory + Native Share sheet
+    // Fallback if direct download fails (e.g. permission or platform issues)
     try {
       const { Filesystem, Directory } = await import('@capacitor/filesystem');
       const { Share } = await import('@capacitor/share');
@@ -151,7 +170,7 @@ export const downloadPdfNative = async (
 
       return 'shared';
     } catch (fallbackError) {
-      console.error('[Capacitor] PDF Native share fallback failed completely:', fallbackError);
+      console.error('[Capacitor] PDF Native completely failed:', fallbackError);
       return 'failed';
     }
   }
