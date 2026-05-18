@@ -12,7 +12,20 @@
           "package_name": "com.flashpay.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "4504627700-m6h2r71uvhhrbv318q8blnt92fsgv9is.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flashpay.app",
+            "certificate_hash": "7c86849cc25bbf5bd3f86f258c3e8778cb4241e8"
+          }
+        },
+        {
+          "client_id": "4504627700-t3orkamdujgdmqn9b38dlt1900q4t1ml.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBTWKybZlLqdTxqNaONfzRuRzciLh9ULno"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "4504627700-t3orkamdujgdmqn9b38dlt1900q4t1ml.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
