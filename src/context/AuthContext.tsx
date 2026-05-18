@@ -30,11 +30,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
 
   useEffect(() => {
-    // Handle Google Auth redirect result on load
-    authService.handleRedirectResult().catch((err) => {
-      console.error("[GoogleAuth] Error handling redirect result on mount:", err);
-    });
-
     let unsubUser: (() => void) | null = null;
 
     const unsubscribeAuth = authService.onAuthStateChanged((fbUser) => {
