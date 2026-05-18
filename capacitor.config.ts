@@ -12,6 +12,15 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     overrideUserAgent: 'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
+    allowNavigation: [
+      'flash-pay-937d7.firebaseapp.com',
+      '*.firebaseapp.com',
+      'accounts.google.com',
+      '*.google.com',
+      '*.googleusercontent.com',
+      '*.googleapis.com',
+      '*.gstatic.com'
+    ]
   },
   plugins: {
     SplashScreen: {
