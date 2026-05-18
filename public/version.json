@@ -1,7 +1,7 @@
 {
-  "version": "1.1.1",
-  "versionCode": 149,
+  "version": "1.1.0",
+  "versionCode": 150,
   "downloadUrl": "https://github.com/zoko-fabiol/Flash-pay/releases/latest",
-  "changelog": "Stabilité améliorée et corrections mineures.",
+  "changelog": "Authentification Google 100% native intégrée.",
   "forceUpdate": false
 }

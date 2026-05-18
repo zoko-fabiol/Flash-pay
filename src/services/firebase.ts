@@ -40,7 +40,16 @@ import {
 } from 'firebase/firestore';
 import { deviceService } from './deviceService';
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+
+// Initialize native Google Auth for mobile
+if (Capacitor.isNativePlatform()) {
+  try {
+    GoogleAuth.initialize();
+  } catch (e) {
+    console.warn("[GoogleAuth] Native initialization failed or already initialized:", e);
+  }
+}
 import {
   getStorage,
   ref,
@@ -232,18 +241,55 @@ export const authService = {
   },
 
   async loginWithGoogle() {
-    const provider = new GoogleAuthProvider();
     const isNative = Capacitor.isNativePlatform();
 
     if (isNative) {
-      console.log("[GoogleAuth] Native APK platform detected. Opening secure Chrome Custom Tab...");
-      Browser.open({ url: 'https://flash-pay.site/login-apk-bridge' }).catch(err => {
-        console.error("[GoogleAuth] Failed to open Custom Tab, falling back to window.open:", err);
-        window.open('https://flash-pay.site/login-apk-bridge', '_system');
-      });
-      return new Promise<FirebaseUser>(() => {});
+      console.log("[GoogleAuth] Native APK platform detected, invoking native Google Sign-In sheet...");
+      try {
+        const googleUser = await GoogleAuth.signIn();
+        const idToken = googleUser.authentication.idToken;
+        if (!idToken) {
+          throw new Error("No ID Token received from Google Auth");
+        }
+
+        const credential = GoogleAuthProvider.credential(idToken);
+        const result = await signInWithCredential(auth, credential);
+        const user = result.user;
+
+        // Check if user document exists
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) {
+          const referralCode = await generateUniqueReferralCode();
+          await setDoc(doc(db, 'users', user.uid), {
+            id: user.uid,
+            email: user.email,
+            nom: user.displayName || '',
+            tel: '',
+            countryCode: '',
+            referralCode,
+            referredBy: null,
+            referralStatus: 'none',
+            referralStats: { invited: 0, rewarded: 0, pending: 0 },
+            statut_kyc: 'Standard',
+            kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
+            solde_bonus: 0,
+            solde_points: 0,
+            emailVerified: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            isOnboardingComplete: false,
+            referredUsers: [],
+            referralRewards: [],
+          });
+        }
+        return user;
+      } catch (err: any) {
+        console.error("[GoogleAuth] Native Google Sign-In failed:", err);
+        throw err;
+      }
     }
 
+    const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
@@ -272,42 +318,6 @@ export const authService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isOnboardingComplete: false, // Flag for redirection
-        referredUsers: [],
-        referralRewards: [],
-      });
-    }
-    
-    return user;
-  },
-
-  async loginWithGoogleIdToken(idToken: string) {
-    const credential = GoogleAuthProvider.credential(idToken);
-    const result = await signInWithCredential(auth, credential);
-    const user = result.user;
-    
-    // Check if user document exists
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
-    
-    if (!userDoc.exists()) {
-      const referralCode = await generateUniqueReferralCode();
-      await setDoc(doc(db, 'users', user.uid), {
-        id: user.uid,
-        email: user.email,
-        nom: user.displayName || '',
-        tel: '',
-        countryCode: '',
-        referralCode,
-        referredBy: null,
-        referralStatus: 'none',
-        referralStats: { invited: 0, rewarded: 0, pending: 0 },
-        statut_kyc: 'Standard',
-        kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
-        solde_bonus: 0,
-        solde_points: 0,
-        emailVerified: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        isOnboardingComplete: false,
         referredUsers: [],
         referralRewards: [],
       });

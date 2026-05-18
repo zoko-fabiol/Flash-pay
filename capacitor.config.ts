@@ -26,6 +26,11 @@ const config: CapacitorConfig = {
     Camera: {
       // Allow camera & gallery
     },
+    GoogleAuth: {
+      scopes: ["profile", "email"],
+      clientId: "4504627700-1c5v4j4gluq9b0m9r2l6356l1q9cplg0.apps.googleusercontent.com",
+      forceCodeForRefreshToken: true
+    }
   },
 };
 

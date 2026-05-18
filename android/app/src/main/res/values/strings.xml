@@ -4,4 +4,5 @@
     <string name="title_activity_main">Flash Pay</string>
     <string name="package_name">com.flashpay.app</string>
     <string name="custom_url_scheme">com.flashpay.app</string>
+    <string name="server_client_id">4504627700-1c5v4j4gluq9b0m9r2l6356l1q9cplg0.apps.googleusercontent.com</string>
 </resources>

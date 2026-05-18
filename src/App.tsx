@@ -44,7 +44,6 @@ import { TransactionDetailPage } from './pages/TransactionDetailPage';
 import { AdminExchangeRatesPage } from './pages/admin/AdminExchangeRatesPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
-import { LoginApkBridgePage } from './pages/LoginApkBridgePage';
 
 import { Loading } from './components/UI';
 import { initializePushNotifications } from './utils/pushNotifications';
@@ -54,7 +53,6 @@ import { UpdateGuard } from './components/UpdateGuard';
 // ─── Android Back Button Handler ────────────────────────────────────────────
 const AndroidBackHandler: React.FC = () => {
   const navigate = useNavigate();
-  const { loginWithGoogleIdToken } = useAuth();
 
   useEffect(() => {
     let appPlugin: any = null;
@@ -82,27 +80,6 @@ const AndroidBackHandler: React.FC = () => {
             navigate(-1);
           } else {
             App.exitApp();
-          }
-        });
-
-        // Handle Android deep linking for Google OAuth bridge
-        App.addListener('appUrlOpen', async (data) => {
-          try {
-            console.log("[GoogleAuth] Deep link URL opened:", data.url);
-            if (data.url && (data.url.startsWith('flashpay://') || data.url.includes('idToken='))) {
-              const searchStr = data.url.split('?')[1];
-              if (searchStr) {
-                const urlParams = new URLSearchParams(searchStr);
-                const idToken = urlParams.get('idToken');
-                if (idToken) {
-                  console.log("[GoogleAuth] Authenticating native user with custom ID token...");
-                  await loginWithGoogleIdToken(idToken);
-                  navigate('/');
-                }
-              }
-            }
-          } catch (err) {
-            console.error("[GoogleAuth] Deep link login failed:", err);
           }
         });
       } catch {
@@ -180,7 +157,6 @@ function AppRoutes() {
         <Route path="/welcome" element={user ? <Navigate to="/" /> : <WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-        <Route path="/login-apk-bridge" element={<LoginApkBridgePage />} />
         <Route path="/onboarding" element={
           user ? <OnboardingPage /> : <Navigate to="/login" />
         } />
