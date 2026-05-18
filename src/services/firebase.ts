@@ -12,6 +12,8 @@ import {
   EmailAuthProvider,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   type Auth,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -229,8 +231,15 @@ export const authService = {
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
-    
-    // Direct popup login for all platforms
+    const isNative = Capacitor.isNativePlatform();
+
+    if (isNative) {
+      console.log("[GoogleAuth] Native APK platform detected, using signInWithRedirect.");
+      await signInWithRedirect(auth, provider);
+      return new Promise<FirebaseUser>(() => {});
+    }
+
+    // Web/PWA Platform: direct popup login
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
@@ -265,6 +274,45 @@ export const authService = {
     }
     
     return user;
+  },
+
+  async handleRedirectResult() {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result && result.user) {
+        const user = result.user;
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (!userDoc.exists()) {
+          const referralCode = await generateUniqueReferralCode();
+          await setDoc(doc(db, 'users', user.uid), {
+            id: user.uid,
+            email: user.email,
+            nom: user.displayName || '',
+            tel: '',
+            countryCode: '',
+            referralCode,
+            referredBy: null,
+            referralStatus: 'none',
+            referralStats: { invited: 0, rewarded: 0, pending: 0 },
+            statut_kyc: 'Standard',
+            kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
+            solde_bonus: 0,
+            solde_points: 0,
+            emailVerified: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            isOnboardingComplete: false,
+            referredUsers: [],
+            referralRewards: [],
+          });
+        }
+        return user;
+      }
+    } catch (err) {
+      console.error("[GoogleAuth] Error handling Google redirect result:", err);
+    }
+    return null;
   },
 
   async logout() {
