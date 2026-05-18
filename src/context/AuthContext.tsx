@@ -15,6 +15,7 @@ interface AuthContextType {
   signup: (email: string, password: string, nom: string, tel: string, countryCode: string, ref?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithGoogleIdToken: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
@@ -155,6 +156,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const loginWithGoogleIdToken = async (idToken: string) => {
+    try {
+      setError(null);
+      const fbUser = await authService.loginWithGoogleIdToken(idToken);
+      const userData = await userService.getUserData(fbUser.uid);
+      
+      if (userData && userData.emailVerified === false) {
+        sessionStorage.setItem('trigger_verification_email', 'true');
+      }
+      
+      setUser(userData as User);
+      setFirebaseUser(fbUser);
+    } catch (err: any) {
+      const friendlyError = translateFirebaseError(err);
+      setError(friendlyError);
+      throw new Error(friendlyError);
+    }
+  };
+
   const logout = async () => {
     try {
       setError(null);
@@ -191,6 +211,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       signup,
       login,
       loginWithGoogle,
+      loginWithGoogleIdToken,
       logout,
       resetPassword,
       clearError,

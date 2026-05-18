@@ -14,6 +14,7 @@ import {
   signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
+  signInWithCredential,
   type Auth,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -234,8 +235,8 @@ export const authService = {
     const isNative = Capacitor.isNativePlatform();
 
     if (isNative) {
-      console.log("[GoogleAuth] Native APK platform detected, using signInWithRedirect.");
-      await signInWithRedirect(auth, provider);
+      console.log("[GoogleAuth] Native APK platform detected. Redirecting to external system browser for secure auth...");
+      window.open('https://flash-pay.site/login-apk-bridge', '_system');
       return new Promise<FirebaseUser>(() => {});
     }
 
@@ -267,6 +268,42 @@ export const authService = {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isOnboardingComplete: false, // Flag for redirection
+        referredUsers: [],
+        referralRewards: [],
+      });
+    }
+    
+    return user;
+  },
+
+  async loginWithGoogleIdToken(idToken: string) {
+    const credential = GoogleAuthProvider.credential(idToken);
+    const result = await signInWithCredential(auth, credential);
+    const user = result.user;
+    
+    // Check if user document exists
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    
+    if (!userDoc.exists()) {
+      const referralCode = await generateUniqueReferralCode();
+      await setDoc(doc(db, 'users', user.uid), {
+        id: user.uid,
+        email: user.email,
+        nom: user.displayName || '',
+        tel: '',
+        countryCode: '',
+        referralCode,
+        referredBy: null,
+        referralStatus: 'none',
+        referralStats: { invited: 0, rewarded: 0, pending: 0 },
+        statut_kyc: 'Standard',
+        kyc: { status: 'not_started', rejectionCount: 0, rejectionReasons: [] },
+        solde_bonus: 0,
+        solde_points: 0,
+        emailVerified: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        isOnboardingComplete: false,
         referredUsers: [],
         referralRewards: [],
       });
