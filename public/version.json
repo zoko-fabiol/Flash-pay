@@ -1,6 +1,6 @@
 {
-  "version": "1.1.0",
-  "versionCode": 148,
+  "version": "1.1.1",
+  "versionCode": 149,
   "downloadUrl": "https://github.com/zoko-fabiol/Flash-pay/releases/latest",
   "changelog": "Stabilité améliorée et corrections mineures.",
   "forceUpdate": false

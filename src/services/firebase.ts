@@ -40,6 +40,7 @@ import {
 } from 'firebase/firestore';
 import { deviceService } from './deviceService';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import {
   getStorage,
   ref,
@@ -235,8 +236,11 @@ export const authService = {
     const isNative = Capacitor.isNativePlatform();
 
     if (isNative) {
-      console.log("[GoogleAuth] Native APK platform detected. Redirecting to external system browser for secure auth...");
-      window.open('https://flash-pay.site/login-apk-bridge', '_system');
+      console.log("[GoogleAuth] Native APK platform detected. Opening secure Chrome Custom Tab...");
+      Browser.open({ url: 'https://flash-pay.site/login-apk-bridge' }).catch(err => {
+        console.error("[GoogleAuth] Failed to open Custom Tab, falling back to window.open:", err);
+        window.open('https://flash-pay.site/login-apk-bridge', '_system');
+      });
       return new Promise<FirebaseUser>(() => {});
     }
 

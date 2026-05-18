@@ -1,11 +1,59 @@
 import React, { useState, useEffect } from 'react';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { LogIn, ShieldCheck, AlertCircle, ArrowLeftRight } from 'lucide-react';
 
 export const LoginApkBridgePage: React.FC = () => {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Check if we have a redirect result from Google login
+    const checkRedirectResult = async () => {
+      try {
+        console.log("[Bridge] Checking redirect result...");
+        const result = await getRedirectResult(auth);
+        
+        if (result && result.user) {
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          const idToken = credential?.idToken;
+
+          if (!idToken) {
+            throw new Error("Impossible de récupérer le jeton de sécurité Google (ID Token).");
+          }
+
+          setStatus('success');
+          console.log("[Bridge] Redirect login successful, sending token to APK...");
+          
+          const deepLinkUrl = `flashpay://login?idToken=${encodeURIComponent(idToken)}`;
+          
+          // Redirect back to the native app using deep link scheme
+          window.location.href = deepLinkUrl;
+
+          // Fallbacks for automatic navigation
+          setTimeout(() => {
+            window.location.replace(deepLinkUrl);
+          }, 300);
+
+          setTimeout(() => {
+            const a = document.createElement('a');
+            a.href = deepLinkUrl;
+            a.click();
+          }, 600);
+          return;
+        }
+
+        // If no redirect user found, set state to idle so they can click the button
+        setStatus('idle');
+      } catch (err: any) {
+        console.error("[Bridge] Error getting redirect result:", err);
+        setStatus('error');
+        setErrorMessage(err.message || "Une erreur est survenue lors de la redirection.");
+      }
+    };
+
+    checkRedirectResult();
+  }, []);
 
   const handleGoogleLogin = async () => {
     try {
@@ -16,46 +64,14 @@ export const LoginApkBridgePage: React.FC = () => {
       // Enforce account selection popup
       provider.setCustomParameters({ prompt: 'select_account' });
 
-      console.log("[Bridge] Launching Firebase signInWithPopup...");
-      const result = await signInWithPopup(auth, provider);
-      
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const idToken = credential?.idToken;
-
-      if (!idToken) {
-        throw new Error("Impossible de récupérer le jeton de sécurité Google (ID Token).");
-      }
-
-      setStatus('success');
-      console.log("[Bridge] Login successful, redirecting to APK...");
-      
-      // Redirect back to the native app using deep link scheme
-      const deepLinkUrl = `flashpay://login?idToken=${encodeURIComponent(idToken)}`;
-      
-      // Auto-trigger redirect
-      window.location.href = deepLinkUrl;
-
-      // Fallback redirect if window.location.href is blocked
-      setTimeout(() => {
-        const a = document.createElement('a');
-        a.href = deepLinkUrl;
-        a.click();
-      }, 500);
-
+      console.log("[Bridge] Initiating Google signInWithRedirect...");
+      await signInWithRedirect(auth, provider);
     } catch (err: any) {
-      console.error("[Bridge] OAuth Bridge error:", err);
+      console.error("[Bridge] OAuth Bridge redirect error:", err);
       setStatus('error');
-      setErrorMessage(err.message || "Une erreur de connexion est survenue. Veuillez réessayer.");
+      setErrorMessage(err.message || "Une erreur est survenue. Veuillez réessayer.");
     }
   };
-
-  // Auto-login attempt on mount to make the flow friction-free
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      handleGoogleLogin();
-    }, 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#120024] via-[#1a0033] to-[#0a0018] text-white flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
@@ -100,7 +116,7 @@ export const LoginApkBridgePage: React.FC = () => {
               Connexion Google en cours...
             </p>
             <p className="text-gray-500 text-xs mt-2">
-              Veuillez valider vos identifiants dans la fenêtre de connexion.
+              Veuillez patienter pendant la redirection vers Google.
             </p>
           </div>
         )}
