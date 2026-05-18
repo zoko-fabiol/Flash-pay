@@ -45,7 +45,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     } catch (e) {
       console.error('Error reading font size from localStorage', e);
     }
-    return 'normal';
+    return 'small';
   });
 
   const setLanguage = (lang: Language) => {

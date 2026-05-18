@@ -4,11 +4,13 @@ import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'reac
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AppProvider } from './context/AppContext';
 import { TransferWizardProvider } from './context/TransferWizardContext';
-import { LanguageProvider } from './context/LanguageContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { deviceService } from './services/deviceService';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from './services/firebase';
 
 // --- Scroll To Top Handler ---
 const ScrollToTop = () => {
@@ -112,6 +114,37 @@ const PushNotificationHandler: React.FC = () => {
   return null;
 };
 
+// ─── Preference Sync Handler ───────────────────────────────────────────────
+const PreferenceSyncHandler: React.FC = () => {
+  const { user } = useAuth();
+  const { setLanguage, setFontSize, language, fontSize } = useLanguage();
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'users', user.id), (snapshot) => {
+      if (snapshot.exists()) {
+        const userData = snapshot.data();
+        if (userData.preferences) {
+          const dbLang = userData.preferences.language;
+          const dbFontSize = userData.preferences.fontSize;
+
+          if (dbLang && dbLang !== language) {
+            setLanguage(dbLang as any);
+          }
+          if (dbFontSize && dbFontSize !== fontSize) {
+            setFontSize(dbFontSize as any);
+          }
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user?.id, language, fontSize, setLanguage, setFontSize]);
+
+  return null;
+};
+
 // ─── Protected Route ─────────────────────────────────────────────────────────
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -151,6 +184,7 @@ function AppRoutes() {
       <ScrollToTop />
       <AndroidBackHandler />
       <PushNotificationHandler />
+      <PreferenceSyncHandler />
       <UpdateGuard />
       <Routes>
         {/* Auth Routes */}

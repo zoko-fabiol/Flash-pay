@@ -23,7 +23,7 @@ export const PreferencesPage: React.FC = () => {
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: currentLang || 'fr',
-    fontSize: currentFontSize || 'normal',
+    fontSize: currentFontSize || 'small',
     promotionalEmails: false,
   });
   const [loading, setLoading] = useState(true);
