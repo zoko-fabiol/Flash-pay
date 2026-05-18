@@ -103,7 +103,6 @@ export const isNativeApp = (): boolean => {
     (window as any).Capacitor?.isNativePlatform?.() === true;
 };
 
-// ─── PDF Download / Share (Native) ────────────────────────────────────────────
 export const downloadPdfNative = async (
   base64Data: string, 
   fileName: string,
@@ -118,16 +117,45 @@ export const downloadPdfNative = async (
       : base64Data;
 
     if (mode === 'download') {
-      // Save directly to the public Documents/Flash Pay folder (extremely clean, creates subfolder automatically)
-      await Filesystem.writeFile({
-        path: `Flash Pay/${fileName}`,
-        data: base64,
-        directory: Directory.Documents,
-        recursive: true,
-      });
+      // 1. Try to check/request storage permissions (required for public Documents directory on some Android versions)
+      try {
+        const permStatus = await Filesystem.checkPermissions();
+        if (permStatus.publicStorage !== 'granted') {
+          await Filesystem.requestPermissions();
+        }
+      } catch (permError) {
+        console.warn('[Capacitor] Permission check/request bypassed or failed:', permError);
+      }
 
-      console.log('[Capacitor] PDF written directly to Documents/Flash Pay folder:', fileName);
-      return 'saved';
+      // 2. Attempt: Write directly to the public Documents/Flash Pay folder
+      try {
+        await Filesystem.writeFile({
+          path: `Flash Pay/${fileName}`,
+          data: base64,
+          directory: Directory.Documents,
+          recursive: true,
+        });
+        console.log('[Capacitor] PDF written directly to Documents/Flash Pay folder:', fileName);
+        return 'saved';
+      } catch (docWriteError: any) {
+        console.warn('[Capacitor] Failed writing to public Documents folder, trying External storage:', docWriteError);
+        
+        // 3. Fallback Attempt: Write to user-visible App-Specific External folder (which ALWAYS succeeds without runtime permissions on Android 10+)
+        // This writes to /storage/emulated/0/Android/data/<package-name>/files/Documents/Flash Pay/
+        try {
+          await Filesystem.writeFile({
+            path: `Documents/Flash Pay/${fileName}`,
+            data: base64,
+            directory: Directory.External,
+            recursive: true,
+          });
+          console.log('[Capacitor] PDF written to external app folder:', fileName);
+          return 'saved';
+        } catch (extWriteError: any) {
+          console.error('[Capacitor] All download attempts failed, falling back to Share sheet:', extWriteError);
+          throw extWriteError; // Let the catch block handle the share sheet fallback
+        }
+      }
     } else {
       // Save to cache directory + Native Share sheet
       const { Share } = await import('@capacitor/share');
@@ -146,7 +174,7 @@ export const downloadPdfNative = async (
       return 'shared';
     }
   } catch (error) {
-    console.error('[Capacitor] PDF Native Action failed, trying fallback:', error);
+    console.error('[Capacitor] PDF Native Action failed, trying fallback Share sheet:', error);
     
     // Fallback if direct download fails (e.g. permission or platform issues)
     try {
