@@ -231,15 +231,6 @@ export const authService = {
 
   async loginWithGoogle() {
     const provider = new GoogleAuthProvider();
-    const isNative = Capacitor.isNativePlatform();
-
-    if (isNative) {
-      console.log("[GoogleAuth] Native APK platform detected, using signInWithRedirect.");
-      await signInWithRedirect(auth, provider);
-      return new Promise<FirebaseUser>(() => {});
-    }
-
-    // Web/PWA Platform: direct popup login
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
