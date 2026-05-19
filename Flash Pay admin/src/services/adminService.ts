@@ -614,12 +614,19 @@ export const adminService = {
     notificationEmails: string[] = [],
     pointsCurrency: string = 'RUB',
     pointsEarningRate: number = 1,
-    pointsRedemptionRate: number = 1000
+    pointsRedemptionRate: number = 1000,
+    apkVersion?: string,
+    apkVersionCode?: number,
+    apkDownloadUrl?: string,
+    apkChangelog?: string,
+    apkForceUpdate?: boolean,
+    showAndroidPromo?: boolean,
+    showApkUpdatePopup?: boolean
   ) => {
     const q = query(collection(db, 'settings'));
     const snapshot = await getDocs(q);
     
-    const payload = {
+    const payload: any = {
       dailyLimitRUB,
       standardLimitRUB,
       expertLimitRUB,
@@ -632,6 +639,14 @@ export const adminService = {
       updatedBy: auth.currentUser?.uid,
     };
 
+    if (apkVersion !== undefined) payload.apkVersion = apkVersion;
+    if (apkVersionCode !== undefined) payload.apkVersionCode = apkVersionCode;
+    if (apkDownloadUrl !== undefined) payload.apkDownloadUrl = apkDownloadUrl;
+    if (apkChangelog !== undefined) payload.apkChangelog = apkChangelog;
+    if (apkForceUpdate !== undefined) payload.apkForceUpdate = apkForceUpdate;
+    if (showAndroidPromo !== undefined) payload.showAndroidPromo = showAndroidPromo;
+    if (showApkUpdatePopup !== undefined) payload.showApkUpdatePopup = showApkUpdatePopup;
+
     if (snapshot.empty) {
       await addDoc(collection(db, 'settings'), payload);
     } else {
@@ -643,7 +658,7 @@ export const adminService = {
     await addDoc(collection(db, 'admin_logs'), {
       adminId: auth.currentUser?.uid,
       action: 'UPDATE_SETTINGS',
-      details: { dailyLimitRUB, standardLimitRUB, expertLimitRUB, referralBonusRUB, notificationEmails },
+      details: { dailyLimitRUB, standardLimitRUB, expertLimitRUB, referralBonusRUB, notificationEmails, apkVersion, apkVersionCode },
       timestamp: Timestamp.now()
     });
   },

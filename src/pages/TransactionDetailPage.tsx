@@ -199,6 +199,8 @@ export const TransactionDetailPage: React.FC = () => {
           toast.success(t('toast_saved_documents'), { id: t_toast });
         } else if (status === 'shared') {
           toast.success(t('toast_ready_share'), { id: t_toast });
+        } else if (status === 'fallback_shared') {
+          toast.success(t('toast_download_fallback'), { id: t_toast, duration: 6000 });
         } else {
           toast.error(t('toast_action_failed'), { id: t_toast });
         }

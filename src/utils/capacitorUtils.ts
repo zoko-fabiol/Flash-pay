@@ -107,7 +107,7 @@ export const downloadPdfNative = async (
   base64Data: string, 
   fileName: string,
   mode: 'download' | 'share' = 'download'
-): Promise<'saved' | 'shared' | 'failed'> => {
+): Promise<'saved' | 'shared' | 'fallback_shared' | 'failed'> => {
   try {
     const { Filesystem, Directory } = await import('@capacitor/filesystem');
 
@@ -239,7 +239,7 @@ export const downloadPdfNative = async (
         url: result.uri,
       });
 
-      return 'shared';
+      return mode === 'download' ? 'fallback_shared' : 'shared';
     } catch (fallbackError) {
       console.error('[Capacitor] PDF Native completely failed:', fallbackError);
       return 'failed';

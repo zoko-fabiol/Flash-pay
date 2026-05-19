@@ -1,31 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Smartphone, X, Download } from 'lucide-react';
 import { usePWAInstall } from '../context/PWAInstallContext';
 import { useLanguage } from '../context/LanguageContext';
 import { deviceService } from '../services/deviceService';
-
-// On utilise le lien direct vers les releases GitHub pour plus de fiabilité quel que soit l'hébergeur
-const APK_URL = 'https://github.com/zoko-fabiol/Flash-pay/releases/latest';
+import { collection, query, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 export const PWAInstallPrompt: React.FC = () => {
   const { canInstall, installApp, isInstalled } = usePWAInstall();
   const { t } = useLanguage();
   const [dismissed, setDismissed] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  
+  const [apkUrl, setApkUrl] = useState('https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk');
+  const [showAndroidPromo, setShowAndroidPromo] = useState(true);
 
   const isIOS = deviceService.isIOS();
   const isAndroid = deviceService.isAndroid();
 
+  // Load configuration from Firestore settings collection
+  useEffect(() => {
+    const qSettings = query(collection(db, 'settings'), limit(1));
+    const unsubscribe = onSnapshot(qSettings, (snapshot) => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs[0].data();
+        if (data.apkDownloadUrl) {
+          setApkUrl(data.apkDownloadUrl);
+        }
+        if (data.showAndroidPromo !== undefined) {
+          setShowAndroidPromo(!!data.showAndroidPromo);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   // On native platforms (APK already installed), we don't show the prompt
   if (deviceService.isNative() || isInstalled || dismissed) return null;
   
+  // If showing Android promo is disabled manually from admin, don't show it for Android users
+  if (isAndroid && !showAndroidPromo) return null;
+
   // On iOS, canInstall is usually false, but we want to show it anyway to guide the user
   if (!canInstall && !isIOS && !isAndroid) return null;
 
   const handleInstallClick = () => {
     if (isAndroid) {
       // Direct download via window.location for better mobile compatibility
-      window.location.href = APK_URL;
+      window.location.href = apkUrl;
     } else if (isIOS) {
       // Pour iOS, on affiche le guide (car pas d'install auto)
       setShowIOSGuide(true);

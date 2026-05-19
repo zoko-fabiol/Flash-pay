@@ -107,6 +107,16 @@ const ExchangeRatesPage: React.FC = () => {
   const [editingPointsEarningRate, setEditingPointsEarningRate] = useState<string>('1');
   const [editingPointsRedemptionRate, setEditingPointsRedemptionRate] = useState<string>('1000');
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // New APK & Promo Update settings
+  const [apkVersion, setApkVersion] = useState<string>('1.1.1');
+  const [apkVersionCode, setApkVersionCode] = useState<string>('151');
+  const [apkDownloadUrl, setApkDownloadUrl] = useState<string>('https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk');
+  const [apkChangelog, setApkChangelog] = useState<string>('Améliorations générales et corrections de bugs.');
+  const [apkForceUpdate, setApkForceUpdate] = useState<boolean>(false);
+  const [showAndroidPromo, setShowAndroidPromo] = useState<boolean>(true);
+  const [showApkUpdatePopup, setShowApkUpdatePopup] = useState<boolean>(true);
+
   const canAdd = canPerformAdminAction(profile, 'add');
   const canEdit = canPerformAdminAction(profile, 'edit');
   const canDelete = canPerformAdminAction(profile, 'delete');
@@ -155,6 +165,15 @@ const ExchangeRatesPage: React.FC = () => {
         setEditingPointsCurrency(settingsDoc.pointsCurrency || 'RUB');
         setEditingPointsEarningRate((settingsDoc.pointsEarningRate || 1).toString());
         setEditingPointsRedemptionRate((settingsDoc.pointsRedemptionRate || 1000).toString());
+
+        // Load new APK & Promo settings
+        setApkVersion(settingsDoc.apkVersion || '1.1.1');
+        setApkVersionCode((settingsDoc.apkVersionCode || 151).toString());
+        setApkDownloadUrl(settingsDoc.apkDownloadUrl || 'https://github.com/zoko-fabiol/Flash-pay/releases/latest');
+        setApkChangelog(settingsDoc.apkChangelog || 'Améliorations générales et corrections de bugs.');
+        setApkForceUpdate(!!settingsDoc.apkForceUpdate);
+        setShowAndroidPromo(settingsDoc.showAndroidPromo !== undefined ? !!settingsDoc.showAndroidPromo : true);
+        setShowApkUpdatePopup(settingsDoc.showApkUpdatePopup !== undefined ? !!settingsDoc.showApkUpdatePopup : true);
       }
     }, (error) => {
       console.error('Error fetching settings:', error);
@@ -215,12 +234,21 @@ const ExchangeRatesPage: React.FC = () => {
     const pointsEarnRate = parseFloat(editingPointsEarningRate);
     const pointsRedeemRate = parseFloat(editingPointsRedemptionRate);
 
+    const versionVal = apkVersion.trim();
+    const codeVal = parseInt(apkVersionCode.trim(), 10);
+    const downloadVal = apkDownloadUrl.trim();
+    const changelogVal = apkChangelog.trim();
+
     if (isNaN(newLimit) || newLimit <= 0) { toast.error('Limite max invalide'); return; }
     if (isNaN(newStdLimit) || newStdLimit <= 0) { toast.error('Limite Standard invalide'); return; }
     if (isNaN(newExpLimit) || newExpLimit <= 0) { toast.error('Limite Expert invalide'); return; }
     if (isNaN(newBonus) || newBonus < 0) { toast.error('Bonus parrainage invalide'); return; }
     if (isNaN(pointsEarnRate) || pointsEarnRate < 0) { toast.error('Taux de gain invalide'); return; }
     if (isNaN(pointsRedeemRate) || pointsRedeemRate <= 0) { toast.error('Taux de rachat invalide'); return; }
+
+    if (!versionVal) { toast.error('Numéro de version requis'); return; }
+    if (isNaN(codeVal) || codeVal <= 0) { toast.error('Code de version requis (nombre entier > 0)'); return; }
+    if (!downloadVal.startsWith('http')) { toast.error('Lien de téléchargement requis'); return; }
 
     const t = toast.loading('Mise à jour des paramètres...');
     try {
@@ -232,7 +260,14 @@ const ExchangeRatesPage: React.FC = () => {
         editingEmails,
         editingPointsCurrency,
         pointsEarnRate,
-        pointsRedeemRate
+        pointsRedeemRate,
+        versionVal,
+        codeVal,
+        downloadVal,
+        changelogVal,
+        apkForceUpdate,
+        showAndroidPromo,
+        showApkUpdatePopup
       );
       toast.success('Configuration système à jour', { id: t });
     } catch (err: any) {
@@ -412,6 +447,101 @@ const ExchangeRatesPage: React.FC = () => {
                         <button onClick={() => setEditingEmails(editingEmails.filter(e => e !== email))} className="hover:text-rose-300"><X size={10} /></button>
                       </div>
                     ))}
+                 </div>
+              </div>
+
+              <div className="pt-8 border-t border-white/10 space-y-5">
+                 <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">Alertes & Mises à jour</h4>
+                 
+                 {/* Version APK Code / Version */}
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Version APK</label>
+                       <input type="text" value={apkVersion} onChange={e => setApkVersion(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[20px] px-5 py-3 text-white font-black text-sm outline-none focus:bg-white/20 transition-all disabled:opacity-60" placeholder="1.1.1" />
+                    </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Code de Version</label>
+                       <input type="number" value={apkVersionCode} onChange={e => setApkVersionCode(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[20px] px-5 py-3 text-white font-black text-sm outline-none focus:bg-white/20 transition-all disabled:opacity-60" placeholder="151" />
+                    </div>
+                 </div>
+
+                 {/* APK download URL */}
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Lien de l'APK</label>
+                    <input type="text" value={apkDownloadUrl} onChange={e => setApkDownloadUrl(e.target.value)} disabled={!canEdit} className="w-full bg-white/10 border border-white/20 rounded-[20px] px-5 py-3 text-white font-black text-xs outline-none focus:bg-white/20 transition-all disabled:opacity-60" placeholder="https://..." />
+                 </div>
+
+                 {/* Changelog */}
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1">Changelog / Quoi de neuf ?</label>
+                    <textarea value={apkChangelog} onChange={e => setApkChangelog(e.target.value)} disabled={!canEdit} rows={2} className="w-full bg-white/10 border border-white/20 rounded-[20px] px-5 py-3 text-white font-black text-xs outline-none focus:bg-white/20 transition-all resize-none disabled:opacity-60" placeholder="Description de la mise à jour..." />
+                 </div>
+
+                 {/* Forcer la mise à jour (checkbox toggle) */}
+                 <div className="pt-2">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                       <input type="checkbox" checked={apkForceUpdate} onChange={e => setApkForceUpdate(e.target.checked)} disabled={!canEdit} className="w-5 h-5 rounded bg-white/10 border border-white/20 text-[#6344B6] focus:ring-0 cursor-pointer disabled:opacity-60" />
+                       <span className="text-[10px] font-black uppercase tracking-widest text-rose-300 group-hover:opacity-80 transition-opacity">Forcer la mise à jour (APK)</span>
+                    </label>
+                 </div>
+
+                 {/* Signalements Manuels (Buttons with status indicators) */}
+                 <div className="pt-4 border-t border-white/10 space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1 block">Déclencheurs Manuels</label>
+                    
+                    {/* APK Popup update status & buttons */}
+                    <div className="bg-white/5 border border-white/10 rounded-[24px] p-4 space-y-3">
+                       <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-white">Popup APK Mobile</span>
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${showApkUpdatePopup ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-white/10 text-white/50 border border-white/10'}`}>
+                             <span className={`w-1.5 h-1.5 rounded-full ${showApkUpdatePopup ? 'bg-emerald-400 animate-pulse' : 'bg-white/30'}`}></span>
+                             {showApkUpdatePopup ? 'Signalement Actif' : 'Signalement Inactif'}
+                          </span>
+                       </div>
+                       <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => { setShowApkUpdatePopup(true); toast.success('Alerte Popup APK activée ✓ (N\'oubliez pas de synchroniser)'); }}
+                            disabled={!canEdit || showApkUpdatePopup}
+                            className={`py-2 px-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${showApkUpdatePopup ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-not-allowed opacity-55' : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'}`}
+                          >
+                             Activer
+                          </button>
+                          <button
+                            onClick={() => { setShowApkUpdatePopup(false); toast.success('Alerte Popup APK désactivée ✕ (N\'oubliez pas de synchroniser)'); }}
+                            disabled={!canEdit || !showApkUpdatePopup}
+                            className={`py-2 px-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${!showApkUpdatePopup ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 cursor-not-allowed opacity-55' : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'}`}
+                          >
+                             Désactiver
+                          </button>
+                       </div>
+                    </div>
+
+                    {/* Android dashboard promo banner status & buttons */}
+                    <div className="bg-white/5 border border-white/10 rounded-[24px] p-4 space-y-3">
+                       <div className="flex items-center justify-between">
+                          <span className="text-[9px] font-black uppercase tracking-wider text-white font-black">Promo Android (Site/Web)</span>
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${showAndroidPromo ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black' : 'bg-white/10 text-white/50 border border-white/10'}`}>
+                             <span className={`w-1.5 h-1.5 rounded-full ${showAndroidPromo ? 'bg-emerald-400 animate-pulse' : 'bg-white/30'}`}></span>
+                             {showAndroidPromo ? 'Promo Active' : 'Promo Inactive'}
+                          </span>
+                       </div>
+                       <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={() => { setShowAndroidPromo(true); toast.success('Promo Android activée ✓ (N\'oubliez pas de synchroniser)'); }}
+                            disabled={!canEdit || showAndroidPromo}
+                            className={`py-2 px-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${showAndroidPromo ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-not-allowed opacity-55' : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'}`}
+                          >
+                             Activer
+                          </button>
+                          <button
+                            onClick={() => { setShowAndroidPromo(false); toast.success('Promo Android désactivée ✕ (N\'oubliez pas de synchroniser)'); }}
+                            disabled={!canEdit || !showAndroidPromo}
+                            className={`py-2 px-3 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${!showAndroidPromo ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30 cursor-not-allowed opacity-55' : 'bg-white/10 hover:bg-white/20 text-white border border-white/20'}`}
+                          >
+                             Désactiver
+                          </button>
+                       </div>
+                    </div>
                  </div>
               </div>
 

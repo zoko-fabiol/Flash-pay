@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Download, RefreshCw, X, ChevronRight, Sparkles } from 'lucide-react';
 import { App } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
+import { collection, query, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 interface VersionData {
   version: string;
@@ -22,27 +24,41 @@ export const UpdateGuard: React.FC = () => {
   useEffect(() => {
     if (isWeb) return;
 
+    let unsubscribe: (() => void) | undefined;
+
     const checkVersion = async () => {
       try {
         const info = await App.getInfo();
         const localVersionCode = parseInt(String(info.build || '0').trim(), 10);
 
-        // On récupère le fichier version.json sur le serveur Netlify
-        const response = await fetch(`/version.json?t=${Date.now()}`);
-        if (!response.ok) return;
+        const qSettings = query(collection(db, 'settings'), limit(1));
+        unsubscribe = onSnapshot(qSettings, (snapshot) => {
+          if (!snapshot.empty) {
+            const data = snapshot.docs[0].data();
+            const apkVersion = data.apkVersion || '1.1.1';
+            const apkVersionCode = parseInt(String(data.apkVersionCode || '0'), 10);
+            const apkDownloadUrl = data.apkDownloadUrl || 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk';
+            const apkChangelog = data.apkChangelog || 'Améliorations générales et corrections de bugs.';
+            const apkForceUpdate = !!data.apkForceUpdate;
+            const showApkUpdatePopup = data.showApkUpdatePopup !== undefined ? !!data.showApkUpdatePopup : true;
 
-        const contentType = response.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          return;
-        }
-
-        const data: VersionData = await response.json();
-        
-        // Comparaison : Si le versionCode du serveur est strictement plus grand que le local
-        if (data.versionCode > localVersionCode) {
-          setUpdateInfo(data);
-          setShowModal(true);
-        }
+            // Comparaison : Si la popup est activée ET le versionCode de Firestore est strictement plus grand que le local
+            if (showApkUpdatePopup && apkVersionCode > localVersionCode) {
+              setUpdateInfo({
+                version: apkVersion,
+                versionCode: apkVersionCode,
+                downloadUrl: apkDownloadUrl,
+                changelog: apkChangelog,
+                forceUpdate: apkForceUpdate,
+              });
+              setShowModal(true);
+            } else {
+              setShowModal(false);
+            }
+          }
+        }, (err) => {
+          console.error('[UpdateGuard] Error listening to Firestore settings:', err);
+        });
       } catch (error) {
         console.error('Erreur lors du check de version:', error);
       }
@@ -50,7 +66,11 @@ export const UpdateGuard: React.FC = () => {
 
     // Petit délai pour laisser l'app charger tranquillement
     const timer = setTimeout(checkVersion, 3000);
-    return () => clearTimeout(timer);
+    
+    return () => {
+      clearTimeout(timer);
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const handleUpdate = () => {
