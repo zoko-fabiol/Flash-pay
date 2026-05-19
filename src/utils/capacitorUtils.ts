@@ -127,33 +127,76 @@ export const downloadPdfNative = async (
         console.warn('[Capacitor] Permission check/request bypassed or failed:', permError);
       }
 
-      // 2. Attempt: Write directly to the public Documents/Flash Pay folder
+      // Try 1: Write directly to the root of the public Documents folder (Scoped Storage safe, no folder creation required!)
       try {
         await Filesystem.writeFile({
-          path: `Flash Pay/${fileName}`,
+          path: fileName,
           data: base64,
           directory: Directory.Documents,
-          recursive: true,
         });
-        console.log('[Capacitor] PDF written directly to Documents/Flash Pay folder:', fileName);
+        console.log('[Capacitor] PDF written directly to root of Documents:', fileName);
         return 'saved';
-      } catch (docWriteError: any) {
-        console.warn('[Capacitor] Failed writing to public Documents folder, trying External storage:', docWriteError);
-        
-        // 3. Fallback Attempt: Write to user-visible App-Specific External folder (which ALWAYS succeeds without runtime permissions on Android 10+)
-        // This writes to /storage/emulated/0/Android/data/<package-name>/files/Documents/Flash Pay/
+      } catch (err1) {
+        console.warn('[Capacitor] Try 1 failed (root of Documents), trying subfolder:', err1);
+
+        // Try 2: Write to the subfolder inside public Documents
         try {
+          try {
+            await Filesystem.mkdir({
+              path: 'Flash Pay',
+              directory: Directory.Documents,
+              recursive: true,
+            });
+          } catch (m1) {
+            console.warn('[Capacitor] mkdir Documents/Flash Pay failed, continuing anyway:', m1);
+          }
+
           await Filesystem.writeFile({
-            path: `Documents/Flash Pay/${fileName}`,
+            path: `Flash Pay/${fileName}`,
             data: base64,
-            directory: Directory.External,
-            recursive: true,
+            directory: Directory.Documents,
           });
-          console.log('[Capacitor] PDF written to external app folder:', fileName);
+          console.log('[Capacitor] PDF written to Documents/Flash Pay:', fileName);
           return 'saved';
-        } catch (extWriteError: any) {
-          console.error('[Capacitor] All download attempts failed, falling back to Share sheet:', extWriteError);
-          throw extWriteError; // Let the catch block handle the share sheet fallback
+        } catch (err2) {
+          console.warn('[Capacitor] Try 2 failed (Documents subfolder), trying root of External storage:', err2);
+
+          // Try 3: Write directly to the root of App-Specific External Storage (100% success on modern Android)
+          try {
+            await Filesystem.writeFile({
+              path: fileName,
+              data: base64,
+              directory: Directory.External,
+            });
+            console.log('[Capacitor] PDF written directly to root of External storage:', fileName);
+            return 'saved';
+          } catch (err3) {
+            console.warn('[Capacitor] Try 3 failed (root of External), trying subfolder of External storage:', err3);
+
+            // Try 4: Write to subfolder inside App-Specific External Storage
+            try {
+              try {
+                await Filesystem.mkdir({
+                  path: 'Documents/Flash Pay',
+                  directory: Directory.External,
+                  recursive: true,
+                });
+              } catch (m2) {
+                console.warn('[Capacitor] mkdir External/Documents/Flash Pay failed:', m2);
+              }
+
+              await Filesystem.writeFile({
+                path: `Documents/Flash Pay/${fileName}`,
+                data: base64,
+                directory: Directory.External,
+              });
+              console.log('[Capacitor] PDF written to External/Documents/Flash Pay:', fileName);
+              return 'saved';
+            } catch (err4) {
+              console.error('[Capacitor] All download attempts failed, falling back to Share sheet:', err4);
+              throw err4; // Let the catch block handle the share sheet fallback
+            }
+          }
         }
       }
     } else {
