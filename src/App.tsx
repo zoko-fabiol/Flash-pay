@@ -58,38 +58,12 @@ const AndroidBackHandler: React.FC = () => {
 
   useEffect(() => {
     let appPlugin: any = null;
-    let statusBarPlugin: any = null;
 
     const initCapacitor = async () => {
       try {
         // Dynamic import to avoid crashing on web
         const { App } = await import('@capacitor/app');
-        const { StatusBar, Style } = await import('@capacitor/status-bar');
         appPlugin = App;
-        statusBarPlugin = StatusBar;
-
-        // Set branded status bar
-        const applyStatusBarStyle = async () => {
-          try {
-            if (deviceService.isIOS()) {
-              await StatusBar.setStyle({ style: Style.Light });
-            } else {
-              // Ensure WebView starts below status bar (does not overlay) and set white background with dark icons for legibility
-              await StatusBar.setOverlaysWebView({ overlay: false });
-              await StatusBar.setBackgroundColor({ color: '#FFFFFF' });
-              await StatusBar.setStyle({ style: Style.Light });
-            }
-          } catch {
-            // Not on native — ignore
-          }
-        };
-
-        await applyStatusBarStyle();
-
-        // Re-apply status bar styles after a delay to ensure they are not overridden by splash screen hide logic
-        setTimeout(applyStatusBarStyle, 1000);
-        setTimeout(applyStatusBarStyle, 2000);
-        setTimeout(applyStatusBarStyle, 5000);
 
         // Handle Android back button
         App.addListener('backButton', ({ canGoBack }) => {
@@ -112,6 +86,66 @@ const AndroidBackHandler: React.FC = () => {
       }
     };
   }, [navigate]);
+
+  return null;
+};
+
+// ─── Status Bar Theme Handler ───────────────────────────────────────────────
+const StatusBarHandler: React.FC = () => {
+  const { theme } = useLanguage();
+
+  useEffect(() => {
+    const applyStatusBarStyle = async () => {
+      try {
+        const { StatusBar, Style } = await import('@capacitor/status-bar');
+        
+        // Determine whether dark mode is active
+        const isDarkMode = 
+          theme === 'dark' || 
+          (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+        if (deviceService.isIOS()) {
+          // On iOS: Style.Dark means white/light icons, Style.Light means dark icons
+          await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
+        } else {
+          // On Android:
+          // 1. If dark mode: dark background (#080511) and light icons (Style.Dark)
+          // 2. If light mode: white background (#FFFFFF) and dark icons (Style.Light)
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          await StatusBar.setBackgroundColor({ color: isDarkMode ? '#080511' : '#FFFFFF' });
+          await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
+        }
+      } catch (err) {
+        // Not native or Capacitor error
+      }
+    };
+
+    applyStatusBarStyle();
+    
+    // Add timeouts to prevent splash screen resets
+    const t1 = setTimeout(applyStatusBarStyle, 1000);
+    const t2 = setTimeout(applyStatusBarStyle, 2000);
+    const t3 = setTimeout(applyStatusBarStyle, 5000);
+    
+    // Add event listener for system theme changes if set to 'system'
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyStatusBarStyle();
+      mediaQuery.addEventListener('change', listener);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+        mediaQuery.removeEventListener('change', listener);
+      };
+    }
+    
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [theme]);
 
   return null;
 };
@@ -280,6 +314,7 @@ function AppRoutes() {
     <>
       <ScrollToTop />
       <AndroidBackHandler />
+      <StatusBarHandler />
       <PushNotificationHandler />
       <PreferenceSyncHandler />
       <UpdateGuard />
