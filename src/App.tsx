@@ -132,12 +132,14 @@ const PushNotificationHandler: React.FC = () => {
 // ─── Preference Sync Handler ───────────────────────────────────────────────
 const PreferenceSyncHandler: React.FC = () => {
   const { user } = useAuth();
-  const { setLanguage, setFontSize, language, fontSize } = useLanguage();
+  const { setLanguage, setFontSize, setTheme, language, fontSize, theme } = useLanguage();
   const lastDbLangRef = React.useRef<string | null>(null);
   const lastDbFontSizeRef = React.useRef<string | null>(null);
+  const lastDbThemeRef = React.useRef<string | null>(null);
   const lastLocalPreferenceWriteRef = React.useRef(0);
   const latestLangRef = React.useRef(language);
   const latestFontSizeRef = React.useRef(fontSize);
+  const latestThemeRef = React.useRef(theme);
 
   const getPreferenceUpdatedAtMs = (value: unknown) => {
     if (!value) return 0;
@@ -158,6 +160,10 @@ const PreferenceSyncHandler: React.FC = () => {
     latestFontSizeRef.current = fontSize;
   }, [fontSize]);
 
+  useEffect(() => {
+    latestThemeRef.current = theme;
+  }, [theme]);
+
   // 1. Listen to Firestore changes (Incoming remote changes)
   useEffect(() => {
     if (!user?.id) return;
@@ -168,6 +174,7 @@ const PreferenceSyncHandler: React.FC = () => {
         if (userData.preferences) {
           const dbLang = userData.preferences.language;
           const dbFontSize = userData.preferences.fontSize;
+          const dbTheme = userData.preferences.theme;
           const dbUpdatedAt = getPreferenceUpdatedAtMs(userData.preferences.updatedAt);
 
           if (
@@ -179,6 +186,7 @@ const PreferenceSyncHandler: React.FC = () => {
 
           lastDbLangRef.current = dbLang || null;
           lastDbFontSizeRef.current = dbFontSize || null;
+          lastDbThemeRef.current = dbTheme || null;
 
           if (dbLang && dbLang !== latestLangRef.current) {
             setLanguage(dbLang as any);
@@ -186,12 +194,15 @@ const PreferenceSyncHandler: React.FC = () => {
           if (dbFontSize && dbFontSize !== latestFontSizeRef.current) {
             setFontSize(dbFontSize as any);
           }
+          if (dbTheme && dbTheme !== latestThemeRef.current) {
+            setTheme(dbTheme as any);
+          }
         }
       }
     });
 
     return () => unsubscribe();
-  }, [user?.id, setLanguage, setFontSize]);
+  }, [user?.id, setLanguage, setFontSize, setTheme]);
 
   // 2. Propagate local changes to Firestore (Outgoing local changes)
   useEffect(() => {
@@ -200,8 +211,9 @@ const PreferenceSyncHandler: React.FC = () => {
     const syncLocalPreferences = async () => {
       const isLangChanged = language !== lastDbLangRef.current;
       const isFontSizeChanged = fontSize !== lastDbFontSizeRef.current;
+      const isThemeChanged = theme !== lastDbThemeRef.current;
 
-      if (isLangChanged || isFontSizeChanged) {
+      if (isLangChanged || isFontSizeChanged || isThemeChanged) {
         try {
           const updatedAt = Date.now();
           lastLocalPreferenceWriteRef.current = updatedAt;
@@ -210,12 +222,14 @@ const PreferenceSyncHandler: React.FC = () => {
             preferences: {
               language,
               fontSize,
+              theme,
               updatedAt: new Date(updatedAt)
             }
           });
 
           lastDbLangRef.current = language;
           lastDbFontSizeRef.current = fontSize;
+          lastDbThemeRef.current = theme;
         } catch (error) {
           console.error('Error syncing local preferences to Firestore:', error);
         }
@@ -223,7 +237,7 @@ const PreferenceSyncHandler: React.FC = () => {
     };
 
     syncLocalPreferences();
-  }, [user?.id, language, fontSize]);
+  }, [user?.id, language, fontSize, theme]);
 
   return null;
 };

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
-import { Bell, Mail, Save, Loader, CheckCircle2, Type, Smartphone, Download } from 'lucide-react';
+import { Bell, Mail, Save, Loader, CheckCircle2, Type, Smartphone, Download, Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -13,17 +13,19 @@ import { deviceService } from '../services/deviceService';
 interface UserPreferences {
   language: string;
   fontSize: 'tiny' | 'small' | 'normal';
+  theme: 'light' | 'dark' | 'system';
   promotionalEmails: boolean;
   updatedAt?: Date;
 }
 
 export const PreferencesPage: React.FC = () => {
   const { user } = useAuth();
-  const { t, language: currentLang, setLanguage, fontSize: currentFontSize, setFontSize } = useLanguage();
+  const { t, language: currentLang, setLanguage, fontSize: currentFontSize, setFontSize, theme: currentTheme, setTheme } = useLanguage();
   const navigate = useNavigate();
   const [preferences, setPreferences] = useState<UserPreferences>({
     language: currentLang || 'fr',
     fontSize: currentFontSize || 'small',
+    theme: currentTheme || 'light',
     promotionalEmails: false,
   });
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,7 @@ export const PreferencesPage: React.FC = () => {
             ...userData.preferences,
             // Ensure values are defaults if missing
             fontSize: userData.preferences.fontSize || prev.fontSize,
+            theme: userData.preferences.theme || prev.theme,
           }));
         }
       }
@@ -64,6 +67,7 @@ export const PreferencesPage: React.FC = () => {
 
       setLanguage(preferences.language as any);
       setFontSize(preferences.fontSize);
+      setTheme(preferences.theme);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
@@ -124,6 +128,34 @@ export const PreferencesPage: React.FC = () => {
                   }`}
                 >
                   {t(`font_${size}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Theme Card */}
+        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 pt-6 pb-3 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6]">
+              {preferences.theme === 'dark' ? <Moon size={18} /> : preferences.theme === 'system' ? <Smartphone size={18} /> : <Sun size={18} />}
+            </div>
+            <h2 className="font-black text-slate-900">{t('theme')}</h2>
+          </div>
+          <div className="p-6">
+            <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-1">
+              {(['light', 'dark', 'system'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setPreferences({ ...preferences, theme: mode })}
+                  className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                    preferences.theme === mode 
+                      ? 'bg-white text-[#6344B6] shadow-md ring-1 ring-slate-100 scale-[1.02]' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {t(`theme_${mode}`)}
                 </button>
               ))}
             </div>

@@ -4,12 +4,15 @@ import { translations } from '../i18n/translations';
 
 type Language = 'fr' | 'en';
 type FontSize = 'tiny' | 'small' | 'normal';
+type Theme = 'light' | 'dark' | 'system';
 
 type LanguageContextValue = {
   language: Language;
   setLanguage: (lang: Language) => void;
   fontSize: FontSize;
   setFontSize: (size: FontSize) => void;
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
   t: (key: string, vars?: Record<string, any>) => string;
   formatNumber: (value: number, currency?: string) => string;
   formatDate: (date: string | number | Date) => string;
@@ -48,6 +51,18 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     return 'small';
   });
 
+  const [theme, setThemeState] = useState<Theme>(() => {
+    try {
+      const saved = localStorage.getItem('flashpay_theme');
+      if (saved && ['light', 'dark', 'system'].includes(saved)) {
+        return saved as Theme;
+      }
+    } catch (e) {
+      console.error('Error reading theme from localStorage', e);
+    }
+    return 'light';
+  });
+
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('flashpay_lang', lang);
@@ -59,6 +74,11 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('flashpay_font_size', size);
   };
 
+  const setTheme = (newTheme: Theme) => {
+    setThemeState(newTheme);
+    localStorage.setItem('flashpay_theme', newTheme);
+  };
+
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
@@ -66,6 +86,26 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     document.documentElement.style.fontSize = FONT_SIZE_MAP[fontSize];
   }, [fontSize]);
+
+  useEffect(() => {
+    const applyTheme = () => {
+      const root = document.documentElement;
+      if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    applyTheme();
+
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const listener = () => applyTheme();
+      mediaQuery.addEventListener('change', listener);
+      return () => mediaQuery.removeEventListener('change', listener);
+    }
+  }, [theme]);
 
   const t = React.useCallback((key: string, vars?: Record<string, any>) => {
     const dict = translations[language] || translations['fr'];
@@ -101,10 +141,12 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     setLanguage,
     fontSize,
     setFontSize,
+    theme,
+    setTheme,
     t,
     formatNumber,
     formatDate
-  }), [language, fontSize, t, formatNumber, formatDate]);
+  }), [language, fontSize, theme, t, formatNumber, formatDate]);
 
   return (
     <LanguageContext.Provider value={value}>
