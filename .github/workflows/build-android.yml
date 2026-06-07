@@ -45,15 +45,17 @@ jobs:
       - name: Grant execute permission to Gradlew
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK
+      - name: Build Debug APK and Release AAB
         working-directory: android
-        run: ./gradlew assembleDebug -PversionCode=${{ github.run_number }} -PversionName=1.0.${{ github.run_number }} --no-daemon
+        run: ./gradlew assembleDebug bundleRelease -PversionCode=${{ github.run_number }} -PversionName=1.0.${{ github.run_number }} --no-daemon
 
-      - name: Upload Platform APK
+      - name: Upload Platform Artifacts (APK & AAB)
         uses: actions/upload-artifact@v4
         with:
           name: flash-pay-platform-v1.0.${{ github.run_number }}
-          path: android/app/build/outputs/apk/debug/*.apk
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/bundle/release/*.aab
           retention-days: 7
 
   build-admin:
