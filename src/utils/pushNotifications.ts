@@ -10,3 +10,4 @@ export async function requestNotificationPermissionFromUser(): Promise<boolean> 
 export async function getCurrentPushToken(): Promise<string | null> {
   return null;
 }
+

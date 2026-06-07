@@ -37,6 +37,9 @@ import {
   Timestamp,
   increment,
   serverTimestamp,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
 } from 'firebase/firestore';
 import { deviceService } from './deviceService';
 import { Capacitor } from '@capacitor/core';
@@ -71,8 +74,26 @@ const firebaseConfig = {
 export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 
-// Initialize Firestore
-export const db: Firestore = getFirestore(app);
+// Initialize Firestore with persistent local cache enabled for offline access
+let firestoreDb: Firestore;
+if (typeof window !== 'undefined' && (window as any).__firestoreDb) {
+  firestoreDb = (window as any).__firestoreDb;
+} else {
+  try {
+    firestoreDb = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+    if (typeof window !== 'undefined') {
+      (window as any).__firestoreDb = firestoreDb;
+    }
+  } catch (e) {
+    // Fallback to existing instance if already initialized (common during HMR)
+    firestoreDb = getFirestore(app);
+  }
+}
+export const db = firestoreDb;
 
 export const storage = getStorage(app);
 

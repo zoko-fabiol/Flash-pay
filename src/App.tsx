@@ -69,12 +69,25 @@ const AndroidBackHandler: React.FC = () => {
         statusBarPlugin = StatusBar;
 
         // Set branded status bar
-        try {
-          await StatusBar.setBackgroundColor({ color: '#6344B6' });
-          await StatusBar.setStyle({ style: Style.Dark });
-        } catch {
-          // Not on native — ignore
-        }
+        const applyStatusBarStyle = async () => {
+          try {
+            if (deviceService.isIOS()) {
+              await StatusBar.setStyle({ style: Style.Light });
+            } else {
+              await StatusBar.setBackgroundColor({ color: '#6344B6' });
+              await StatusBar.setStyle({ style: Style.Dark });
+            }
+          } catch {
+            // Not on native — ignore
+          }
+        };
+
+        await applyStatusBarStyle();
+
+        // Re-apply status bar styles after a delay to ensure they are not overridden by splash screen hide logic
+        setTimeout(applyStatusBarStyle, 1000);
+        setTimeout(applyStatusBarStyle, 2000);
+        setTimeout(applyStatusBarStyle, 5000);
 
         // Handle Android back button
         App.addListener('backButton', ({ canGoBack }) => {

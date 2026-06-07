@@ -12,6 +12,10 @@ export const SupportPage: React.FC = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  // Support links (configured via .env or falling back to placeholder coordinates)
+  const WHATSAPP_LINK = import.meta.env.VITE_SUPPORT_WHATSAPP || "https://wa.me/33600000000";
+  const TELEGRAM_LINK = import.meta.env.VITE_SUPPORT_TELEGRAM || "https://t.me/FlashPaySupport";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -168,6 +172,50 @@ export const SupportPage: React.FC = () => {
               )}
             </button>
           </form>
+        </div>
+
+        {/* Other Support Channels */}
+        <div className="space-y-4">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">
+            {t('other_channels') || "Autres canaux d'assistance"}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* WhatsApp Card */}
+            <a 
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="premium-card p-5 flex items-center gap-4 hover:border-[#25D366]/30 hover:shadow-lg hover:shadow-[#25D366]/5 group transition-all cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-[#25D366]/10 text-[#25D366] rounded-2xl flex items-center justify-center shadow-sm border border-[#25D366]/10 group-hover:bg-[#25D366] group-hover:text-white transition-all duration-300">
+                <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.528 2.01 14.069.993 11.5.993c-5.44 0-9.863 4.37-9.867 9.8-.001 1.737.465 3.431 1.346 4.932l-.993 3.626 3.73-.977zm11.567-5.613c-.317-.159-1.88-.93-2.171-1.036-.29-.105-.502-.159-.713.159-.211.317-.818 1.036-1.002 1.248-.184.212-.368.238-.685.079-1.216-.61-2.083-1.066-2.924-2.523-.223-.387.223-.359.638-1.193.069-.14.035-.262-.017-.367-.052-.105-.502-1.217-.687-1.666-.181-.439-.364-.38-.501-.387-.13-.006-.279-.007-.427-.007-.149 0-.39.056-.595.28-.205.223-.782.766-.782 1.867s.8 2.167.912 2.317c.112.15 1.574 2.413 3.812 3.385.532.231.948.369 1.272.473.535.17 1.021.146 1.405.088.428-.065 1.88-.77 2.144-1.48.263-.71.263-1.317.184-1.48-.079-.163-.29-.267-.607-.427z"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-black text-slate-900 text-sm tracking-tight transition-colors group-hover:text-[#25D366]">{t('whatsapp_support') || "Assistance WhatsApp"}</h4>
+                <p className="text-slate-400 text-xs font-medium mt-0.5">{t('whatsapp_desc') || "Réponse rapide 24h/24 et 7j/7"}</p>
+              </div>
+            </a>
+
+            {/* Telegram Card */}
+            <a 
+              href={TELEGRAM_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="premium-card p-5 flex items-center gap-4 hover:border-[#0088cc]/30 hover:shadow-lg hover:shadow-[#0088cc]/5 group transition-all cursor-pointer"
+            >
+              <div className="w-12 h-12 bg-[#0088cc]/10 text-[#0088cc] rounded-2xl flex items-center justify-center shadow-sm border border-[#0088cc]/10 group-hover:bg-[#0088cc] group-hover:text-white transition-all duration-300">
+                <svg className="w-5.5 h-5.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-1-.65-.35-1 .22-1.6 1.5-1.55 2.75-2.95 2.87-3.48.02-.07.02-.27-.1-.38-.12-.11-.29-.07-.42-.04-.18.04-3 1.9-8.47 5.61-.8.55-1.53.82-2.19.8-.73-.02-2.13-.42-3.17-.76-1.28-.41-2.3-.64-2.21-1.35.05-.37.55-.75 1.51-1.13 5.89-2.56 9.83-4.26 11.82-5.07 5.67-2.3 6.85-2.7 7.62-2.7.17 0 .55.04.79.24.2.17.26.4.28.58.02.16-.01.93-.05 1.35z"/>
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-black text-slate-900 text-sm tracking-tight transition-colors group-hover:text-[#0088cc]">{t('telegram_support') || "Assistance Telegram"}</h4>
+                <p className="text-slate-400 text-xs font-medium mt-0.5">{t('telegram_desc') || "Messagerie instantanée"}</p>
+              </div>
+            </a>
+          </div>
         </div>
 
         {/* Tickets History List */}

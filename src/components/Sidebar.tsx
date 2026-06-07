@@ -55,7 +55,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
           </button>
         </div>
 
-        <nav className="p-6 space-y-2 mt-4">
+        <nav className="p-6 space-y-2 mt-4 pb-48 lg:pb-32">
           {menuItems.map(item => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -79,7 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/20">
+        <div className="absolute bottom-0 left-0 right-0 p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,20px))] border-t border-slate-100 bg-white/95">
           <div className="mb-6 flex justify-center sm:hidden">
             <LanguageSwitcher />
           </div>
