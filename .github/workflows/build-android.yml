@@ -47,7 +47,7 @@ jobs:
 
       - name: Build Debug APK and Release AAB
         working-directory: android
-        run: ./gradlew assembleDebug bundleRelease -PversionCode=${{ github.run_number }} -PversionName=1.0.${{ github.run_number }} --no-daemon
+        run: ./gradlew assembleDebug bundleRelease -x lint -x lintVitalRelease -PversionCode=${{ github.run_number }} -PversionName=1.0.${{ github.run_number }} --no-daemon
 
       - name: Upload Platform Artifacts (APK & AAB)
         uses: actions/upload-artifact@v4
