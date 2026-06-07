@@ -74,6 +74,8 @@ const AndroidBackHandler: React.FC = () => {
             if (deviceService.isIOS()) {
               await StatusBar.setStyle({ style: Style.Light });
             } else {
+              // Ensure WebView starts below status bar (does not overlay) so status bar background and icons are fully visible
+              await StatusBar.setOverlaysWebView({ overlay: false });
               await StatusBar.setBackgroundColor({ color: '#6344B6' });
               await StatusBar.setStyle({ style: Style.Dark });
             }
