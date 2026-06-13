@@ -39,7 +39,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, [location.pathname]);
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-mesh">
+    <div className="flex flex-col h-screen" style={{ backgroundColor: 'var(--bg-app)' }}>
       <Header onMenuClick={() => setSidebarOpen(true)} />
       
       <div className="flex flex-1 overflow-hidden">

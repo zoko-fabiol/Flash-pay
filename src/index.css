@@ -26,10 +26,56 @@
 :root {
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-border: rgba(255, 255, 255, 0.5);
+
+  /* Light mode semantic tokens */
+  --bg-app: #F8F9FF;
+  --bg-surface: #FFFFFF;
+  --bg-surface-secondary: #F3F4F8;
+  --bg-surface-hover: #F0F0F7;
+  --bg-glass: rgba(255, 255, 255, 0.7);
+  --bg-glass-border: rgba(255, 255, 255, 0.5);
+
+  --text-primary: #1A1A2E;
+  --text-secondary: #49454F;
+  --text-muted: #94a3b8;
+  --text-on-brand: #FFFFFF;
+
+  --border-color: #E2E8F0;
+  --border-light: rgba(0,0,0,0.06);
+
+  --shadow-nav: 0 -4px 20px -5px rgba(0,0,0,0.10);
+}
+
+.dark {
+  --glass-bg: rgba(22, 14, 40, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  /* Dark mode semantic tokens */
+  --bg-app: #0D0B14;
+  --bg-surface: #1A1528;
+  --bg-surface-secondary: #231D38;
+  --bg-surface-hover: #2A2344;
+  --bg-glass: rgba(22, 14, 40, 0.85);
+  --bg-glass-border: rgba(255, 255, 255, 0.08);
+
+  --text-primary: #EDE8FF;
+  --text-secondary: #B0A8D0;
+  --text-muted: #6B6388;
+  --text-on-brand: #FFFFFF;
+
+  --border-color: rgba(255,255,255,0.08);
+  --border-light: rgba(255,255,255,0.05);
+
+  --shadow-nav: 0 -4px 20px -5px rgba(0,0,0,0.40);
 }
 
 * {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html {
@@ -38,8 +84,8 @@ html {
 
 body {
   font-family: 'Outfit', sans-serif;
-  background-color: var(--color-background);
-  color: #1A1A2E;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 

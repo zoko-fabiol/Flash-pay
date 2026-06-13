@@ -96,36 +96,37 @@ export const PreferencesPage: React.FC = () => {
 
         {/* Header */}
         <div className="pt-4">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('preferences')}</h1>
-          <p className="text-slate-500 mt-1 font-medium">{t('preferences_desc')}</p>
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>{t('preferences')}</h1>
+          <p className="mt-1 font-medium" style={{ color: 'var(--text-muted)' }}>{t('preferences_desc')}</p>
         </div>
 
         {success && (
-          <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-200 flex items-center gap-3">
+          <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-200 flex items-center gap-3 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
             <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
             <span className="font-bold">{t('preferences_saved')}</span>
           </div>
         )}
 
         {/* Font Size Card */}
-        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+        <div className="rounded-[32px] border shadow-sm overflow-hidden" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
           <div className="px-6 pt-6 pb-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6]">
               <Type size={18} />
             </div>
-            <h2 className="font-black text-slate-900">{t('font_size')}</h2>
+            <h2 className="font-black" style={{ color: 'var(--text-primary)' }}>{t('font_size')}</h2>
           </div>
           <div className="p-6">
-            <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-1">
+            <div className="flex p-1.5 rounded-2xl gap-1" style={{ background: 'var(--bg-surface-secondary)' }}>
               {(['tiny', 'small', 'normal'] as const).map((size) => (
                 <button
                   key={size}
                   onClick={() => setPreferences({ ...preferences, fontSize: size })}
                   className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     preferences.fontSize === size 
-                      ? 'bg-white text-[#6344B6] shadow-md ring-1 ring-slate-100 scale-[1.02]' 
-                      : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-white text-[#6344B6] shadow-md ring-1 ring-slate-100 scale-[1.02] dark:bg-[#2A2344] dark:ring-white/10' 
+                      : 'hover:text-[#6344B6]'
                   }`}
+                  style={preferences.fontSize !== size ? { color: 'var(--text-muted)' } : {}}
                 >
                   {t(`font_${size}`)}
                 </button>
@@ -135,25 +136,29 @@ export const PreferencesPage: React.FC = () => {
         </div>
 
         {/* Theme Card */}
-        <div className="rounded-[32px] bg-white border border-slate-100 shadow-sm overflow-hidden">
+        <div className="rounded-[32px] border shadow-sm overflow-hidden" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
           <div className="px-6 pt-6 pb-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#6344B6]/10 flex items-center justify-center text-[#6344B6]">
               {preferences.theme === 'dark' ? <Moon size={18} /> : preferences.theme === 'system' ? <Smartphone size={18} /> : <Sun size={18} />}
             </div>
-            <h2 className="font-black text-slate-900">{t('theme')}</h2>
+            <h2 className="font-black" style={{ color: 'var(--text-primary)' }}>{t('theme')}</h2>
           </div>
           <div className="p-6">
-            <div className="flex bg-slate-50 p-1.5 rounded-2xl gap-1">
+            <div className="flex p-1.5 rounded-2xl gap-1" style={{ background: 'var(--bg-surface-secondary)' }}>
               {(['light', 'dark', 'system'] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
-                  onClick={() => setPreferences({ ...preferences, theme: mode })}
+                  onClick={() => {
+                    setPreferences({ ...preferences, theme: mode });
+                    setTheme(mode); // Apply immediately for live preview
+                  }}
                   className={`flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                     preferences.theme === mode 
-                      ? 'bg-white text-[#6344B6] shadow-md ring-1 ring-slate-100 scale-[1.02]' 
-                      : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-white text-[#6344B6] shadow-md ring-1 ring-slate-100 scale-[1.02] dark:bg-[#2A2344] dark:ring-white/10' 
+                      : 'hover:text-[#6344B6]'
                   }`}
+                  style={preferences.theme !== mode ? { color: 'var(--text-muted)' } : {}}
                 >
                   {t(`theme_${mode}`)}
                 </button>
@@ -200,7 +205,8 @@ export const PreferencesPage: React.FC = () => {
           </button>
           <button
             onClick={() => navigate(-1)}
-            className="flex-1 py-4 border-2 border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 transition active:scale-95"
+            className="flex-1 py-4 font-black rounded-2xl transition active:scale-95 border-2"
+            style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
           >
             {t('cancel')}
           </button>

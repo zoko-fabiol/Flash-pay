@@ -196,7 +196,7 @@ export const DashboardPage: React.FC = () => {
         {/* Recent Transactions Section */}
         <section className="px-4 pt-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-slate-900">{t('recent_transactions')}</h3>
+            <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{t('recent_transactions')}</h3>
             <button 
               onClick={() => navigate('/transactions')} 
               className="text-sm font-bold text-primary"
@@ -211,30 +211,31 @@ export const DashboardPage: React.FC = () => {
                 <button 
                   key={tx.id} 
                   onClick={() => navigate(`/transactions/${tx.id}`)} 
-                  className="flex w-full items-center justify-between rounded-2xl bg-white p-4 shadow-sm border border-slate-50 transition-all active:scale-[0.98]"
+                  className="flex w-full items-center justify-between rounded-2xl p-4 shadow-sm transition-all active:scale-[0.98] border"
+                  style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-primary font-bold">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary font-bold" style={{ background: 'var(--bg-surface-secondary)' }}>
                       {tx.recipientName?.charAt(0) || '?'}
                     </div>
                     <div className="text-left">
-                      <h4 className="font-bold text-slate-800 text-sm">
+                      <h4 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                         {tx.recipientName || t('unknown_recipient')}
                       </h4>
-                      <p className="text-[10px] font-bold text-slate-400">
+                      <p className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>
                         {formatDate(tx.createdAt)}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-slate-900 text-sm">
+                    <div className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
                       {formatNumber(tx.amount, tx.currency)}
                     </div>
                   </div>
                 </button>
               ))
             ) : (
-              <div className="rounded-2xl border-2 border-dashed border-slate-100 p-8 text-center text-slate-300">
+              <div className="rounded-2xl border-2 border-dashed p-8 text-center" style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
                 <p className="text-xs font-bold uppercase tracking-widest">{t('no_transactions')}</p>
               </div>
             )}

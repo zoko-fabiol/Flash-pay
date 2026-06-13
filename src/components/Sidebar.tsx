@@ -43,14 +43,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-300" onClick={onClose} />
       )}
       
-      <aside className={`
-        fixed lg:static inset-y-0 left-0 w-72 bg-white/95 backdrop-blur-xl border-r border-slate-200/60 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.05)]
-        transform transition-all duration-300 z-[70] overflow-y-auto
-        ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full lg:translate-x-0 opacity-0 lg:opacity-100'}
-      `}>
+      <aside
+        className={`fixed lg:static inset-y-0 left-0 w-72 backdrop-blur-xl shadow-[20px_0_60px_-15px_rgba(0,0,0,0.08)]
+          transform transition-all duration-300 z-[70] overflow-y-auto border-r
+          ${isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full lg:translate-x-0 opacity-0 lg:opacity-100'}
+        `}
+        style={{
+          background: 'var(--bg-glass)',
+          borderColor: 'var(--border-color)',
+        }}
+      >
         <div className="p-6 flex justify-between items-center lg:hidden sidebar-safe-top">
           <span className="font-bold text-primary text-xl">Flash Pay</span>
-          <button onClick={onClose} className="p-2 hover:bg-primary/10 rounded-xl">
+          <button onClick={onClose} className="p-2 hover:bg-primary/10 rounded-xl" style={{ color: 'var(--text-primary)' }}>
             <X size={20} />
           </button>
         </div>
@@ -68,9 +73,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
                   flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all
                   ${active
                     ? 'bg-primary text-white shadow-lg shadow-primary/20 font-semibold'
-                    : 'text-slate-600 hover:bg-primary/5 hover:text-primary'
+                    : 'hover:bg-primary/10 hover:text-primary'
                   }
                 `}
+                style={active ? {} : { color: 'var(--text-secondary)' }}
               >
                 <Icon size={20} />
                 <span className="text-sm">{item.label}</span>
@@ -79,13 +85,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] border-t border-slate-100 bg-white/95">
+        <div
+          className="absolute bottom-0 left-0 right-0 p-6 pb-[calc(2.5rem+env(safe-area-inset-bottom,0px))] border-t"
+          style={{
+            background: 'var(--bg-glass)',
+            borderColor: 'var(--border-color)',
+          }}
+        >
           <div className="mb-6 flex justify-center sm:hidden">
             <LanguageSwitcher />
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-rose-500 hover:bg-rose-50 transition-colors font-semibold"
+            className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-rose-500 hover:bg-rose-500/10 transition-colors font-semibold"
           >
             <LogOut size={20} />
             <span className="text-sm">{t('logout')}</span>
