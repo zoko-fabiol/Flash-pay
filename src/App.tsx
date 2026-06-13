@@ -92,29 +92,19 @@ const AndroidBackHandler: React.FC = () => {
 
 // ─── Status Bar Theme Handler ───────────────────────────────────────────────
 const StatusBarHandler: React.FC = () => {
-  const { theme } = useLanguage();
-
   useEffect(() => {
     const applyStatusBarStyle = async () => {
       try {
         const { StatusBar, Style } = await import('@capacitor/status-bar');
         
-        // Determine whether dark mode is active
-        const isDarkMode = 
-          theme === 'dark' || 
-          (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-        if (deviceService.isIOS()) {
-          // On iOS: Style.Dark means white/light icons, Style.Light means dark icons
-          await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
-        } else {
-          // On Android:
-          // 1. If dark mode: dark background (#080511) and light icons (Style.Dark)
-          // 2. If light mode: white background (#FFFFFF) and dark icons (Style.Light)
-          await StatusBar.setOverlaysWebView({ overlay: false });
-          await StatusBar.setBackgroundColor({ color: isDarkMode ? '#080511' : '#FFFFFF' });
-          await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
-        }
+        // Ensure status bar does not overlay webview (no transparency)
+        await StatusBar.setOverlaysWebView({ overlay: false });
+        
+        // Set background to solid black (#000000)
+        await StatusBar.setBackgroundColor({ color: '#000000' });
+        
+        // Set style to DARK (meaning white/light text and icons on the black background)
+        await StatusBar.setStyle({ style: Style.Dark });
       } catch (err) {
         // Not native or Capacitor error
       }
@@ -122,30 +112,17 @@ const StatusBarHandler: React.FC = () => {
 
     applyStatusBarStyle();
     
-    // Add timeouts to prevent splash screen resets
+    // Add timeouts to ensure it applies after splash screen hides
     const t1 = setTimeout(applyStatusBarStyle, 1000);
     const t2 = setTimeout(applyStatusBarStyle, 2000);
     const t3 = setTimeout(applyStatusBarStyle, 5000);
-    
-    // Add event listener for system theme changes if set to 'system'
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const listener = () => applyStatusBarStyle();
-      mediaQuery.addEventListener('change', listener);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-        clearTimeout(t3);
-        mediaQuery.removeEventListener('change', listener);
-      };
-    }
     
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [theme]);
+  }, []);
 
   return null;
 };
