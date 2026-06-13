@@ -190,7 +190,8 @@ export const TransactionDetailPage: React.FC = () => {
       pdf.setFont('helvetica', 'bold');
       pdf.text(isComp ? (language === 'en' ? 'TRANSFER COMPLETED' : 'TRANSFERT EFFECTUÉ') : (language === 'en' ? 'PENDING' : 'EN ATTENTE'), pageWidth / 2, y + 6.5, { align: 'center' });
 
-      const fileName = `FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : (language === 'en' ? 'Receipt' : 'Recu')}.pdf`;
+      const invoiceNumber = `${transaction.id.substring(0, 10).toUpperCase()}${recipient ? '-' + recipient.id.substring(0, 4).toUpperCase() : ''}`;
+      const fileName = `${invoiceNumber}.pdf`;
 
       if (isNativeApp()) {
         const pdfBase64 = pdf.output('datauristring');
