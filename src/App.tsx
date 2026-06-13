@@ -92,19 +92,25 @@ const AndroidBackHandler: React.FC = () => {
 
 // ─── Status Bar Theme Handler ───────────────────────────────────────────────
 const StatusBarHandler: React.FC = () => {
+  const { theme } = useLanguage();
+
   useEffect(() => {
     const applyStatusBarStyle = async () => {
       try {
         const { StatusBar, Style } = await import('@capacitor/status-bar');
         
+        const isDarkMode = 
+          theme === 'dark' || 
+          (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
         // Ensure status bar does not overlay webview (no transparency)
         await StatusBar.setOverlaysWebView({ overlay: false });
         
-        // Set background to solid black (#000000)
-        await StatusBar.setBackgroundColor({ color: '#000000' });
+        // Set background: white (#FFFFFF) for light mode, dark (#0D0B14) for dark mode
+        await StatusBar.setBackgroundColor({ color: isDarkMode ? '#0D0B14' : '#FFFFFF' });
         
-        // Set style to DARK (meaning white/light text and icons on the black background)
-        await StatusBar.setStyle({ style: Style.Dark });
+        // Set style: Style.Light (dark icons/text) for light mode, Style.Dark (light icons/text) for dark mode
+        await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
       } catch (err) {
         // Not native or Capacitor error
       }
@@ -122,7 +128,7 @@ const StatusBarHandler: React.FC = () => {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, []);
+  }, [theme]);
 
   return null;
 };
