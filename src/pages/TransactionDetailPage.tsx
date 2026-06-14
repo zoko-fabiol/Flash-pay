@@ -6,7 +6,7 @@ import { db } from '../services/firebase';
 import { Layout } from '../components/Layout';
 import { Loading } from '../components/UI';
 import { useLanguage } from '../context/LanguageContext';
-import jsPDF from 'jspdf';
+import { generateReceiptPDF, type ReceiptData } from '../utils/generateReceiptPDF';
 import toast from 'react-hot-toast';
 import { isNativeApp, downloadPdfNative } from '../utils/capacitorUtils';
 
@@ -70,44 +70,8 @@ export const TransactionDetailPage: React.FC = () => {
   const handleReceiptDownload = async (recipient?: any, mode: 'download' | 'share' = 'download') => {
     if (!transaction) return;
     const t_toast = toast.loading(mode === 'share' ? t('preparing_share') : t('generating_receipt'));
-    
+
     try {
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a5'
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 12;
-      let y = 15;
-
-      const mainColor = [102, 20, 137]; // #6344B6
-
-      // Header background
-      pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.rect(0, 0, pageWidth, 28, 'F');
-
-      // Title
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(22);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('FLASH PAY', pageWidth / 2, 12, { align: 'center' });
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(language === 'en' ? 'OFFICIAL TRANSFER RECEIPT' : 'REÇU DE TRANSFERT OFFICIEL', pageWidth / 2, 18, { align: 'center' });
-
-      y = 40;
-      pdf.setTextColor(60, 60, 60);
-      
-      // Transaction Header
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(language === 'en' ? 'REFERENCE' : 'RÉFÉRENCE', margin, y);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`#${transaction.id.substring(0, 10).toUpperCase()}${recipient ? '-' + recipient.id.substring(0, 4) : ''}`, margin, y + 5);
-      
       const formatDate = (date: Date) => {
         const d = date.getDate().toString().padStart(2, '0');
         const m = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -117,90 +81,39 @@ export const TransactionDetailPage: React.FC = () => {
         return `${d}/${m}/${ye} ${h}:${mi}`;
       };
 
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(language === 'en' ? 'DATE OF ISSUE' : 'DATE D\'ÉMISSION', pageWidth - margin, y, { align: 'right' });
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(formatDate(transaction.createdAt?.toDate ? transaction.createdAt.toDate() : new Date()), pageWidth - margin, y + 5, { align: 'right' });
-
-      y += 18;
-
-      // Parties Section
-      pdf.setDrawColor(240, 240, 240);
-      pdf.line(margin, y, pageWidth - margin, y);
-      y += 8;
-      
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(language === 'en' ? 'SENDER' : 'EXPÉDITEUR', margin, y);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(transaction.clientName || (language === 'en' ? 'Flash Pay Customer' : 'Client Flash Pay'), margin, y + 5);
-      
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(language === 'en' ? 'BENEFICIARY' : 'BÉNÉFICIAIRE', pageWidth - margin, y, { align: 'right' });
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(recipient ? recipient.name : (transaction.recipientName || 'N/A'), pageWidth - margin, y + 5, { align: 'right' });
-      pdf.text(recipient ? (recipient.phone || '') : (transaction.recipientPhone || ''), pageWidth - margin, y + 9, { align: 'right' });
-
-      y += 24;
-
-      // Financials
-      pdf.setFillColor(250, 250, 252);
-      pdf.roundedRect(margin, y, pageWidth - (margin * 2), 38, 4, 4, 'F');
-      y += 6;
-      
       const sendAmt = recipient ? recipient.amount : transaction.amount;
       const rate = transaction.exchangeRate || 1;
       const recvAmt = Math.floor(sendAmt * rate);
-
-      // Helper to format number with space
-      const formatNum = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(language === 'en' ? 'Amount sent:' : 'Montant envoyé:', margin + 6, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(40, 40, 40);
-      pdf.text(`${formatNum(sendAmt)} ${transaction.currency}`, pageWidth - margin - 6, y, { align: 'right' });
-      
-      y += 7;
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(100, 100, 100);
-      pdf.text(language === 'en' ? 'Exchange rate:' : 'Taux de change:', margin + 6, y);
-      pdf.text(`1 ${transaction.currency} = ${rate.toFixed(2)} ${transaction.destinationCurrency}`, pageWidth - margin - 6, y, { align: 'right' });
-      
-      y += 10;
-      pdf.setFontSize(12);
-      pdf.setTextColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.text(language === 'en' ? 'NET TO RECEIVE:' : 'NET À RECEVOIR:', margin + 6, y);
-      pdf.setFontSize(15);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${formatNum(recvAmt)} ${transaction.destinationCurrency}`, pageWidth - margin - 6, y, { align: 'right' });
-
-      y += 18;
-
-      // Status Badge (For all transactions)
       const status = recipient ? (recipient.status || 'pending') : transaction.status;
-      const isComp = status === 'completed';
-      
-      pdf.setFillColor(isComp ? 232 : 255, isComp ? 252 : 241, isComp ? 241 : 242);
-      pdf.roundedRect(pageWidth / 2 - 25, y, 50, 10, 5, 5, 'F');
-      pdf.setTextColor(isComp ? 16 : 225, isComp ? 124 : 29, isComp ? 65 : 72);
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(isComp ? (language === 'en' ? 'TRANSFER COMPLETED' : 'TRANSFERT EFFECTUÉ') : (language === 'en' ? 'PENDING' : 'EN ATTENTE'), pageWidth / 2, y + 6.5, { align: 'center' });
+      const refSuffix = recipient ? '-' + recipient.id.substring(0, 4).toUpperCase() : '';
 
-      const invoiceNumber = `${transaction.id.substring(0, 10).toUpperCase()}${recipient ? '-' + recipient.id.substring(0, 4).toUpperCase() : ''}`;
+      const receiptData: ReceiptData = {
+        referenceId: `#${transaction.id.substring(0, 10).toUpperCase()}${refSuffix}`,
+        date: formatDate(transaction.createdAt?.toDate ? transaction.createdAt.toDate() : new Date()),
+        senderName: transaction.clientName || (language === 'en' ? 'Flash Pay Customer' : 'Client Flash Pay'),
+        recipientName: recipient ? recipient.name : (transaction.recipientName || 'N/A'),
+        recipientContact: recipient ? (recipient.phone || '') : (transaction.recipientPhone || ''),
+        sentAmount: sendAmt,
+        sentCurrency: transaction.currency,
+        exchangeRate: rate,
+        receivedAmount: recvAmt,
+        receivedCurrency: transaction.destinationCurrency,
+        isCompleted: status === 'completed',
+        language: language === 'en' ? 'en' : 'fr',
+      };
+
+      const pdf = await generateReceiptPDF(receiptData);
+      const invoiceNumber = `${transaction.id.substring(0, 10).toUpperCase()}${refSuffix}`;
       const fileName = `${invoiceNumber}.pdf`;
 
       if (isNativeApp()) {
         const pdfBase64 = pdf.output('datauristring');
-        const status = await downloadPdfNative(pdfBase64, fileName, mode);
-        if (status === 'saved') {
+        const nativeStatus = await downloadPdfNative(pdfBase64, fileName, mode);
+        if (nativeStatus === 'saved') {
           toast.success(t('toast_saved_documents'), { id: t_toast });
-        } else if (status === 'shared') {
+        } else if (nativeStatus === 'shared') {
           toast.success(t('toast_ready_share'), { id: t_toast });
-        } else if (status === 'fallback_shared') {
+        } else if (nativeStatus === 'fallback_shared') {
           toast.success(t('toast_download_fallback'), { id: t_toast, duration: 6000 });
         } else {
           toast.error(t('toast_action_failed'), { id: t_toast });

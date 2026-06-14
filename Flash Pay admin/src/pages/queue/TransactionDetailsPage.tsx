@@ -5,7 +5,7 @@ import { doc, onSnapshot, updateDoc, Timestamp, collection, query, where, getDoc
 import { db } from '../../lib/firebase';
 import type { Transaction, BulkRecipient, TransactionStatus } from '../../types';
 import { adminService } from '../../services/adminService';
-import jsPDF from 'jspdf';
+import { generateReceiptPDF, type ReceiptData } from '../../utils/generateReceiptPDF';
 import { isNativeApp, downloadPdfNative } from '../../utils/capacitorUtils';
 import { 
   ArrowLeft, 
@@ -165,41 +165,8 @@ const TransactionDetailsPage: React.FC = () => {
   const handleGeneratePDF = async (recipient?: BulkRecipient) => {
     if (!transaction) return;
     const t_toast = toast.loading('Génération du reçu...');
-    
+
     try {
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a5'
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 12;
-      let y = 15;
-
-      const mainColor = [102, 20, 137]; // M3 Primary #6344B6
-
-      pdf.setFillColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.rect(0, 0, pageWidth, 28, 'F');
-
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(22);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('FLASH PAY', pageWidth / 2, 14, { align: 'center' });
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('RECU DE TRANSFERT OFFICIEL', pageWidth / 2, 21, { align: 'center' });
-
-      y = 42;
-      pdf.setTextColor(60, 60, 60);
-      
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('REFERENCE', margin, y);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`#${transaction.id.substring(0, 10).toUpperCase()}${recipient ? '-' + recipient.id.substring(0, 4) : ''}`, margin, y + 7);
-      
       const formatDate = (date: Date) => {
         const d = date.getDate().toString().padStart(2, '0');
         const m = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -209,90 +176,33 @@ const TransactionDetailsPage: React.FC = () => {
         return `${d}/${m}/${ye} ${h}:${mi}`;
       };
 
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('DATE D\'EMISSION', pageWidth - margin, y, { align: 'right' });
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(formatDate(new Date()), pageWidth - margin, y + 7, { align: 'right' });
-
-      y += 24;
-      pdf.setDrawColor(240, 240, 240);
-      pdf.line(margin, y, pageWidth - margin, y);
-      y += 10;
-      
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('EXPEDITEUR', margin, y);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(transaction.clientName || 'Client Flash Pay', margin, y + 7);
-      
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('BENEFICIAIRE', pageWidth - margin, y, { align: 'right' });
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(recipient ? recipient.name : (transaction.recipientName || 'N/A'), pageWidth - margin, y + 7, { align: 'right' });
-      pdf.setFontSize(9);
-      const recipientContactBase = recipient 
-        ? (recipient.phone || recipient.account || '') 
-        : (transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '');
-      const recipientContact = recipientContactBase + (!recipient && transaction.beneficiaryBankAccount ? ` (Acc: ${transaction.beneficiaryBankAccount})` : '');
-      pdf.text(recipientContact, pageWidth - margin, y + 12, { align: 'right' });
-
-      y += 28;
-      pdf.setFillColor(243, 237, 247); // M3 Surface Variant
-      pdf.roundedRect(margin, y, pageWidth - (margin * 2), 48, 4, 4, 'F');
-      
-      y += 12;
-      pdf.setFontSize(10);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text('Montant du transfert:', margin + 8, y);
-      pdf.setFont('helvetica', 'bold');
-      pdf.setTextColor(40, 40, 40);
-      
       const rate = transaction.exchangeRate || 1;
       const sendAmt = recipient ? recipient.amount : transaction.amount;
       const recvAmt = Math.floor(sendAmt * rate);
-      const formatNumber = (num: number) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-
-      pdf.text(`${formatNumber(sendAmt)} ${transaction.currency || 'RUB'}`, pageWidth - margin - 8, y, { align: 'right' });
-      
-      y += 10;
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(100, 100, 100);
-      pdf.text('Taux appliqué:', margin + 8, y);
-      pdf.text(`1 ${transaction.currency || 'RUB'} = ${rate.toFixed(2)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
-      
-      y += 14;
-      pdf.setFontSize(12);
-      pdf.setTextColor(mainColor[0], mainColor[1], mainColor[2]);
-      pdf.text('MONTANT PERÇU:', margin + 8, y);
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`${formatNumber(recvAmt)} ${transaction.destinationCurrency || 'XAF'}`, pageWidth - margin - 8, y, { align: 'right' });
-
-      y += 28;
       const status = recipient ? (recipient.status || 'pending') : transaction.status;
-      const isSuccess = status === 'completed';
-      
-      if (isSuccess) {
-        pdf.setFillColor(232, 252, 241);
-        pdf.roundedRect(pageWidth / 2 - 25, y, 50, 12, 6, 6, 'F');
-        pdf.setTextColor(16, 124, 65);
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('TRANSFERT EFFECTUE', pageWidth / 2, y + 7.5, { align: 'center' });
-      } else {
-        pdf.setFillColor(255, 241, 242);
-        pdf.roundedRect(pageWidth / 2 - 25, y, 50, 12, 6, 6, 'F');
-        pdf.setTextColor(225, 29, 72);
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('EN ATTENTE', pageWidth / 2, y + 7.5, { align: 'center' });
-      }
 
-      pdf.setTextColor(180, 180, 180);
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text('Document généré par Flash Pay Admin.', pageWidth / 2, pageHeight - 15, { align: 'center' });
-      
+      const recipientContactBase = recipient
+        ? (recipient.phone || recipient.account || '')
+        : (transaction.recipientPhone || transaction.recipientAccount || transaction.beneficiaryAccount || '');
+      const recipientContact = recipientContactBase +
+        (!recipient && transaction.beneficiaryBankAccount ? ` (Acc: ${transaction.beneficiaryBankAccount})` : '');
+
+      const receiptData: ReceiptData = {
+        referenceId: `#${transaction.id.substring(0, 10).toUpperCase()}${recipient ? '-' + recipient.id.substring(0, 4).toUpperCase() : ''}`,
+        date: formatDate(new Date()),
+        senderName: transaction.clientName || 'Client Flash Pay',
+        recipientName: recipient ? recipient.name : (transaction.recipientName || 'N/A'),
+        recipientContact,
+        sentAmount: sendAmt,
+        sentCurrency: transaction.currency || 'XAF',
+        exchangeRate: rate,
+        receivedAmount: recvAmt,
+        receivedCurrency: transaction.destinationCurrency || 'RUB',
+        isCompleted: status === 'completed',
+        language: 'fr',
+      };
+
+      const pdf = await generateReceiptPDF(receiptData);
       const fileName = `FlashPay_${recipient ? recipient.name.replace(/\s+/g, '_') : 'Recu'}_${transaction.id.substring(0, 8)}.pdf`;
 
       if (isNativeApp()) {
