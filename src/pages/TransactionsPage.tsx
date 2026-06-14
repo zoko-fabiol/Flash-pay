@@ -56,13 +56,13 @@ export const TransactionsPage: React.FC = () => {
 
   const getStatusClass = (status: string) => {
     const classes: Record<string, string> = {
-      pending: 'bg-amber-100 text-amber-700',
-      proof_received: 'bg-blue-100 text-blue-700',
-      confirmed: 'bg-indigo-100 text-indigo-700',
-      completed: 'bg-emerald-100 text-emerald-700',
-      failed: 'bg-rose-100 text-rose-700',
-      flagged_problem: 'bg-orange-100 text-orange-700',
-      cancelled: 'bg-slate-100 text-slate-700',
+      pending: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+      proof_received: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+      confirmed: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+      completed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+      failed: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+      flagged_problem: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+      cancelled: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
     };
 
     return classes[status] || classes.pending;
@@ -111,8 +111,8 @@ export const TransactionsPage: React.FC = () => {
     <Layout>
       <div className="max-w-xl mx-auto space-y-8 pb-20 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('history_title')}</h1>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest opacity-60">{t('history_desc')}</p>
+          <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>{t('history_title')}</h1>
+          <p className="font-bold text-[10px] uppercase tracking-widest opacity-60" style={{ color: 'var(--text-muted)' }}>{t('history_desc')}</p>
         </div>
 
         {/* Filters - Modern Style */}
@@ -138,8 +138,8 @@ export const TransactionsPage: React.FC = () => {
         ) : filteredTransactions.length === 0 ? (
           <div className="premium-card p-20 text-center">
             <div className="w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">📭</div>
-            <p className="text-slate-900 font-bold text-2xl tracking-tight mb-2">{t('no_transactions')}</p>
-            <p className="text-slate-400 font-medium">{t('no_transactions_filter')}</p>
+            <p className="font-bold text-2xl tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>{t('no_transactions')}</p>
+            <p className="font-medium" style={{ color: 'var(--text-muted)' }}>{t('no_transactions_filter')}</p>
           </div>
         ) : (
           <div className="grid gap-4">
@@ -177,12 +177,12 @@ export const TransactionsPage: React.FC = () => {
                         )}
                       </div>
                       <div className="min-w-0 flex-1 space-y-1 text-left">
-                        <h4 className="truncate text-lg font-bold tracking-tight text-slate-900 transition-colors group-hover:text-primary">
+                        <h4 className="truncate text-lg font-bold tracking-tight transition-colors group-hover:text-primary" style={{ color: 'var(--text-primary)' }}>
                           {displayName}
                         </h4>
-                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
                           <span className="truncate">{displayPhone}</span>
-                          <span className="h-1 w-1 shrink-0 rounded-full bg-slate-200" />
+                          <span className="h-1 w-1 shrink-0 rounded-full" style={{ background: 'var(--border-color)' }} />
                           <span className="truncate">{getCountryName(tx)}</span>
                         </div>
                       </div>
@@ -190,7 +190,7 @@ export const TransactionsPage: React.FC = () => {
                   
                   <div className="flex flex-1 flex-row items-end justify-between lg:flex-col lg:items-end lg:justify-center">
                     <div className="space-y-1 text-left lg:text-right">
-                      <div className="text-3xl font-bold tracking-tight text-slate-900">
+                      <div className="text-3xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                         {formatNumber(tx.amount, tx.currency)}
                       </div>
                       {tx.fee > 0 && (

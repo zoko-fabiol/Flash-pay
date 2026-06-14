@@ -22,12 +22,12 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusTone: Record<string, string> = {
-  pending: 'bg-slate-100 text-slate-700',
-  proof_received: 'bg-blue-100 text-blue-700',
-  confirmed: 'bg-indigo-100 text-indigo-700',
-  completed: 'bg-emerald-100 text-emerald-700',
-  failed: 'bg-rose-100 text-rose-700',
-  flagged_problem: 'bg-amber-100 text-amber-700',
+  pending: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  proof_received: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  confirmed: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  completed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  failed: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
+  flagged_problem: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
 };
 
 export const TransactionDetailPage: React.FC = () => {
@@ -228,8 +228,8 @@ export const TransactionDetailPage: React.FC = () => {
   if (!transaction) {
     return (
       <Layout>
-        <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-          <p className="text-lg font-bold text-slate-900">{t('transaction_not_found')}</p>
+        <div className="mx-auto max-w-xl rounded-3xl border p-8 text-center shadow-sm" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
+          <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{t('transaction_not_found')}</p>
           <button onClick={() => navigate('/transactions')} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#6344B6] px-5 py-3 font-semibold text-white">
             <ArrowLeft size={16} /> {t('back')}
           </button>
@@ -261,8 +261,8 @@ export const TransactionDetailPage: React.FC = () => {
           </button>
         </div>
 
-        <div className="overflow-hidden rounded-[32px] border border-[#eadfff] bg-white shadow-[0_20px_60px_rgba(98,54,204,0.10)]">
-          <div className="bg-white px-6 pt-10 pb-8 text-center relative overflow-hidden">
+        <div className="overflow-hidden rounded-[32px] border shadow-[0_20px_60px_rgba(98,54,204,0.10)]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
+          <div className="px-6 pt-10 pb-8 text-center relative overflow-hidden" style={{ background: 'var(--bg-surface)' }}>
             <div className="absolute inset-x-0 top-0 h-28 bg-[radial-gradient(circle_at_top,rgba(98,54,204,0.10),transparent_70%)]" />
 
             <div className="relative z-10 space-y-4">
@@ -274,10 +274,10 @@ export const TransactionDetailPage: React.FC = () => {
                 <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#6344B6]">
                   {transaction.isBulk ? t('bulk_transfer') : (currentStatus === 'completed' ? t('completed') : t('in_progress'))}
                 </p>
-                <h1 className="text-3xl font-black tracking-tight text-[#1D1B20]">
+                <h1 className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
                   {currentStatus === 'completed' ? t('transfer_completed') : t('transfer_in_progress')}
                 </h1>
-                <p className="text-[11px] font-medium text-[#49454F] opacity-80">
+                <p className="text-[11px] font-medium opacity-80" style={{ color: 'var(--text-secondary)' }}>
                   {currentStatus === 'completed'
                     ? t('transfer_completed_desc')
                     : t('transfer_in_progress_desc')}
@@ -285,28 +285,30 @@ export const TransactionDetailPage: React.FC = () => {
               </div>
 
               <div className="pt-2">
-                <div className="text-5xl font-black tracking-tighter text-[#1D1B20]">
-                  {transaction.amount?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} <span className="text-2xl font-bold text-[#49454F] opacity-70">{transaction.currency}</span>
+                <div className="text-5xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>
+                  {transaction.amount?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} <span className="text-2xl font-bold opacity-70" style={{ color: 'var(--text-secondary)' }}>{transaction.currency}</span>
                 </div>
-                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em] text-[#49454F] opacity-60">
+                <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.25em] opacity-60" style={{ color: 'var(--text-secondary)' }}>
                   {transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleDateString(language === 'en' ? 'en-US' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                 </p>
               </div>
 
-              <div className="mx-auto mt-3 flex w-full max-w-[320px] rounded-full bg-[#F3EDF7] p-1.5">
+              <div className="mx-auto mt-3 flex w-full max-w-[320px] rounded-full p-1.5" style={{ background: 'var(--bg-surface-secondary)' }}>
                 <button 
                   onClick={() => setActiveTab('update')}
                   className={`flex-1 rounded-full px-4 py-3 text-center text-sm font-bold transition-all ${
-                    activeTab === 'update' ? 'bg-[#E8DEF8] text-[#21005D] shadow-sm' : 'text-[#49454F]'
+                    activeTab === 'update' ? 'bg-[#E8DEF8] text-[#21005D] dark:bg-[#2A2344] dark:text-[#EDE8FF] shadow-sm' : ''
                   }`}
+                  style={activeTab !== 'update' ? { color: 'var(--text-secondary)' } : {}}
                 >
                   {t('tab_update')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('details')}
                   className={`flex-1 rounded-full px-4 py-3 text-center text-sm font-bold transition-all ${
-                    activeTab === 'details' ? 'bg-[#E8DEF8] text-[#21005D] shadow-sm' : 'text-[#49454F]'
+                    activeTab === 'details' ? 'bg-[#E8DEF8] text-[#21005D] dark:bg-[#2A2344] dark:text-[#EDE8FF] shadow-sm' : ''
                   }`}
+                  style={activeTab !== 'details' ? { color: 'var(--text-secondary)' } : {}}
                 >
                   {t('tab_details')}
                 </button>
@@ -314,21 +316,21 @@ export const TransactionDetailPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-6 bg-[#FCFAFF] px-5 pb-6 pt-4 min-h-[400px]">
+          <div className="space-y-6 px-5 pb-6 pt-4 min-h-[400px]" style={{ background: 'var(--bg-surface-secondary)' }}>
             {activeTab === 'update' ? (
               <>
             {transaction.isBulk && (
-              <div className="rounded-[28px] border border-[#6344B6]/10 bg-white p-6 space-y-5 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
+              <div className="rounded-[28px] border p-6 space-y-5 shadow-[0_10px_30px_rgba(98,54,204,0.06)]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
                 <div className="flex justify-between items-end">
                   <div className="space-y-1">
                     <h3 className="text-[#6344B6] font-black text-lg tracking-tight">{t('bulk_progress_title')}</h3>
-                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">{t('bulk_progress_desc', { completed: completedRecipients, total: totalRecipients })}</p>
+                    <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{t('bulk_progress_desc', { completed: completedRecipients, total: totalRecipients })}</p>
                   </div>
                   <div className="text-right">
                     <span className="text-3xl font-black text-[#6344B6] tracking-tighter">{Math.round(bulkProgress)}%</span>
                   </div>
                 </div>
-                <div className="w-full h-4 bg-[#F3EDF7] rounded-full overflow-hidden p-1 shadow-inner">
+                <div className="w-full h-4 rounded-full overflow-hidden p-1 shadow-inner" style={{ background: 'var(--bg-surface-secondary)' }}>
                   <div
                     className="h-full bg-gradient-to-r from-[#7C4DFF] to-[#6344B6] rounded-full transition-all duration-1000 ease-out shadow-lg"
                     style={{ width: `${bulkProgress}%` }}
@@ -340,19 +342,19 @@ export const TransactionDetailPage: React.FC = () => {
             )}
 
             <div className="space-y-4">
-              <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-3 px-2">
+              <h3 className="text-[11px] font-black uppercase tracking-[0.3em] flex items-center gap-3 px-2" style={{ color: 'var(--text-muted)' }}>
                 <div className="w-1 h-4 bg-[#6344B6] rounded-full"></div>
                 {transaction.isBulk ? t('recipients_list') : t('recipient_details')}
               </h3>
 
               {!transaction.isBulk ? (
-                <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
+                <div className="rounded-[28px] border p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-2">
-                      <p className="text-[12px] font-black uppercase tracking-[0.18em] text-[#49454F]">{t('you_send')}</p>
-                      <p className="text-3xl font-black text-[#1D1B20] tracking-tight">{transaction.amount?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')}</p>
+                      <p className="text-[12px] font-black uppercase tracking-[0.18em]" style={{ color: 'var(--text-secondary)' }}>{t('you_send')}</p>
+                      <p className="text-3xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>{transaction.amount?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')}</p>
                       <p className="text-sm font-black text-[#6344B6] tracking-tight">{transaction.currency}</p>
-                      <p className="text-xs text-[#49454F] font-medium pt-2">{t('to_recipient', { name: transaction.recipientName || 'N/A' })}</p>
+                      <p className="text-xs font-medium pt-2" style={{ color: 'var(--text-secondary)' }}>{t('to_recipient', { name: transaction.recipientName || 'N/A' })}</p>
                     </div>
                     <div className={`rounded-full px-4 py-2 text-[9px] font-black uppercase tracking-[0.22em] shadow-sm border ${statusTone[currentStatus] || statusTone.pending} border-current/10`}>
                       {t(`detail_status_${currentStatus}`) || currentStatus}
@@ -362,15 +364,15 @@ export const TransactionDetailPage: React.FC = () => {
               ) : (
                 <div className="grid gap-4">
                   {transaction.bulkRecipients?.map((rec: any) => (
-                    <div key={rec.id} className="rounded-[28px] border border-slate-100 bg-white p-5 flex items-center justify-between shadow-sm">
+                    <div key={rec.id} className="rounded-[28px] border p-5 flex items-center justify-between shadow-sm" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
                       <div className="space-y-1">
-                        <p className="font-black text-slate-900 text-lg tracking-tight">{rec.name}</p>
-                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{rec.phone} • {rec.operator}</p>
+                        <p className="font-black text-lg tracking-tight" style={{ color: 'var(--text-primary)' }}>{rec.name}</p>
+                        <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{rec.phone} • {rec.operator}</p>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <p className="text-xl font-black text-slate-900 tracking-tighter">{Math.floor(rec.amount * (transaction.exchangeRate || 1)).toLocaleString()} <span className="text-xs opacity-40">{transaction.destinationCurrency}</span></p>
-                          <div className={`text-[9px] font-black uppercase tracking-widest mt-1 flex items-center justify-end gap-1.5 ${rec.status === 'completed' ? 'text-emerald-500' : 'text-amber-500'}`}>
+                          <p className="text-xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>{Math.floor(rec.amount * (transaction.exchangeRate || 1)).toLocaleString()} <span className="text-xs opacity-40">{transaction.destinationCurrency}</span></p>
+                          <div className={`text-[9px] font-black uppercase tracking-widest mt-1 flex items-center justify-end gap-1.5 ${rec.status === 'completed' ? 'text-emerald-500 dark:text-emerald-400' : 'text-amber-500 dark:text-amber-400'}`}>
                             {rec.status === 'completed' && <CheckCircle2 size={10} />}
                             {rec.status === 'completed' ? t('completed') : t('status_pending')}
                           </div>
@@ -387,7 +389,8 @@ export const TransactionDetailPage: React.FC = () => {
                             {isNativeApp() && (
                               <button
                                 onClick={() => handleReceiptDownload(rec, 'share')}
-                                className="p-3.5 bg-white text-[#6344B6] rounded-[18px] hover:bg-[#6344B6]/5 transition-all shadow-sm border border-[#6344B6]/20"
+                                className="p-3.5 text-[#6344B6] rounded-[18px] transition-all shadow-sm border border-[#6344B6]/20 hover:bg-[#6344B6]/10"
+                              style={{ background: 'var(--bg-surface)' }}
                                 title="Partager"
                               >
                                 <Share2 size={18} />
@@ -403,7 +406,7 @@ export const TransactionDetailPage: React.FC = () => {
             </div>
 
             {!transaction.isBulk && (
-              <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]">
+              <div className="rounded-[28px] border p-6 shadow-[0_10px_30px_rgba(98,54,204,0.06)]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
                 <div className="flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.28em] text-[#6344B6] mb-8">
                   <div className="p-2 bg-[#6344B6]/10 rounded-lg">
                     <Clock3 size={18} />
@@ -412,7 +415,7 @@ export const TransactionDetailPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-8 relative ml-3">
-                  <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-[#f3edff]" />
+                  <div className="absolute left-[15px] top-2 bottom-2 w-0.5" style={{ background: 'var(--border-color)' }} />
                   {steps.map((status, index) => {
                     const active = index <= stepIndex;
                     const isFailed = status === 'failed' && currentStatus === 'failed';
@@ -421,19 +424,22 @@ export const TransactionDetailPage: React.FC = () => {
                       <div key={status} className="flex gap-6 relative z-10 group">
                         <div className={`flex h-8 w-8 items-center justify-center rounded-full transition-all duration-700 ${
                           isFailed ? 'bg-rose-500 text-white shadow-xl shadow-rose-500/30' :
-                          active ? 'bg-[#6344B6] text-white shadow-xl shadow-[#6344B6]/30 scale-110' : 'bg-white border-2 border-[#f3edff] text-[#f3edff]'
-                        }`}>
+                          active ? 'bg-[#6344B6] text-white shadow-xl shadow-[#6344B6]/30 scale-110' : 'border-2 dark:border-white/10'
+                        }`}
+                        style={!active && !isFailed ? { background: 'var(--bg-surface-secondary)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' } : {}}>
                           {isFailed ? <ArrowLeft size={18} strokeWidth={3} className="rotate-[135deg]" /> : <CheckCircle2 size={18} strokeWidth={3} className={active ? 'animate-in zoom-in duration-500' : ''} />}
                         </div>
                         <div className="flex-1 space-y-1">
-                          <p className={`font-black text-[18px] tracking-tight transition-colors duration-500 ${isFailed ? 'text-rose-600' : active ? 'text-slate-900' : 'text-slate-200'}`}>{t(`detail_status_${status}`)}</p>
-                          <div className={`text-sm font-medium leading-relaxed transition-colors duration-500 ${isFailed ? 'text-rose-500' : active ? 'text-slate-500' : 'text-slate-100'}`}>
+                          <p className={`font-black text-[18px] tracking-tight transition-colors duration-500 ${isFailed ? 'text-rose-500' : ''}`}
+                             style={!isFailed ? { color: active ? 'var(--text-primary)' : 'var(--text-muted)' } : {}}>{t(`detail_status_${status}`)}</p>
+                          <div className={`text-sm font-medium leading-relaxed transition-colors duration-500 ${isFailed ? 'text-rose-400' : ''}`}
+                               style={!isFailed ? { color: active ? 'var(--text-secondary)' : 'var(--border-color)' } : {}}>
                             {status === 'pending' && t('step_pending_desc')}
                             {status === 'proof_received' && t('step_proof_received_desc')}
                             {status === 'confirmed' && t('step_confirmed_desc')}
                             {status === 'completed' && t('step_completed_desc')}
                             {isFailed && (
-                              <div className="mt-3 p-4 bg-rose-50 rounded-2xl border border-rose-100 italic">
+                              <div className="mt-3 p-4 bg-rose-50 dark:bg-rose-900/20 rounded-2xl border border-rose-100 dark:border-rose-800 italic">
                                 "{transaction.adminNote || t('step_failed_desc')}"
                               </div>
                             )}
@@ -447,14 +453,14 @@ export const TransactionDetailPage: React.FC = () => {
             )}
 
             {currentStatus === 'completed' && !transaction.isBulk && (
-              <div className="rounded-[28px] border border-[#eadfff] bg-gradient-to-br from-white to-[#F3EDF7]/50 p-6 shadow-[0_18px_50px_rgba(98,54,204,0.10)]">
+              <div className="rounded-[28px] border p-6 shadow-[0_18px_50px_rgba(98,54,204,0.10)]" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
                 <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center text-[#6344B6] shadow-lg border border-[#eadfff]">
+                  <div className="w-16 h-16 rounded-3xl flex items-center justify-center text-[#6344B6] shadow-lg border" style={{ background: 'var(--bg-surface-secondary)', borderColor: 'var(--border-color)' }}>
                     <FileText size={30} />
                   </div>
                   <div className="flex-1 space-y-1">
-                    <h4 className="font-black text-slate-900 text-xl tracking-tight">{t('receipt_title')}</h4>
-                    <p className="text-sm text-slate-500 font-medium">{t('receipt_desc')}</p>
+                    <h4 className="font-black text-xl tracking-tight" style={{ color: 'var(--text-primary)' }}>{t('receipt_title')}</h4>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{t('receipt_desc')}</p>
                   </div>
                 </div>
                 
@@ -468,7 +474,8 @@ export const TransactionDetailPage: React.FC = () => {
                     </button>
                     <button
                       onClick={() => handleReceiptDownload(null, 'share')}
-                      className="flex-1 py-4 bg-white text-[#6344B6] border border-[#6344B6]/20 font-black rounded-full shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2 text-sm hover:bg-[#6344B6]/5"
+                      className="flex-1 py-4 text-[#6344B6] border border-[#6344B6]/20 font-black rounded-full shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2 text-sm hover:bg-[#6344B6]/10"
+                      style={{ background: 'var(--bg-surface)' }}
                     >
                       <Share2 size={18} /> {t('share')}
                     </button>
@@ -487,26 +494,26 @@ export const TransactionDetailPage: React.FC = () => {
             ) : (
               <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                 {/* Financial Summary */}
-                <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-sm space-y-4">
-                  <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
+                <div className="rounded-[28px] border p-6 shadow-sm space-y-4" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.25em] flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                     <Banknote size={14} className="text-brand" /> {t('financial_summary')}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">{t('amount_sent_label')}</span>
-                      <span className="font-bold text-slate-900">{transaction.amount?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} {transaction.currency}</span>
+                      <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('amount_sent_label')}</span>
+                      <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{transaction.amount?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} {transaction.currency}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">{t('exchange_rate_label')}</span>
-                      <span className="font-bold text-slate-900">1 {transaction.currency} = {transaction.exchangeRate?.toFixed(2)} {transaction.destinationCurrency}</span>
+                      <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('exchange_rate_label')}</span>
+                      <span className="font-bold" style={{ color: 'var(--text-primary)' }}>1 {transaction.currency} = {transaction.exchangeRate?.toFixed(2)} {transaction.destinationCurrency}</span>
                     </div>
                     {transaction.commission > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-500 font-medium">{t('commission')}</span>
-                        <span className="font-bold text-slate-900">{transaction.commission?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} {transaction.currency}</span>
+                        <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('commission')}</span>
+                        <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{transaction.commission?.toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} {transaction.currency}</span>
                       </div>
                     )}
-                    <div className="pt-3 border-t border-slate-50 flex justify-between items-center">
+                    <div className="pt-3 border-t flex justify-between items-center" style={{ borderColor: 'var(--border-color)' }}>
                       <span className="text-brand font-black">{t('net_to_receive')}</span>
                       <span className="text-2xl font-black text-brand">{Math.floor(transaction.amount * (transaction.exchangeRate || 1)).toLocaleString(language === 'en' ? 'en-US' : 'fr-FR')} {transaction.destinationCurrency}</span>
                     </div>
@@ -515,24 +522,24 @@ export const TransactionDetailPage: React.FC = () => {
 
                 {/* Participants */}
                 <div className="grid gap-4">
-                  <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-sm space-y-4">
-                    <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
+                  <div className="rounded-[28px] border p-6 shadow-sm space-y-4" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.25em] flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                       <User size={14} className="text-brand" /> {t('sender')}
                     </h3>
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 font-bold">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center font-bold" style={{ background: 'var(--bg-surface-secondary)', color: 'var(--text-muted)' }}>
                         {transaction.clientName?.charAt(0).toUpperCase() || 'C'}
                       </div>
                       <div>
-                        <p className="font-black text-slate-900">{transaction.clientName || 'Client Flash Pay'}</p>
-                        <p className="text-xs text-slate-500 font-medium">{t('paid_via', { operator: transaction.selectedOperator || t('direct_method') })}</p>
+                        <p className="font-black" style={{ color: 'var(--text-primary)' }}>{transaction.clientName || 'Client Flash Pay'}</p>
+                        <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{t('paid_via', { operator: transaction.selectedOperator || t('direct_method') })}</p>
                       </div>
                     </div>
                   </div>
 
                   {!transaction.isBulk && (
-                    <div className="rounded-[28px] border border-[#eadfff] bg-white p-6 shadow-sm space-y-4">
-                      <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.25em] flex items-center gap-2">
+                    <div className="rounded-[28px] border p-6 shadow-sm space-y-4" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border-color)' }}>
+                      <h3 className="text-[11px] font-black uppercase tracking-[0.25em] flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                         <Smartphone size={14} className="text-brand" /> {t('beneficiary_desc')}
                       </h3>
                       <div className="flex items-center gap-4">
@@ -540,8 +547,8 @@ export const TransactionDetailPage: React.FC = () => {
                           {transaction.recipientName?.charAt(0).toUpperCase() || 'B'}
                         </div>
                         <div>
-                          <p className="font-black text-slate-900">{transaction.recipientName}</p>
-                          <p className="text-xs text-slate-500 font-medium">{transaction.recipientPhone} • {transaction.recipientOperator}</p>
+                          <p className="font-black" style={{ color: 'var(--text-primary)' }}>{transaction.recipientName}</p>
+                          <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>{transaction.recipientPhone} • {transaction.recipientOperator}</p>
                         </div>
                       </div>
                     </div>
@@ -549,25 +556,26 @@ export const TransactionDetailPage: React.FC = () => {
                 </div>
 
                 {/* Technical Info */}
-                <div className="rounded-[28px] border border-dashed border-slate-200 p-6 space-y-4">
+                <div className="rounded-[28px] border border-dashed p-6 space-y-4" style={{ borderColor: 'var(--border-color)' }}>
                    <div className="flex justify-between items-start">
                      <div>
-                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('transaction_id')}</p>
-                       <p className="text-xs font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded-lg">#{transaction.id.toUpperCase()}</p>
+                       <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{t('transaction_id')}</p>
+                       <p className="text-xs font-mono px-2 py-1 rounded-lg" style={{ color: 'var(--text-secondary)', background: 'var(--bg-surface-secondary)' }}>#{transaction.id.toUpperCase()}</p>
                      </div>
                      <button 
                        onClick={() => {
                          navigator.clipboard.writeText(transaction.id);
                          toast.success(t('copy_id_success'));
                        }}
-                       className="p-2 hover:bg-slate-100 rounded-xl transition-colors text-slate-400"
+                       className="p-2 rounded-xl transition-colors hover:bg-[#6344B6]/10"
+                       style={{ color: 'var(--text-muted)' }}
                      >
                        <Copy size={16} />
                      </button>
                    </div>
                    <div>
-                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('transfer_date')}</p>
-                     <p className="text-xs text-slate-600 font-bold">
+                     <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>{t('transfer_date')}</p>
+                     <p className="text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>
                        {transaction.createdAt?.toDate ? transaction.createdAt.toDate().toLocaleString(language === 'en' ? 'en-US' : 'fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
                      </p>
                    </div>

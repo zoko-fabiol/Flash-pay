@@ -100,9 +100,9 @@ body {
 
 /* Premium Card */
 .premium-card {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 24px;
-  border: 1px solid #F0EFFF;
+  border: 1px solid var(--border-color);
   box-shadow: var(--shadow-premium);
 }
 
@@ -134,12 +134,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #E2E8F0;
+  background: var(--border-color);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #CBD5E1;
+  background: var(--text-muted);
 }
 
 /* Buttons */
@@ -148,7 +148,10 @@ body {
 }
 
 .input-field {
-  @apply w-full px-6 py-4 bg-[#F8F9FC] border border-slate-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold text-slate-900 transition-all;
+  @apply w-full px-6 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary font-bold transition-all;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
 }
 
 /* --- Mobile Safe Areas Helper Classes --- */
@@ -214,6 +217,51 @@ body {
 .dark .border-slate-200,
 .dark .border-gray-200 {
   border-color: var(--border-color) !important;
+}
+
+/* --- Dark Mode: Input fields --- */
+.dark input[type="text"],
+.dark input[type="email"],
+.dark input[type="password"],
+.dark input[type="tel"],
+.dark input[type="number"],
+.dark input[type="search"],
+.dark textarea,
+.dark select {
+  background-color: var(--bg-surface-secondary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* --- Dark Mode: Dividers --- */
+.dark .divide-y > * + * {
+  border-color: var(--border-color) !important;
+}
+
+/* --- Dark Mode: Text overrides --- */
+.dark .text-slate-500,
+.dark .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.dark .text-slate-400,
+.dark .text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+.dark .text-slate-300,
+.dark .text-gray-300 {
+  color: var(--text-muted) !important;
+}
+
+/* --- Logo in dark mode: keep Flash Pay logo visible --- */
+.dark .header-logo {
+  filter: brightness(0) invert(1);
 }
 
 
