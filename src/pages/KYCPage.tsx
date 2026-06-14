@@ -178,11 +178,11 @@ export const KYCPage: React.FC = () => {
 
   const getStatusBadge = () => {
     const statusColors = {
-      Standard: 'bg-gray-100 text-gray-800',
-      Pending: 'bg-yellow-100 text-yellow-800',
-      Expert: 'bg-green-100 text-green-800',
-      Rejected: 'bg-red-100 text-red-800',
-      Blocked: 'bg-orange-100 text-orange-800',
+      Standard: 'bg-gray-100 text-gray-800 dark:bg-slate-800 dark:text-slate-300',
+      Pending: 'bg-yellow-100 text-yellow-800 dark:bg-amber-900/40 dark:text-amber-300',
+      Expert: 'bg-green-100 text-green-800 dark:bg-emerald-900/40 dark:text-emerald-300',
+      Rejected: 'bg-red-100 text-red-800 dark:bg-rose-900/40 dark:text-rose-300',
+      Blocked: 'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300',
     };
 
     const statusIcons = {

@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       }}
     >
       <div className="flex items-center cursor-pointer" onClick={() => navigate('/')}>
-        <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain dark:brightness-200 dark:saturate-0 dark:invert" />
+        <img src="/header-logo.png" alt="Flash Pay" className="h-8 w-auto object-contain" />
       </div>
       
       <div className="flex items-center gap-4">
