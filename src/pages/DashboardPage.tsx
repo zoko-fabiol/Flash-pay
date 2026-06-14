@@ -155,10 +155,10 @@ export const DashboardPage: React.FC = () => {
         <PWAInstallPrompt />
 
         {showReferral && (
-          <section className="relative overflow-hidden rounded-[28px] bg-[#FDF7FF] p-5 shadow-sm border border-[#F3E8FF]">
+          <section className="relative overflow-hidden rounded-[28px] bg-[#FDF7FF] dark:bg-[#1E1530] p-5 shadow-sm border border-[#F3E8FF] dark:border-[#6344B6]/20">
             <div className="flex justify-between items-start">
               <div className="space-y-4 flex-1 pr-4">
-                <h3 className="text-[15px] font-bold text-slate-800 leading-snug">
+                <h3 className="text-[15px] font-bold text-slate-800 dark:text-[#EDE8FF] leading-snug">
                   {t('earn_referral', { amount: formatNumber(referralBonus, 'RUB') })}
                 </h3>
                 
@@ -171,7 +171,7 @@ export const DashboardPage: React.FC = () => {
                   </button>
                   <button 
                     onClick={handleIgnoreReferral}
-                    className="text-[10px] font-bold text-slate-400 hover:text-[#6344B6] transition-colors uppercase tracking-wider"
+                    className="text-[10px] font-bold text-slate-400 hover:text-[#6344B6] dark:text-[#B0A8D0] dark:hover:text-[#EDE8FF] transition-colors uppercase tracking-wider"
                   >
                     {t('ignore')}
                   </button>
@@ -179,12 +179,12 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               <div className="flex flex-col items-end gap-2 shrink-0">
-                 <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-[9px] font-bold text-[#6344B6] shadow-sm border border-[#F3E8FF]">
+                 <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white dark:bg-[#2A2344] text-[9px] font-bold text-[#6344B6] dark:text-[#EDE8FF] shadow-sm border border-[#F3E8FF] dark:border-[#6344B6]/20">
                    <Gift size={10} /> {t('special_offer')}
                  </div>
                  <div className="mt-1 scale-100">
                    {/* Placeholder for gift box illustration */}
-                   <Gift size={60} className="text-[#D8B4FE]" />
+                   <Gift size={60} className="text-[#D8B4FE] dark:text-[#866ED1]" />
                  </div>
               </div>
             </div>

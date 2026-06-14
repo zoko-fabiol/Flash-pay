@@ -124,7 +124,7 @@ export const TransactionsPage: React.FC = () => {
               className={`px-4 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${
                 filter === status
                   ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50'
+                  : 'bg-white text-slate-400 border border-slate-100 hover:bg-slate-50 dark:bg-[#1A1528] dark:border-white/10 dark:text-[#B0A8D0] dark:hover:bg-[#231D38]'
               }`}
             >
               {t(`filter_${status}`)}
@@ -160,10 +160,10 @@ export const TransactionsPage: React.FC = () => {
                 <button
                   key={tx.id}
                   onClick={() => navigate(`/transactions/${tx.id}`)}
-                  className={`group relative flex flex-col gap-6 rounded-3xl border bg-white p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 lg:flex-row lg:items-center lg:justify-between ${
+                  className={`group relative flex flex-col gap-6 rounded-3xl border bg-white dark:bg-[#1A1528] p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 lg:flex-row lg:items-center lg:justify-between ${
                     isBulk 
-                      ? 'border-primary/30' 
-                      : 'border-slate-50 shadow-sm'
+                      ? 'border-primary/30 dark:border-primary/40' 
+                      : 'border-slate-50 dark:border-white/5 shadow-sm'
                   }`}
                 >
                     <div className="flex items-center gap-5">

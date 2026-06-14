@@ -168,4 +168,53 @@ body {
   padding-bottom: calc(0.8rem + env(safe-area-inset-bottom, 0px)) !important;
 }
 
+/* --- Global Dark Mode Overrides --- */
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6,
+.dark .text-slate-900,
+.dark .text-\[\#1D1B20\],
+.dark .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-slate-800,
+.dark .text-gray-800,
+.dark .text-slate-700,
+.dark .text-gray-700,
+.dark .text-slate-600,
+.dark .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .premium-card {
+  background: var(--bg-surface) !important;
+  border-color: var(--border-color) !important;
+  box-shadow: none !important;
+}
+
+.dark .bg-slate-50,
+.dark .bg-gray-50,
+.dark .bg-\[\#F8F9FC\] {
+  background-color: var(--bg-surface-secondary) !important;
+}
+
+.dark .bg-slate-100,
+.dark .bg-gray-100 {
+  background-color: var(--bg-surface-hover) !important;
+}
+
+.dark .border-slate-50,
+.dark .border-gray-50,
+.dark .border-slate-100,
+.dark .border-gray-100,
+.dark .border-slate-200,
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+
 

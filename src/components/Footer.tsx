@@ -24,7 +24,11 @@ const Footer: React.FC<{ tabs: Tab[]; isActive: (path: string) => boolean }> = (
                 <div key={tab.path} className="flex flex-col items-center justify-center -mt-12">
                   <Link 
                     to={tab.path} 
-                    className={`flex items-center justify-center rounded-full transition-all ${active ? 'bg-primary text-white shadow-lg shadow-primary/30' : 'bg-primary/10 text-primary shadow-premium' } w-20 h-20 hover:scale-110 active:scale-90 border-4`}
+                    className={`flex items-center justify-center rounded-full transition-all w-20 h-20 hover:scale-110 active:scale-90 border-4 ${
+                      active 
+                        ? 'bg-[#6344B6] text-white shadow-lg shadow-[#6344B6]/30' 
+                        : 'bg-[#efe6ff] text-[#6344B6] dark:bg-[#2A2344] dark:text-[#EDE8FF] shadow-premium'
+                    }`}
                     style={{ borderColor: 'var(--bg-surface)' }}
                     aria-label={tab.label}
                   >

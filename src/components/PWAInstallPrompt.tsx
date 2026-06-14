@@ -60,7 +60,7 @@ export const PWAInstallPrompt: React.FC = () => {
   return (
     <>
       <div className="mx-3 mb-8 animate-in fade-in slide-in-from-top-6 duration-1000 ease-out">
-        <div className="relative overflow-hidden rounded-[30px] bg-white/40 backdrop-blur-md border border-white/60 p-5 shadow-[0_8px_32px_rgba(0,0,0,0.03)] group">
+        <div className="relative overflow-hidden rounded-[30px] glass-effect p-5 shadow-sm group">
           <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-[#6344B6]/5 opacity-50" />
           
           <div className="relative z-10 flex items-center justify-between gap-4">
@@ -69,10 +69,10 @@ export const PWAInstallPrompt: React.FC = () => {
                 <Smartphone size={22} className="animate-pulse" />
               </div>
               <div className="flex flex-col">
-                <h4 className="text-[14px] font-black text-slate-900 leading-tight tracking-tight">
+                <h4 className="text-[14px] font-black text-slate-900 dark:text-[#EDE8FF] leading-tight tracking-tight">
                   {isAndroid ? 'Version Android Native' : (t('install_app_title') || 'Expérience Premium')}
                 </h4>
-                <p className="text-[11px] font-bold text-slate-500 leading-tight mt-1 opacity-80">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-[#B0A8D0] leading-tight mt-1 opacity-80">
                   {isAndroid ? 'Téléchargez l\'APK pour plus de performances' : (t('install_app_subtitle') || 'Installez l\'app pour un accès instantané')}
                 </p>
               </div>
@@ -81,14 +81,14 @@ export const PWAInstallPrompt: React.FC = () => {
             <div className="flex flex-col items-center gap-2">
               <button
                 onClick={handleInstallClick}
-                className="flex items-center justify-center gap-2 rounded-full bg-slate-900 px-6 py-3 text-[11px] font-black text-white shadow-xl transition-all active:scale-95 hover:bg-black w-full"
+                className="flex items-center justify-center gap-2 rounded-full bg-slate-900 hover:bg-black dark:bg-[#EDE8FF] dark:text-[#0D0B14] dark:hover:bg-[#B0A8D0] px-6 py-3 text-[11px] font-black text-white shadow-xl transition-all active:scale-95 w-full"
               >
                 <Download size={14} />
                 {isAndroid ? 'Télécharger' : (t('install') || 'Installer')}
               </button>
               <button 
                 onClick={() => setDismissed(true)}
-                className="text-[10px] font-black text-slate-400 hover:text-slate-600 transition-colors uppercase tracking-widest py-1 w-full text-center"
+                className="text-[10px] font-black text-slate-400 hover:text-slate-600 dark:text-[#B0A8D0]/60 dark:hover:text-[#EDE8FF] transition-colors uppercase tracking-widest py-1 w-full text-center"
               >
                 {t('ignore') || 'Ignorer'}
               </button>

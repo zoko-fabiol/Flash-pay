@@ -205,44 +205,44 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
       <div className="flex items-center gap-4 mb-6">
         <button 
           onClick={previousStep}
-          className="w-10 h-10 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-600 hover:text-brand hover:border-brand transition-all active:scale-90"
+          className="w-10 h-10 rounded-full bg-white dark:bg-[#1A1528] border border-slate-100 dark:border-white/10 shadow-sm flex items-center justify-center text-slate-600 dark:text-[#EDE8FF] hover:text-brand hover:border-brand transition-all active:scale-90"
         >
           <ChevronLeft size={24} />
         </button>
-        <h2 className="text-2xl font-black text-[#1D1B20] tracking-tight">{t('amount_selection')}</h2>
+        <h2 className="text-2xl font-black text-[#1D1B20] dark:text-[#EDE8FF] tracking-tight">{t('amount_selection')}</h2>
       </div>
 
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-6 space-y-4">
+      <div className="bg-white dark:bg-[#1A1528] rounded-[40px] border border-slate-100 dark:border-white/5 shadow-[0_24px_60px_rgba(0,0,0,0.06)] p-6 sm:p-6 space-y-4">
         <div className="space-y-4">
           {/* You Send */}
-          <div className={`p-6 rounded-[32px] transition-all border-2 ${isSendMode ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 bg-slate-50'}`}>
+          <div className={`p-6 rounded-[32px] transition-all border-2 ${isSendMode ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#231D38]/30'}`}>
             <div className="flex justify-between items-start mb-2">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('you_send')}</span>
+              <span className="text-xs font-black text-slate-400 dark:text-[#B0A8D0] uppercase tracking-widest">{t('you_send')}</span>
               
               {/* Sender Country Dropdown */}
               <div className="relative">
                 <button 
                   onClick={() => setIsSenderDropdownOpen(!isSenderDropdownOpen)}
-                  className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border-2 border-slate-100 hover:border-brand transition-all"
+                  className="flex items-center gap-2 bg-white dark:bg-[#1A1528] px-4 py-2 rounded-2xl shadow-sm border-2 border-slate-100 dark:border-white/10 hover:border-brand transition-all"
                 >
                    <img src={`https://flagcdn.com/w40/${(currentSender?.code || 'ru').toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover" alt="" />
-                   <span className="font-black text-slate-900 text-xs">{currentSender?.name || 'Russie'}</span>
-                   <ChevronRight size={14} className={`transition-transform ${isSenderDropdownOpen ? 'rotate-90' : ''}`} />
+                   <span className="font-black text-slate-900 dark:text-[#EDE8FF] text-xs">{currentSender?.name || 'Russie'}</span>
+                   <ChevronRight size={14} className={`transition-transform dark:text-[#B0A8D0] ${isSenderDropdownOpen ? 'rotate-90' : ''}`} />
                 </button>
                 
                 {isSenderDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsSenderDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#231D38] rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
                       <div className="max-h-60 overflow-y-auto">
                         {availableSenderCountries.map(c => (
                           <button
                             key={c.code}
                             onClick={() => handleSenderSelect(c)}
-                            className={`w-full flex items-center gap-3 p-3 hover:bg-brand/5 transition-colors text-left ${transferData.originCountry === c.code ? 'bg-brand/10' : ''}`}
+                            className={`w-full flex items-center gap-3 p-3 hover:bg-brand/5 dark:hover:bg-brand/20 transition-colors text-left ${transferData.originCountry === c.code ? 'bg-brand/10 dark:bg-brand/20' : ''}`}
                           >
                             <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover" alt="" />
-                            <span className="font-bold text-slate-700 text-sm">{c.name}</span>
+                            <span className="font-bold text-slate-700 dark:text-[#EDE8FF] text-sm">{c.name}</span>
                           </button>
                         ))}
                       </div>
@@ -258,9 +258,9 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
                 onFocus={() => setIsSendMode(true)}
                 onChange={(e) => handleSendChange(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-transparent border-none outline-none text-[34px] font-black text-slate-900 placeholder:text-slate-300"
+                className="w-full bg-transparent border-none outline-none text-[34px] font-black text-slate-900 dark:text-[#EDE8FF] placeholder:text-slate-300 dark:placeholder:text-slate-700"
               />
-              <span className="text-xl font-black text-slate-400">{fromCurrency}</span>
+              <span className="text-xl font-black text-slate-400 dark:text-[#B0A8D0]">{fromCurrency}</span>
             </div>
           </div>
 
@@ -271,34 +271,34 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
           </div>
 
           {/* They Receive */}
-          <div className={`p-6 rounded-[32px] transition-all border-2 ${!isSendMode ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 bg-slate-50'}`}>
+          <div className={`p-6 rounded-[32px] transition-all border-2 ${!isSendMode ? 'border-[#6344B6] bg-[#6344B6]/5 ring-4 ring-[#6344B6]/5' : 'border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-[#231D38]/30'}`}>
             <div className="flex justify-between items-start mb-2">
-              <span className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('recipient_receives')}</span>
+              <span className="text-xs font-black text-slate-400 dark:text-[#B0A8D0] uppercase tracking-widest">{t('recipient_receives')}</span>
               
               {/* Recipient Country Dropdown */}
               <div className="relative">
                 <button 
                   onClick={() => setIsRecipientDropdownOpen(!isRecipientDropdownOpen)}
-                  className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl shadow-sm border-2 border-slate-100 hover:border-brand transition-all"
+                  className="flex items-center gap-2 bg-white dark:bg-[#1A1528] px-4 py-2 rounded-2xl shadow-sm border-2 border-slate-100 dark:border-white/10 hover:border-brand transition-all"
                 >
                    <img src={`https://flagcdn.com/w40/${(currentRecipient?.code || 'cm').toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover" alt="" />
-                   <span className="font-black text-slate-900 text-xs">{currentRecipient?.name || 'Cameroun'}</span>
-                   <ChevronRight size={14} className={`transition-transform ${isRecipientDropdownOpen ? 'rotate-90' : ''}`} />
+                   <span className="font-black text-slate-900 dark:text-[#EDE8FF] text-xs">{currentRecipient?.name || 'Cameroun'}</span>
+                   <ChevronRight size={14} className={`transition-transform dark:text-[#B0A8D0] ${isRecipientDropdownOpen ? 'rotate-90' : ''}`} />
                 </button>
                 
                 {isRecipientDropdownOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsRecipientDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#231D38] rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 z-50 overflow-hidden animate-in zoom-in-95 duration-200">
                       <div className="max-h-60 overflow-y-auto">
                         {availableRecipientCountries.map(c => (
                           <button
                             key={c.code}
                             onClick={() => handleRecipientSelect(c)}
-                            className={`w-full flex items-center gap-3 p-3 hover:bg-brand/5 transition-colors text-left ${transferData.destinationCountry === c.code ? 'bg-brand/10' : ''}`}
+                            className={`w-full flex items-center gap-3 p-3 hover:bg-brand/5 dark:hover:bg-brand/20 transition-colors text-left ${transferData.destinationCountry === c.code ? 'bg-brand/10 dark:bg-brand/20' : ''}`}
                           >
                             <img src={`https://flagcdn.com/w40/${c.code.toLowerCase()}.png`} className="w-5 h-5 rounded-full object-cover" alt="" />
-                            <span className="font-bold text-slate-700 text-sm">{c.name}</span>
+                            <span className="font-bold text-slate-700 dark:text-[#EDE8FF] text-sm">{c.name}</span>
                           </button>
                         ))}
                       </div>
@@ -314,9 +314,9 @@ export const AmountSelectionStep: React.FC<AmountSelectionStepProps> = ({
                 onFocus={() => setIsSendMode(false)}
                 onChange={(e) => handleReceiveChange(e.target.value)}
                 placeholder="0.00"
-                className="w-full bg-transparent border-none outline-none text-[34px] font-black text-slate-900 placeholder:text-slate-300"
+                className="w-full bg-transparent border-none outline-none text-[34px] font-black text-slate-900 dark:text-[#EDE8FF] placeholder:text-slate-300 dark:placeholder:text-slate-700"
               />
-              <span className="text-xl font-black text-slate-400">{toCurrency}</span>
+              <span className="text-xl font-black text-slate-400 dark:text-[#B0A8D0]">{toCurrency}</span>
             </div>
           </div>
         </div>
