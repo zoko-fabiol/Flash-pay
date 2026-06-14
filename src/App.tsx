@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { HashRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -6,11 +6,12 @@ import { AppProvider } from './context/AppContext';
 import { TransferWizardProvider } from './context/TransferWizardContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { NotificationProvider } from './context/NotificationContext';
-import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { deviceService } from './services/deviceService';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db, userService } from './services/firebase';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 
 // --- Scroll To Top Handler ---
 const ScrollToTop = () => {
@@ -96,37 +97,51 @@ const StatusBarHandler: React.FC = () => {
 
   useEffect(() => {
     const applyStatusBarStyle = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+
       try {
-        const { StatusBar, Style } = await import('@capacitor/status-bar');
-        
         const isDarkMode = 
           theme === 'dark' || 
           (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
-        // Ensure status bar does not overlay webview (no transparency)
-        await StatusBar.setOverlaysWebView({ overlay: false });
-        
-        // Set background: white (#FFFFFF) for light mode, dark (#0D0B14) for dark mode
-        await StatusBar.setBackgroundColor({ color: isDarkMode ? '#0D0B14' : '#FFFFFF' });
-        
-        // Set style: Style.Light (dark icons/text) for light mode, Style.Dark (light icons/text) for dark mode
-        await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
+        // 1. Force the status bar style first (controlling text/icon color: LIGHT = dark text, DARK = light text)
+        try {
+          await StatusBar.setStyle({ style: isDarkMode ? Style.Dark : Style.Light });
+        } catch (e) {
+          console.warn('[StatusBar] setStyle failed:', e);
+        }
+
+        // 2. Set background color (ignored on Android 15/16 but important for Android <15 and iOS)
+        try {
+          await StatusBar.setBackgroundColor({ color: isDarkMode ? '#0D0B14' : '#FFFFFF' });
+        } catch (e) {
+          console.warn('[StatusBar] setBackgroundColor failed:', e);
+        }
+
+        // 3. Set overlay to false (WebView starts below status bar on older Androids/iOS)
+        try {
+          await StatusBar.setOverlaysWebView({ overlay: false });
+        } catch (e) {
+          console.warn('[StatusBar] setOverlaysWebView failed:', e);
+        }
       } catch (err) {
-        // Not native or Capacitor error
+        console.warn('[StatusBar] Error in applyStatusBarStyle:', err);
       }
     };
 
     applyStatusBarStyle();
     
-    // Add timeouts to ensure it applies after splash screen hides
-    const t1 = setTimeout(applyStatusBarStyle, 1000);
-    const t2 = setTimeout(applyStatusBarStyle, 2000);
-    const t3 = setTimeout(applyStatusBarStyle, 5000);
+    // Add timeouts to ensure it applies after splash screen hides and native view transitions complete
+    const t1 = setTimeout(applyStatusBarStyle, 500);
+    const t2 = setTimeout(applyStatusBarStyle, 1000);
+    const t3 = setTimeout(applyStatusBarStyle, 2500);
+    const t4 = setTimeout(applyStatusBarStyle, 5000);
     
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
+      clearTimeout(t4);
     };
   }, [theme]);
 
