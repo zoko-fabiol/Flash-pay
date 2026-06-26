@@ -30,7 +30,17 @@ const config: CapacitorConfig = {
       scopes: ["profile", "email"],
       clientId: "4504627700-t3orkamdujgdmqn9b38dlt1900q4t1ml.apps.googleusercontent.com",
       forceCodeForRefreshToken: true
-    }
+    },
+    CapacitorUpdater: {
+      // URL de l'endpoint Netlify qui retourne la dernière version du bundle
+      updateUrl: 'https://flash-pay.netlify.app/.netlify/functions/bundle-update',
+      // Pas de stats (privacy)
+      statsUrl: '',
+      // Mode automatique : télécharge et applique sans intervention utilisateur
+      autoUpdate: true,
+      // Délai avant de vérifier (ms) - laisse l'app s'initialiser d'abord
+      directUpdate: false,
+    },
   },
 };
 

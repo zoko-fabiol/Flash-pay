@@ -12,6 +12,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db, userService } from './services/firebase';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
+import { autoUpdaterService } from './services/autoUpdater';
 
 // --- Scroll To Top Handler ---
 const ScrollToTop = () => {
@@ -47,6 +48,21 @@ import { TransactionDetailPage } from './pages/TransactionDetailPage';
 import { AdminExchangeRatesPage } from './pages/admin/AdminExchangeRatesPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
+
+// ─── Auto-Update Handler ─────────────────────────────────────────────────────
+// CRITIQUE : notifyAppReady() doit être appelé au démarrage de chaque session.
+// Sans cet appel, capacitor-updater considère que le bundle est défectueux
+// et effectue un rollback automatique vers la version précédente.
+const AutoUpdateHandler: React.FC = () => {
+  useEffect(() => {
+    // Léger délai pour s'assurer que l'app est bien montée avant de notifier
+    const timer = setTimeout(() => {
+      autoUpdaterService.notifyReady();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+  return null;
+};
 
 import { Loading } from './components/UI';
 import { initializePushNotifications } from './utils/pushNotifications';
@@ -429,6 +445,7 @@ function App() {
               <AppProvider>
                 <TransferWizardProvider>
                   <BiometricGuard>
+                    <AutoUpdateHandler />
                     <AppRoutes />
                   </BiometricGuard>
                 </TransferWizardProvider>

@@ -1,0 +1,90 @@
+name: Release JS Bundle (Auto-Update)
+
+on:
+  push:
+    tags:
+      - 'bundle-v*'   # Déclenché par un tag comme : bundle-v1.1.2
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version du bundle (ex: 1.1.2)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release-bundle:
+    name: Build & Release JS Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React app (JS bundle)
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      # Extraire la version depuis le tag ou l'input manuel
+      - name: Extract version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # Tag format: bundle-v1.1.2 → 1.1.2
+            echo "VERSION=${GITHUB_REF_NAME#bundle-v}" >> $GITHUB_OUTPUT
+          fi
+
+      # Zipper le dossier dist/ → bundle.zip
+      - name: Create bundle zip
+        run: |
+          cd dist
+          zip -r ../bundle.zip .
+          cd ..
+          echo "Bundle size: $(du -sh bundle.zip | cut -f1)"
+
+      # Créer une GitHub Release et uploader le bundle
+      - name: Create GitHub Release with bundle
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: bundle-v${{ steps.get_version.outputs.VERSION }}
+          name: "JS Bundle v${{ steps.get_version.outputs.VERSION }}"
+          body: |
+            ## Bundle JS Flash Pay v${{ steps.get_version.outputs.VERSION }}
+            
+            Ce bundle est automatiquement téléchargé par les APKs Flash Pay via `@capgo/capacitor-updater`.
+            
+            **Les utilisateurs ne voient rien** — la mise à jour s'applique silencieusement au prochain lancement.
+            
+            > Pour déployer : mettez à jour `LATEST_VERSION` dans `netlify/functions/bundle-update.ts`
+          files: bundle.zip
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Display bundle URL
+        run: |
+          echo ""
+          echo "✅ Bundle publié avec succès !"
+          echo ""
+          echo "URL du bundle :"
+          echo "https://github.com/zoko-fabiol/Flash-pay/releases/download/bundle-v${{ steps.get_version.outputs.VERSION }}/bundle.zip"
+          echo ""
+          echo "PROCHAINE ÉTAPE : Mettre à jour netlify/functions/bundle-update.ts :"
+          echo "  LATEST_VERSION = '${{ steps.get_version.outputs.VERSION }}'"
+          echo "  BUNDLE_URL = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/bundle-v${{ steps.get_version.outputs.VERSION }}/bundle.zip'"
