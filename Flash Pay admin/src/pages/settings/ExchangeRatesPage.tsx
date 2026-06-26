@@ -169,7 +169,7 @@ const ExchangeRatesPage: React.FC = () => {
         // Load new APK & Promo settings
         setApkVersion(settingsDoc.apkVersion || '1.1.1');
         setApkVersionCode((settingsDoc.apkVersionCode || 151).toString());
-        setApkDownloadUrl(settingsDoc.apkDownloadUrl || 'https://github.com/zoko-fabiol/Flash-pay/releases/latest');
+        setApkDownloadUrl(settingsDoc.apkDownloadUrl || 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk');
         setApkChangelog(settingsDoc.apkChangelog || 'Améliorations générales et corrections de bugs.');
         setApkForceUpdate(!!settingsDoc.apkForceUpdate);
         setShowAndroidPromo(settingsDoc.showAndroidPromo !== undefined ? !!settingsDoc.showAndroidPromo : true);

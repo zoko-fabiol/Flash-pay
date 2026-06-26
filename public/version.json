@@ -1,7 +1,7 @@
 {
   "version": "1.1.1",
   "versionCode": 151,
-  "downloadUrl": "https://github.com/zoko-fabiol/Flash-pay/releases/latest",
+  "downloadUrl": "https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk",
   "changelog": "Désactivation temporaire de la PWA au profit de l'APK Android.",
   "forceUpdate": false
 }

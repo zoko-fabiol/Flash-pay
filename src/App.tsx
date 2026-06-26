@@ -404,7 +404,7 @@ function App() {
             Cette version n'est plus supportée. Veuillez télécharger notre application mobile officielle Android (APK) pour une expérience optimale, fluide et 100% sécurisée.
           </p>
           <a
-            href="https://github.com/zoko-fabiol/Flash-pay/releases/latest"
+            href="https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full max-w-xs py-4 px-6 rounded-2xl bg-gradient-to-r from-[#7c3aed] to-[#db2777] hover:from-[#6d28d9] hover:to-[#be185d] text-white font-semibold flex items-center justify-center gap-3 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-[#7c3aed]/20"

@@ -37,7 +37,7 @@ export const UpdateGuard: React.FC = () => {
             const data = snapshot.docs[0].data();
             const apkVersion = data.apkVersion || '1.1.1';
             const apkVersionCode = parseInt(String(data.apkVersionCode || '0'), 10);
-            const apkDownloadUrl = data.apkDownloadUrl || 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk';
+            const apkDownloadUrl = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk';
             const apkChangelog = data.apkChangelog || 'Améliorations générales et corrections de bugs.';
             const apkForceUpdate = !!data.apkForceUpdate;
             const showApkUpdatePopup = data.showApkUpdatePopup !== undefined ? !!data.showApkUpdatePopup : true;

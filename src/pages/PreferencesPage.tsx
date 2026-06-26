@@ -230,7 +230,7 @@ export const PreferencesPage: React.FC = () => {
                 </p>
                 <button
                   onClick={() => {
-                    window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/latest';
+                    window.location.href = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk';
                   }}
                   className="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white text-[#6344B6] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                 >

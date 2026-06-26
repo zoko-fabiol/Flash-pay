@@ -12,7 +12,7 @@ export const PWAInstallPrompt: React.FC = () => {
   const [dismissed, setDismissed] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
   
-  const [apkUrl, setApkUrl] = useState('https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk');
+  const apkUrl = 'https://github.com/zoko-fabiol/Flash-pay/releases/download/v1.1.1/FlashPay.apk';
   const [showAndroidPromo, setShowAndroidPromo] = useState(true);
 
   const isIOS = deviceService.isIOS();
@@ -24,9 +24,6 @@ export const PWAInstallPrompt: React.FC = () => {
     const unsubscribe = onSnapshot(qSettings, (snapshot) => {
       if (!snapshot.empty) {
         const data = snapshot.docs[0].data();
-        if (data.apkDownloadUrl) {
-          setApkUrl(data.apkDownloadUrl);
-        }
         if (data.showAndroidPromo !== undefined) {
           setShowAndroidPromo(!!data.showAndroidPromo);
         }
